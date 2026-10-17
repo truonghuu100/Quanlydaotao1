@@ -1,4 +1,5 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HPDQ Training Management V6 - FIX06 Performance</title><style>
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="hpdq-api-base" content="https://trainhpdq.onrender.com"><title>HPDQ Training Management V6 - FIX06 Performance</title><style>
 :root{
  --navy:#061d3d;--navy2:#0a2e5a;--blue:#0b5fae;--blue2:#1478d4;--gold:#d7a72b;--gold2:#f1c75b;
  --bg:#f3f6fa;--surface:#fff;--surface2:#f8fafc;--text:#14283f;--muted:#718198;--line:#dfe7ef;
@@ -288,9 +289,9 @@ html,body{background:#f2f5fa!important;color:#0b1f41!important;font-family:Inter
 @media(max-width:760px){.side{position:relative!important;width:100%!important;height:auto!important;bottom:auto!important}.main{margin-left:0!important}.g4,.g3,.g2,.form{grid-template-columns:1fr!important}.content{padding:16px!important}.top{position:relative!important;padding:0 14px!important}.title{align-items:flex-start!important;flex-direction:column!important}.modalbox{width:96vw!important;max-height:95vh!important}.mb{padding:15px!important}.course-hero{align-items:flex-start!important;flex-direction:column!important}.course-hero h2{font-size:18px!important}.course-status{align-self:flex-start!important}.step{grid-template-columns:32px minmax(0,1fr)!important}.step>div:last-child{grid-column:2!important;justify-content:flex-start!important;flex-wrap:wrap!important}.subject-row{grid-template-columns:34px minmax(0,1fr)!important}.subject-row>.badge,.subject-row>.btn{grid-column:2!important;justify-self:start!important}.mywork-row{align-items:flex-start!important;flex-direction:column!important;gap:12px!important;padding:16px!important}.mywork-actions{width:100%!important;justify-content:flex-start!important;flex-wrap:wrap!important}.mywork-open{margin-left:auto!important}.login{grid-template-columns:1fr!important}.login-brand{min-height:auto!important;padding:22px 24px!important}.login-brand-copy{margin:34px 0 8px!important}.login-brand-copy h2{font-size:25px!important}.login-brand-copy p{font-size:12px!important}.login-panel{padding:22px!important}.loginbox{padding:26px!important}}
 </style>
 
-<style id="fix-login-app-visibility">
-  /* Fix: late CSS rules on .login must not override .hidden after login */
-  #login.hidden { display: none !important; }
+<style id="hpdq-login-visibility-fix">
+  /* Override legacy .login display:grid!important after login */
+  #login.hidden { display: none !important; visibility: hidden !important; pointer-events: none !important; }
   #app.hidden { display: none !important; }
   #app:not(.hidden) { display: block !important; }
 </style>
@@ -633,12 +634,31 @@ async function hpRestoreSession(){
   }catch(e){sessionToken='';currentUser=null;hpClearSavedSession();return false;}
 }
 
-function gsCall(fn, payload){
-  return new Promise((resolve,reject)=>{
-    if(!google || !google.script || !google.script.run){reject(new Error('Không chạy trong Google Apps Script Web App'));return;}
-    let runner=google.script.run.withSuccessHandler(resolve).withFailureHandler(reject);
-    if(payload===undefined){runner[fn]();}else{const body={...payload};if(sessionToken)body.__token=sessionToken;runner[fn](body);}
-  });
+const HPDQ_API_BASE = String(
+  document.querySelector('meta[name="hpdq-api-base"]')?.content || window.HPDQ_API_BASE || ''
+).trim().replace(/\/+$/, '');
+async function gsCall(fn, payload){
+  if(!HPDQ_API_BASE){
+    throw new Error('Chưa cấu hình URL API mới. Hãy điền URL vào meta name="hpdq-api-base" ở đầu file HTML.');
+  }
+  const body = payload && typeof payload === 'object' ? {...payload} : {};
+  if(sessionToken) body.__token = sessionToken;
+  let response;
+  try {
+    response = await fetch(`${HPDQ_API_BASE}/legacy/${encodeURIComponent(fn)}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(body),
+      cache: 'no-store'
+    });
+  } catch (error) {
+    throw new Error('Không kết nối được API HPDQ Training. Kiểm tra URL API và trạng thái dịch vụ.');
+  }
+  let result;
+  try { result = await response.json(); }
+  catch (error) { throw new Error(`API trả về dữ liệu không hợp lệ (HTTP ${response.status}).`); }
+  // The legacy UI handles {ok:false,error} itself, so preserve JSON bodies for HTTP 4xx/5xx.
+  return result;
 }
 function setLoginStatus(text, ok){
   const el=document.getElementById('loginGoogleStatus');
