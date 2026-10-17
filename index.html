@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="vi">
 <head>
@@ -5,22 +6,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#061d3d">
   <title>HPDQ Training Management</title>
+
   <style>
-    * { box-sizing: border-box; }
-    html, body {
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
       margin: 0;
       width: 100%;
-      height: 100%;
+      min-height: 100%;
       overflow: hidden;
       background: #f3f6fa;
     }
-    iframe {
+
+    body {
+      height: 100vh;
+      height: 100dvh;
+    }
+
+    #trainingApp {
       display: block;
+      position: fixed;
+      inset: 0;
       width: 100%;
       height: 100%;
+      height: 100dvh;
       border: 0;
+      margin: 0;
+      padding: 0;
       background: #f3f6fa;
     }
+
     .fallback {
       display: none;
       position: fixed;
@@ -32,8 +50,13 @@
       color: #173753;
       font: 15px/1.6 Arial, sans-serif;
       text-align: center;
+      z-index: 10;
     }
-    .fallback.show { display: flex; }
+
+    .fallback.show {
+      display: flex;
+    }
+
     .fallback a {
       display: inline-block;
       margin-top: 12px;
@@ -46,23 +69,53 @@
     }
   </style>
 </head>
+
 <body>
-  <iframe id="trainingApp" title="HPDQ Training Management"
+  <iframe
+    id="trainingApp"
+    title="HPDQ Training Management"
     src="https://script.google.com/macros/s/AKfycbymC0F7ocG4AG91bdUdPy1QpiICg8j_pGH73GQutARg-BflRIvfJt9MlahqVngPJKwO/exec"
     allow="clipboard-read; clipboard-write; fullscreen"
-    allowfullscreen></iframe>
+    allowfullscreen>
+  </iframe>
+
   <div class="fallback" id="fallback">
     <div>
       <strong>Không thể hiển thị hệ thống trong khung này.</strong>
       <p>Đại ca có thể mở ứng dụng đào tạo trực tiếp.</p>
-      <a href="https://script.google.com/macros/s/AKfycbymC0F7ocG4AG91bdUdPy1QpiICg8j_pGH73GQutARg-BflRIvfJt9MlahqVngPJKwO/exec" target="_blank" rel="noopener">Mở HPDQ Training</a>
+      <a
+        href="https://script.google.com/macros/s/AKfycbymC0F7ocG4AG91bdUdPy1QpiICg8j_pGH73GQutARg-BflRIvfJt9MlahqVngPJKwO/exec"
+        target="_blank"
+        rel="noopener">
+        Mở HPDQ Training
+      </a>
     </div>
   </div>
+
   <script>
-    const frame = document.getElementById('trainingApp');
-    frame.addEventListener('error', () => {
-      document.getElementById('fallback').classList.add('show');
+    const frame = document.getElementById("trainingApp");
+    const fallback = document.getElementById("fallback");
+
+    function syncFrameSize() {
+      const height = window.visualViewport
+        ? window.visualViewport.height
+        : window.innerHeight;
+
+      frame.style.height = `${height}px`;
+    }
+
+    window.addEventListener("resize", syncFrameSize);
+    window.addEventListener("orientationchange", syncFrameSize);
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", syncFrameSize);
+    }
+
+    frame.addEventListener("error", () => {
+      fallback.classList.add("show");
     });
+
+    syncFrameSize();
   </script>
 </body>
 </html>
