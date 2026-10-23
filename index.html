@@ -746,7 +746,7 @@ function openProviderContractsSection(){
   const opts=eligible.map(p=>`<option value="${xhtml(p.id)}" ${String(p.id)===String(selected)?'selected':''}>${xhtml(providerShortCode(p))} — ${xhtml(p.name)} (${trainingContracts.filter(c=>c.providerId===p.id).length} hợp đồng)</option>`).join('');
   const h=providerFullHost();document.getElementById('crumb').textContent='Hợp đồng đào tạo';
   const p=eligible.find(x=>String(x.id)===String(selected))||eligible[0];
-  const rows=trainingContracts.filter(c=>String(c.providerId)===String(p.id)).map(c=>`<tr><td><b>${xhtml(c.number||'—')}</b></td><td>${xhtml(c.name||'—')}</td><td>${vi(c.date)||'—'}</td><td>${c.from&&c.to?vi(c.from)+' – '+vi(c.to):'—'}</td><td>${xhtml(c.value||'—')}</td><td><span class="badge ${c.status==='Còn hiệu lực'?'ok':'red'}">${xhtml(c.status||'Chưa xác định')}</span></td><td><button class="btn light" onclick="editTrainingContract('${xhtml(p.id)}','${xhtml(c.id)}')">Sửa</button> <button class="btn light" onclick="toggleTrainingContract('${xhtml(c.id)}')">${c.status==='Còn hiệu lực'?'Hết hiệu lực':'Khôi phục'}</button></td></tr>`).join('');
+  const rows=trainingContracts.filter(c=>String(c.providerId)===String(p.id)).map(c=>`<tr><td><b>${xhtml(c.number||'—')}</b></td><td>${xhtml(c.name||'—')}</td><td>${vi(c.date)||'—'}</td><td>${c.from&&c.to?vi(c.from)+' – '+vi(c.to):'—'}</td><td>${xhtml(c.value||'—')}</td><td><span class="badge ${c.status==='Còn hiệu lực'?'ok':'red'}">${xhtml(c.status||'Chưa xác định')}</span></td><td><button class="btn light" onclick="editTrainingContract('${xhtml(p.id)}','${xhtml(c.id)}')">Sửa</button> <button class="btn light" onclick="toggleTrainingContract('${xhtml(c.id)}')">${c.status==='Còn hiệu lực'?'Hết hiệu lực':'Khôi phục'}</button> <button class="btn danger" onclick="deleteTrainingContract('${xhtml(c.id)}')">Xóa</button></td></tr>`).join('');
   h.innerHTML=`<div class="title"><div><h1>Hợp đồng đào tạo</h1><p>Quản lý hợp đồng đã ký với từng đơn vị đào tạo; danh sách hiển thị trực tiếp trên trang, không mở popup.</p></div><button class="btn primary" onclick="editTrainingContract('${xhtml(p.id)}','')">＋ Thêm hợp đồng</button></div>${providerSubnav('contracts')}<div class="card"><div class="cardbody"><div class="field" style="max-width:720px"><label>Đơn vị đào tạo</label><select id="providerContractFullPick" onchange="window.providerContractsSelectedId=this.value;openProviderContractsSection()">${opts}</select></div><div class="note"><b>${xhtml(p.name)}</b><br>Mã số thuế: ${xhtml(p.tax||'—')} · ${xhtml(p.address||'Chưa có địa chỉ')}</div><div class="tablewrap"><table class="table"><thead><tr><th>Số hợp đồng</th><th>Tên hợp đồng</th><th>Ngày hợp đồng</th><th>Thời hạn</th><th>Giá trị</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>${rows||'<tr><td colspan="7">Đơn vị này chưa có hợp đồng.</td></tr>'}</tbody></table></div></div></div>`;
 }
 
@@ -1676,6 +1676,15 @@ async function saveTrainingContractDo(providerId,id){
   try{const r=await gsCall('saveTrainingContract',b);if(!r||!r.ok)throw new Error(r?.error||'Không lưu được hợp đồng');const savedContractId=r.data?.HOP_DONG_ID||id;if(document.querySelectorAll('#hd_attachment_rows > div').length)await uploadPendingAttachmentRows(document.querySelectorAll('#hd_attachment_rows > div'),providerId,savedContractId);await refreshFromServerV2();openProviderContracts(providerId);toast('Đã lưu hợp đồng và hồ sơ đính kèm ✓');}catch(e){toast('Lỗi: '+(e.message||e));}
 }
 async function toggleTrainingContract(id){const c=trainingContracts.find(x=>x.id===id);if(!c)return;try{const r=await gsCall('toggleTrainingContract',{id});if(!r||!r.ok)throw new Error(r?.error||'Không cập nhật được trạng thái hợp đồng');await refreshFromServerV2();openProviderContracts(c.providerId);toast('Đã cập nhật trạng thái hợp đồng ✓');}catch(e){toast('Lỗi: '+(e.message||e));}}
+async function deleteTrainingContract(id){
+ const c=trainingContracts.find(x=>String(x.id)===String(id));if(!c)return;
+ const label=[c.number,c.name].filter(Boolean).join(' — ')||id;
+ if(!confirm('XÓA VĨNH VIỄN hợp đồng này?\\n\\n'+label+'\\n\\nHợp đồng sẽ bị xóa khỏi dữ liệu và không thể khôi phục bằng nút Khôi phục.'))return;
+ const typed=prompt('Để xác nhận xóa vĩnh viễn, nhập XOA:');
+ if(typed!=='XOA'){if(typed!==null)toast('Chưa xác nhận xóa.');return;}
+ try{const r=await gsCall('deleteTrainingContract',{id});if(!r||!r.ok)throw new Error(r?.error||'Không xóa được hợp đồng');await refreshFromServerV2();openProviderContracts(c.providerId);toast('Đã xóa vĩnh viễn hợp đồng khỏi dữ liệu ✓');}
+ catch(e){toast('Lỗi: '+(e.message||e));}
+}
 async function toggleTrainingProviderV2(id){try{const r=await gsCall('toggleTrainingProvider',{id});if(!r||!r.ok)throw new Error(r?.error||'Không cập nhật được trạng thái đơn vị');await refreshFromServerV2();openProviders();toast('Đã cập nhật trạng thái đơn vị ✓');}catch(e){toast('Lỗi: '+(e.message||e));}}
 
 
