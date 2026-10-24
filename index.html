@@ -855,7 +855,10 @@ async function createOrdinaryTaskUI(){
  const btn=document.getElementById('ot_create_btn');if(btn){btn.disabled=true;btn.textContent='Đang giao việc…';}
  try{const r=await gsCall('createOrdinaryTask',{noiDung:content,nguoiNhan:assignee,ngayCanHoanThanh:deadline,ghiChu:note});if(!r||!r.ok)throw new Error(r?.error||'Không giao được công việc.');closeModal();await refreshFromServerV2();toast('Đã giao công việc thành công.');}catch(e){toast('Không giao được việc: '+(e.message||e));if(btn){btn.disabled=false;btn.textContent='Giao việc';}}
 }
-function taskFileList(files){return (files||[]).length?`<div class="task-file-list">${files.map(f=>`<div class="task-file-item"><span>📎 <a href="${xhtml(f.url||'#')}" target="_blank" rel="noopener">${xhtml(f.name||'File đính kèm')}</a></span><small>${Math.max(1,Math.round(Number(f.size||0)/1024))} KB</small></div>`).join('')}</div>`:'<div style="color:var(--muted);font-size:10px">Không có file đính kèm.</div>'}
+function taskFileList(files){
+ if(!(files||[]).length)return '<div style="color:var(--muted);font-size:10px">Không có file đính kèm.</div>';
+ return '<div class="task-file-list">'+files.map((f)=>{const id=String(f.driveFileId||f.id||"");const title=f.title||f.name||"File đính kèm";const controls=id?'<button class="btn light" onclick="openSecureDocument(\''+xhtml(id)+'\',\''+xhtml(title)+'\')">Xem trực tiếp</button> <button class="btn light" onclick="requestDocumentDownloadUI(\''+xhtml(id)+'\',\''+xhtml(title)+'\')">Tải xuống · Xin duyệt</button>':'<span class="badge warn">Chưa có mã file an toàn</span>';return '<div class="task-file-item"><span>📎 '+xhtml(title)+'<div style="margin-top:6px">'+controls+'</div></span><small>'+Math.max(1,Math.round(Number(f.size||0)/1024))+' KB</small></div>'}).join('')+'</div>';
+}
 function openOrdinaryTask(taskId){
  const t=(ordinaryTasks||[]).find(x=>x.id===taskId);if(!t){toast('Không tìm thấy công việc.');return;}
  if(!isAdminUser()&&t.assignee!==currentUser?.username){toast('Bạn không có quyền xem công việc này.');return;}
