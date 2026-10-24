@@ -913,6 +913,8 @@ function openOrdinaryTask(taskId){
  const content=`<div class="note"><b>Nội dung công việc</b><br><div style="white-space:pre-wrap;margin-top:5px">${xhtml(t.content)}</div>${t.note?`<div style="margin-top:7px"><b>Ghi chú:</b> ${xhtml(t.note)}</div>`:''}<div style="margin-top:7px">Người nhận: <b>${xhtml(t.assignee)}</b> · Hạn hoàn thành: <b>${vi(t.deadline)}</b></div></div><div class="grid g3"><div class="card kpi"><small>TRẠNG THÁI</small><strong style="font-size:15px">${xhtml(t.status)}</strong></div><div class="card kpi"><small>SỐ LẦN BÁO CÁO</small><strong>${reports.length}</strong></div><div class="card kpi"><small>HẠN HOÀN THÀNH</small><strong style="font-size:15px">${vi(t.deadline)}</strong></div></div><div style="margin-top:14px"><b>Lịch sử báo cáo kết quả</b>${history||'<div class="note" style="margin-top:8px">Chưa có báo cáo. Người nhận có thể gửi báo cáo lần 1 bên dưới.</div>'}</div>${reportForm}`;
  window.taskReportDraft={taskId:t.id,reportId:'TASKREP_'+Date.now()+'_'+Math.random().toString(36).slice(2,8),files:[]};
  modal('Chi tiết công việc',content);
+ // Each time the task detail is reopened, re-query persisted approval status for its file controls.
+ setTimeout(()=>refreshDocumentDownloadControls(),0);
 }
 function updateTaskFileLabel(){const input=document.getElementById('ot_report_files'),label=document.getElementById('ot_report_file_label');if(!input||!label)return;const files=Array.from(input.files||[]);label.textContent=files.length?files.map(f=>`${f.name} · ${Math.max(1,(f.size/1024/1024).toFixed(2))} MB`).join(' | '):'Có thể đính kèm nhiều file, tối đa 100 MB/file.';}
 async function uploadOrdinaryTaskFiles(taskId,reportId,files){
