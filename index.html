@@ -1700,7 +1700,7 @@ function renderSavedAttachments(containerId,raw){
  refreshDocumentDownloadControls();
 }
 function secureFileUrl(fileId,mode){return "https://trainhpdq.onrender.com/secure-file/"+encodeURIComponent(fileId)+"/"+mode+"?token="+encodeURIComponent(sessionToken||"");}
-function openSecureDocument(fileId,title){const url=secureFileUrl(fileId,"view");modal("Xem hồ sơ · "+xhtml(title),'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px"><span class="badge blue">Xem trực tiếp · Không mở Drive</span>'+(isAdminUser()?'<button class="btn light" onclick="reviewDocumentDownloadsUI()">Quản lý yêu cầu tải</button>':'')+'</div><iframe title="Trình xem hồ sơ" src="'+url+'" style="width:100%;height:70vh;border:1px solid var(--line);border-radius:8px;background:#fff"></iframe><div style="text-align:right;margin-top:10px"><button class="btn light" onclick="closeModal()">Đóng</button></div>');}
+function openSecureDocument(fileId,title){const url=secureFileUrl(fileId,"view");modal("Xem hồ sơ · "+xhtml(title),'<div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:10px">'+(isAdminUser()?'<button class="btn light" onclick="reviewDocumentDownloadsUI()">Quản lý yêu cầu tải</button>':'')+'</div><iframe title="Trình xem hồ sơ" src="'+url+'" style="width:100%;height:70vh;border:1px solid var(--line);border-radius:8px;background:#fff"></iframe><div style="text-align:right;margin-top:10px"><button class="btn light" onclick="closeModal()">Đóng</button></div>');}
 function downloadOwnDocument(fileId){window.open(secureFileUrl(fileId,"download"),"_blank","noopener");}
 
 let documentDownloadCountdownTimer=null,documentDownloadStatusPollTimer=null,documentDownloadRefreshBusy=false;
