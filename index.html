@@ -1476,9 +1476,21 @@ async function init(){try{renderAll();}catch(e){console.error(e)}}
 window.addEventListener('load',async()=>{
   setLoginStatus('Đang kiểm tra kết nối API…',false);
   try{
-    const restored=await hpRestoreSession();
-    if(!restored)await bootstrapServer();
-  }catch(e){console.error('Khởi tạo phiên đăng nhập:',e);setLoginStatus('Lỗi khởi tạo: '+(e.message||e),false);await bootstrapServer();}
+    // Check API independently first so a slow/stale saved session cannot leave the login screen spinning.
+    await bootstrapServer();
+    if(!serverReady)return;
+    const restoreTimeout=new Promise(resolve=>setTimeout(()=>resolve(false),25000));
+    const restored=await Promise.race([hpRestoreSession(),restoreTimeout]);
+    if(!restored){
+      sessionToken='';currentUser=null;
+      document.getElementById('login')?.classList.remove('hidden');
+      document.getElementById('app')?.classList.add('hidden');
+      setLoginStatus('Hệ thống: đã kết nối',true);
+    }
+  }catch(e){
+    console.error('Khởi tạo phiên đăng nhập:',e);
+    setLoginStatus('Lỗi khởi tạo: '+(e.message||e),false);
+  }
 });
 /* ===== END HPDQ GOOGLE APPS SCRIPT INTEGRATION ===== */
 
