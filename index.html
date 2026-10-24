@@ -1835,6 +1835,7 @@ function adminSetTab(tab,button){
   document.querySelectorAll('.admin-tab-panel').forEach(el=>el.classList.toggle('active',el.id==='adminPanel-'+tab));
   const panel=document.getElementById('adminPanel-'+tab);
   if(panel) panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  if(tab==='downloadRequests') reviewDocumentDownloadsInline();
 }
 
 
