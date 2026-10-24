@@ -771,7 +771,7 @@ function openProviderLecturersSection(){providerMenuOpen=true;navBuild();openLec
 
 function goSection(target,navId){go('dashboard');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===navId));setTimeout(()=>{const el=document.getElementById(target);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},60)}
 function go(id){if(!canOpenPage(id)){toast('Bạn không có quyền truy cập chức năng này');return}document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));const page=document.getElementById(id);if(!page)return;page.classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));document.getElementById('crumb').textContent=page.querySelector('h1')?.textContent||'Quản trị hệ thống';renderAll()}
-function renderAll(){navBuild();renderDashboard();renderMy();renderAssignments();renderUsers();renderProviderTracking();if(document.getElementById('trainingNeedsTable'))renderTrainingNeeds();const cb=document.getElementById('tcCategoriesBtn');if(cb)cb.style.display=isAdminUser()?'':'none';}
+function renderAll(){navBuild();renderDashboard();renderMy();renderAssignments();renderUsers();renderProviderTracking();if(document.getElementById('trainingNeedsTable'))renderTrainingNeeds();const cb=document.getElementById('tcCategoriesBtn');if(cb)cb.style.display=isAdminUser()?'':'none';refreshDocumentDownloadControls();}
 function visibleAssignments(){return isAdminUser()?assignments:assignments.filter(a=>hasWorkForUser(a,currentUser?.username))}
 function renderDashboard(){
  const allVisible=visibleAssignments();
@@ -869,7 +869,7 @@ async function createOrdinaryTaskUI(){
 }
 function taskFileList(files){
  if(!(files||[]).length)return '<div style="color:var(--muted);font-size:10px">Không có file đính kèm.</div>';
- return '<div class="task-file-list">'+files.map((f)=>{const id=String(f.driveFileId||f.id||"");const title=f.title||f.name||"File đính kèm";const controls=id?'<button class="btn light" onclick="openSecureDocument(\''+xhtml(id)+'\',\''+xhtml(title)+'\')">Xem trực tiếp</button> <button class="btn light" onclick="requestDocumentDownloadUI(\''+xhtml(id)+'\',\''+xhtml(title)+'\')">Tải xuống · Xin duyệt</button>':'<span class="badge warn">Chưa có mã file an toàn</span>';return '<div class="task-file-item"><span>📎 '+xhtml(title)+'<div style="margin-top:6px">'+controls+'</div></span><small>'+Math.max(1,Math.round(Number(f.size||0)/1024))+' KB</small></div>'}).join('')+'</div>';
+ return '<div class="task-file-list">'+files.map((f)=>{const id=String(f.driveFileId||f.id||"");const title=f.title||f.name||"File đính kèm";const controls=id?'<button class="btn light" onclick="openSecureDocument(\\''+xhtml(id)+'\\',\\''+xhtml(title)+'\\')">Xem trực tiếp</button> <span class="download-control" data-download-file="'+xhtml(id)+'" data-download-title="'+xhtml(title)+'"><button class="btn light" onclick="requestDocumentDownloadUI(\\''+xhtml(id)+'\\',\\''+xhtml(title)+'\\')">Đang kiểm tra…</button><small class="download-control-note" style="display:block;margin-top:4px;color:var(--muted)"></small></span>':'<span class="badge warn">Chưa có mã file an toàn</span>';return '<div class="task-file-item"><span>📎 '+xhtml(title)+'<div style="margin-top:6px">'+controls+'</div></span><small>'+Math.max(1,Math.round(Number(f.size||0)/1024))+' KB</small></div>'}).join('')+'</div>';
 }
 function openOrdinaryTask(taskId){
  const t=(ordinaryTasks||[]).find(x=>x.id===taskId);if(!t){toast('Không tìm thấy công việc.');return;}
@@ -1648,7 +1648,25 @@ function renderSavedAttachments(containerId,raw){const el=document.getElementByI
 function secureFileUrl(fileId,mode){return "https://trainhpdq.onrender.com/secure-file/"+encodeURIComponent(fileId)+"/"+mode+"?token="+encodeURIComponent(sessionToken||"");}
 function openSecureDocument(fileId,title){const url=secureFileUrl(fileId,"view");modal("Xem hồ sơ · "+xhtml(title),'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px"><span class="badge blue">Xem trực tiếp · Không mở Drive</span>'+(isAdminUser()?'<button class="btn light" onclick="reviewDocumentDownloadsUI()">Quản lý yêu cầu tải</button>':'')+'</div><iframe title="Trình xem hồ sơ" src="'+url+'" style="width:100%;height:70vh;border:1px solid var(--line);border-radius:8px;background:#fff"></iframe><div style="text-align:right;margin-top:10px"><button class="btn light" onclick="closeModal()">Đóng</button></div>');}
 function downloadOwnDocument(fileId){window.open(secureFileUrl(fileId,"download"),"_blank","noopener");}
-async function requestDocumentDownloadUI(fileId,title){const reason=prompt("Nhập lý do cần tải hồ sơ: "+title);if(reason===null)return;if(!reason.trim()){toast("Vui lòng nhập lý do yêu cầu tải.");return;}try{const r=await gsCall("requestDocumentDownload",{fileId,reason:reason.trim()});if(!r||!r.ok)throw new Error(r?.error||"Không gửi được yêu cầu");toast(r.data?.alreadyPending?"Yêu cầu đã được gửi trước đó và đang chờ Admin duyệt.":"Đã gửi yêu cầu");}catch(e){toast("Lỗi: "+(e.message||e));}}
+
+let documentDownloadCountdownTimer=null;
+async function refreshDocumentDownloadControls(){
+ const controls=[...document.querySelectorAll('.download-control[data-download-file]')];if(!controls.length)return;
+ const cache=new Map();
+ for(const el of controls){
+  const fileId=el.dataset.downloadFile||'',btn=el.querySelector('button'),note=el.querySelector('.download-control-note');if(!fileId||!btn)continue;
+  try{
+   let d=cache.get(fileId);if(d===undefined){const r=await gsCall('getDocumentDownloadStatus',{fileId});if(!r||!r.ok)throw new Error(r?.error||'Không kiểm tra được trạng thái');d=r.data||null;cache.set(fileId,d);}
+   if(d&&d.TRANG_THAI==='Chờ duyệt'){btn.disabled=true;btn.textContent='Đang chờ duyệt';btn.onclick=null;el.dataset.expiresAt='';if(note)note.textContent='Đang có phiếu chờ duyệt';}
+   else if(d&&d.TRANG_THAI==='Đã duyệt'&&Number(d.remainingSeconds)>0){btn.disabled=false;btn.textContent='Tải xuống · '+formatDownloadCountdown(d.remainingSeconds);btn.onclick=()=>downloadApprovedDocument(fileId,el);el.dataset.expiresAt=String(Date.parse(d.THOI_DIEM_HET_HAN||'')||Date.now()+Number(d.remainingSeconds)*1000);if(note)note.textContent='Đã được duyệt';}
+   else {btn.disabled=false;btn.textContent='Tải xuống · Xin duyệt';btn.onclick=()=>requestDocumentDownloadUI(fileId,el.dataset.downloadTitle||'Hồ sơ');el.dataset.expiresAt='';if(note)note.textContent=d&&d.TRANG_THAI==='Từ chối'?'Yêu cầu trước đã bị từ chối. Có thể gửi yêu cầu mới.':d&&d.TRANG_THAI==='Đã duyệt'?'Quyền tải đã hết hạn. Gửi yêu cầu mới nếu cần.':'';}
+  }catch(e){btn.disabled=false;btn.textContent='Tải xuống · Xin duyệt';btn.onclick=()=>requestDocumentDownloadUI(fileId,el.dataset.downloadTitle||'Hồ sơ');if(note)note.textContent='Chưa kiểm tra được trạng thái tải.';}
+ }
+ if(!documentDownloadCountdownTimer)documentDownloadCountdownTimer=setInterval(()=>{document.querySelectorAll('.download-control[data-expires-at]').forEach(el=>{const exp=Number(el.dataset.expiresAt||0),btn=el.querySelector('button'),note=el.querySelector('.download-control-note'),remaining=Math.ceil((exp-Date.now())/1000);if(!btn||!exp)return;if(remaining>0){btn.textContent='Tải xuống · '+formatDownloadCountdown(remaining);}else{btn.textContent='Tải xuống · Xin duyệt';btn.onclick=()=>requestDocumentDownloadUI(el.dataset.downloadFile,el.dataset.downloadTitle||'Hồ sơ');el.dataset.expiresAt='';if(note)note.textContent='Quyền tải đã hết hạn. Gửi yêu cầu mới nếu cần.';}});},1000);
+}
+function formatDownloadCountdown(seconds){const s=Math.max(0,Number(seconds)||0);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function downloadApprovedDocument(fileId,el){const exp=Number(el?.dataset.expiresAt||0);if(!exp||exp<=Date.now()){toast('Quyền tải đã hết hạn.');refreshDocumentDownloadControls();return;}window.open(secureFileUrl(fileId,'download'),'_blank','noopener');}
+async function requestDocumentDownloadUI(fileId,title){const reason=prompt("Nhập lý do cần tải hồ sơ: "+title);if(reason===null)return;if(!reason.trim()){toast("Vui lòng nhập lý do yêu cầu tải.");return;}try{const r=await gsCall("requestDocumentDownload",{fileId,reason:reason.trim()});if(!r||!r.ok)throw new Error(r?.error||"Không gửi được yêu cầu");toast(r.data?.alreadyPending?"Yêu cầu đã được gửi trước đó và đang chờ Admin duyệt.":"Đã gửi yêu cầu");await refreshDocumentDownloadControls();}catch(e){toast("Lỗi: "+(e.message||e));}}
 async function reviewDocumentDownloadsInline(){
  const host=document.getElementById("downloadRequestsInlineList");if(!host)return;
  if(!isAdminUser()){host.textContent="Chỉ Admin được xem yêu cầu tải hồ sơ.";return;}
