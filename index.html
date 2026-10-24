@@ -1686,17 +1686,18 @@ function addContractAttachmentRow(name=''){
 async function saveTrainingContractDo(providerId,id){
   const from=document.getElementById('hd_from').value,to=document.getElementById('hd_to').value;
   if(from&&to&&from>to){toast('Hiệu lực từ không được sau hiệu lực đến');return;}
+  const pendingContractAttachmentRows=[...document.querySelectorAll('#hd_attachment_rows > div')];
   const managerUnitId=document.getElementById('hd_manager_unit')?.value||'';const managerUnit=contractManagerUnits.find(u=>String(u.id)===String(managerUnitId));const b={hopDongId:id||'',donViDaoTaoId:providerId,donViQuanLyHopDongId:managerUnitId,tenDonViQuanLyHopDong:managerUnit?.name||'',soHopDong:document.getElementById('hd_no').value.trim(),tenHopDong:document.getElementById('hd_name').value.trim(),ngayHopDong:document.getElementById('hd_date').value,ngayHieuLucTu:from,ngayHieuLucDen:to,giaTriHopDong:document.getElementById('hd_value').value.trim(),loaiHopDong:document.getElementById('hd_type').value.trim(),nguoiPhuTrach:document.getElementById('hd_owner').value,trangThai:document.getElementById('hd_status').value,ghiChu:document.getElementById('hd_note').value};
   if(!b.soHopDong||!b.tenHopDong){toast('Vui lòng nhập số và tên hợp đồng');return;}if(!b.donViQuanLyHopDongId){toast('Vui lòng chọn công ty quản lý hợp đồng');return;}
-  modal(id?'Đang cập nhật hợp đồng':'Đang khởi tạo hợp đồng',`<div style="text-align:center;padding:28px 18px"><div style="font-size:30px;margin-bottom:12px">⏳</div><b style="font-size:14px;color:var(--navy)">Vui lòng chờ trong giây lát...</b><p>Hệ thống đang lưu thông tin hợp đồng${document.querySelectorAll('#hd_attachment_rows > div').length?' và tải hồ sơ đính kèm':''}. Không đóng trang trong lúc xử lý.</p><div class="progress" style="max-width:360px;margin:18px auto"><i style="width:45%;animation:fade 1s infinite alternate"></i></div></div>`);
+  modal(id?'Đang cập nhật hợp đồng':'Đang khởi tạo hợp đồng',`<div style="text-align:center;padding:28px 18px"><div style="font-size:30px;margin-bottom:12px">⏳</div><b style="font-size:14px;color:var(--navy)">Vui lòng chờ trong giây lát...</b><p>Hệ thống đang lưu thông tin hợp đồng${pendingContractAttachmentRows.length?' và tải hồ sơ đính kèm':''}. Không đóng trang trong lúc xử lý.</p><div class="progress" style="max-width:360px;margin:18px auto"><i style="width:45%;animation:fade 1s infinite alternate"></i></div></div>`);
   try{
     const r=await gsCall('saveTrainingContract',b);
     if(!r||!r.ok)throw new Error(r?.error||'Không lưu được hợp đồng');
     const savedContractId=r.data?.HOP_DONG_ID||id;
-    if(document.querySelectorAll('#hd_attachment_rows > div').length)await uploadPendingAttachmentRows(document.querySelectorAll('#hd_attachment_rows > div'),providerId,savedContractId);
+    if(pendingContractAttachmentRows.length)await uploadPendingAttachmentRows(pendingContractAttachmentRows,providerId,savedContractId);
     await refreshFromServerV2();
     openProviderContracts(providerId);
-    modal('Thành công',`<div style="text-align:center;padding:28px 18px"><div style="font-size:42px;color:#16864a;margin-bottom:10px">✓</div><b style="font-size:16px;color:var(--navy)">${id?'Cập nhật hợp đồng thành công':'Tạo hợp đồng thành công'}!</b><p>Thông tin hợp đồng đã được lưu${document.querySelectorAll('#hd_attachment_rows > div').length?' cùng hồ sơ đính kèm':''}.</p><button class="btn primary" onclick="closeModal()">Đóng</button></div>`);
+    modal('Thành công',`<div style="text-align:center;padding:28px 18px"><div style="font-size:42px;color:#16864a;margin-bottom:10px">✓</div><b style="font-size:16px;color:var(--navy)">${id?'Cập nhật hợp đồng thành công':'Tạo hợp đồng thành công'}!</b><p>Thông tin hợp đồng đã được lưu${pendingContractAttachmentRows.length?' cùng hồ sơ đính kèm':''}.</p><button class="btn primary" onclick="closeModal()">Đóng</button></div>`);
   }catch(e){
     modal('Chưa hoàn tất',`<div style="text-align:center;padding:24px 18px"><div style="font-size:38px;color:#c63b3b;margin-bottom:10px">!</div><b style="font-size:15px">Không thể lưu hợp đồng</b><p>${xhtml(e.message||e)}</p><button class="btn light" onclick="closeModal()">Đóng</button></div>`);
   }
