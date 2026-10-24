@@ -739,7 +739,29 @@ function ensureNotificationCenter(){let el=document.getElementById("notification
 function toggleNotificationCenter(){notificationCenterOpen=!notificationCenterOpen;const el=ensureNotificationCenter();el.style.display=notificationCenterOpen?"block":"none";if(notificationCenterOpen)loadUserNotifications(true);}
 async function loadUserNotifications(showErrors=false){if(!currentUser)return;try{const r=await gsCall("listUserNotifications",{});if(!r||!r.ok)throw new Error(r?.error||"Không tải được thông báo");notificationCache=Array.isArray(r.data)?r.data:[];const unread=notificationCache.filter(n=>!n.DA_DOC).length;const badge=document.getElementById("notificationUnreadCount");if(badge)badge.textContent=unread>99?"99+":String(unread);if(notificationCenterOpen)renderNotificationCenter();}catch(e){if(showErrors)toast("Không tải được thông báo: "+(e.message||e));}}
 function renderNotificationCenter(){const el=ensureNotificationCenter();const items=notificationCache;el.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><b>Thông báo</b><div><button class="btn light" onclick="loadUserNotifications(true)">↻ Làm mới</button> <button class="btn light" onclick="toggleNotificationCenter()">×</button></div></div>'+(items.length?items.map(n=>'<div class="notification-item '+(!n.DA_DOC?'unread':'')+'" onclick="openUserNotification(\''+xhtml(n.NOTIFICATION_ID)+'\')"><b>'+xhtml(n.TIEU_DE||"Thông báo")+'</b><div>'+xhtml(n.NOI_DUNG||"")+'</div><small>'+xhtml(n.CREATED_AT||"")+'</small></div>').join(""):'<div class="note" style="margin-top:12px">Chưa có thông báo mới.</div>');}
-async function openUserNotification(id){const n=notificationCache.find(x=>String(x.NOTIFICATION_ID)===String(id));if(!n)return;try{await gsCall("markUserNotificationRead",{id});n.DA_DOC=true;}catch(e){}renderNotificationCenter();if(n.LINK)try{const target=document.querySelector(n.LINK);if(target)target.scrollIntoView({behavior:"smooth",block:"center"});}catch(e){}}
+async function openUserNotification(id){
+ const n=notificationCache.find(x=>String(x.NOTIFICATION_ID)===String(id));if(!n)return;
+ try{await gsCall("markUserNotificationRead",{id});n.DA_DOC=true;}catch(e){}
+ notificationCenterOpen=false;const panel=ensureNotificationCenter();panel.style.display="none";renderNotificationCenter();
+ const title=String(n.TIEU_DE||"").toLowerCase(),message=String(n.NOI_DUNG||"").toLowerCase(),link=String(n.LINK||"");
+ if((title.includes("yêu cầu tải hồ sơ")||title.includes("yêu cầu tải tài liệu")||message.includes("yêu cầu tải hồ sơ mới"))&&isAdminUser()){
+   await reviewDocumentDownloadsUI();return;
+ }
+ if(title.includes("nhiệm vụ mới")||title.includes("công việc mới")||link==="#mywork"){
+   go("mywork");return;
+ }
+ if(link){
+   if(link.startsWith("#")&&link.length>1){
+     const route=link.slice(1);
+     try{if(typeof go==="function"){go(route);return;}}catch(e){}
+     try{const target=document.querySelector(link);if(target){target.scrollIntoView({behavior:"smooth",block:"center"});return;}}catch(e){}
+   }else if(link.startsWith("https://")||link.startsWith("http://")){window.open(link,"_blank","noopener");return;}
+   else{
+     try{const target=document.querySelector(link);if(target){target.scrollIntoView({behavior:"smooth",block:"center"});return;}}catch(e){}
+   }
+ }
+ toast("Đã đánh dấu thông báo là đã đọc.");
+}
 async function sendUserNotification(recipient,title,message,type="info",link=""){try{return await gsCall("createUserNotification",{recipient,title,message,type,link});}catch(e){console.warn("Notification failed",e);return null;}}
 function startNotificationPolling(){if(notificationPollHandle)clearInterval(notificationPollHandle);loadUserNotifications();notificationPollHandle=setInterval(()=>loadUserNotifications(),30000);}
 function doLogin(){let u=document.getElementById('lu').value.trim(),p=document.getElementById('lp').value;let x=users.find(a=>a.username===u&&a.password===p&&a.status==='Hoạt động');if(!x){toast('Sai tài khoản/mật khẩu');return}currentUser=x;startNotificationPolling();document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('userName').textContent=x.name+' · '+x.username;document.getElementById('avatar').textContent=x.username.slice(0,2).toUpperCase();log('Đăng nhập','Hệ thống','Đăng nhập thành công');renderAll();go(x.role==='Admin'?'dashboard':'mywork')}
