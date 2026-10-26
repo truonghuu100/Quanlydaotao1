@@ -1700,7 +1700,47 @@ function renderSavedAttachments(containerId,raw){
  refreshDocumentDownloadControls();
 }
 function secureFileUrl(fileId,mode){return "https://trainhpdq.onrender.com/secure-file/"+encodeURIComponent(fileId)+"/"+mode+"?token="+encodeURIComponent(sessionToken||"");}
-function openSecureDocument(fileId,title){const url=secureFileUrl(fileId,"view");modal("Xem hồ sơ · "+xhtml(title),'<div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin-bottom:10px">'+(isAdminUser()?'<button class="btn light" onclick="reviewDocumentDownloadsUI()">Quản lý yêu cầu tải</button>':'')+'</div><iframe title="Trình xem hồ sơ" src="'+url+'" style="width:100%;height:70vh;border:1px solid var(--line);border-radius:8px;background:#fff"></iframe><div style="text-align:right;margin-top:10px"><button class="btn light" onclick="closeModal()">Đóng</button></div>');}
+let securePdfJsLoading=null,securePdfDocument=null,securePdfScale=1,securePdfPage=1,securePdfRenderToken=0;
+function ensureSecurePdfJs(){
+ if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);
+ if(securePdfJsLoading)return securePdfJsLoading;
+ securePdfJsLoading=new Promise((resolve,reject)=>{
+  const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.onload=()=>{if(!window.pdfjsLib){reject(new Error('Không tải được thư viện xem PDF.'));return;}window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';resolve(window.pdfjsLib);};
+  s.onerror=()=>reject(new Error('Không tải được thư viện xem PDF.'));document.head.appendChild(s);
+ });
+ return securePdfJsLoading;
+}
+async function renderSecurePdf(){
+ const token=++securePdfRenderToken,doc=securePdfDocument,host=document.getElementById('securePdfPages');
+ if(!doc||!host)return;
+ host.innerHTML='<div style="padding:24px;color:#536579;text-align:center">Đang hiển thị hồ sơ…</div>';
+ try{
+  const width=Math.max(320,(host.clientWidth||800)-28),pages=[];
+  for(let n=1;n<=doc.numPages;n++){
+   const page=await doc.getPage(n);if(token!==securePdfRenderToken)return;
+   const base=page.getViewport({scale:1}),scale=Math.min(width/base.width,1.8)*securePdfScale,viewport=page.getViewport({scale});
+   const canvas=document.createElement('canvas');canvas.style.cssText='display:block;max-width:100%;height:auto;margin:0 auto 14px;background:#fff;box-shadow:0 1px 5px #0002';canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);canvas.setAttribute('aria-label','Trang '+n+' / '+doc.numPages);
+   pages.push(canvas);await page.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
+  }
+  if(token!==securePdfRenderToken)return;host.replaceChildren(...pages);
+  const info=document.getElementById('securePdfPageInfo');if(info)info.textContent='Tổng '+doc.numPages+' trang';
+ }catch(e){if(token===securePdfRenderToken)host.innerHTML='<div style="padding:24px;color:#b42318;text-align:center">Không thể hiển thị hồ sơ PDF. '+xhtml(e.message||'')+'</div>';}
+}
+async function openSecureDocument(fileId,title){
+ securePdfDocument=null;securePdfPage=1;securePdfScale=1;
+ const url=secureFileUrl(fileId,'view');
+ modal('Xem hồ sơ · '+xhtml(title),
+ '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">'+
+ '<div style="display:flex;align-items:center;gap:8px"><button class="btn light" id="securePdfZoomOut" type="button">−</button><span id="securePdfZoomLabel">100%</span><button class="btn light" id="securePdfZoomIn" type="button">+</button><span id="securePdfPageInfo" style="color:var(--muted);font-size:13px">Đang tải…</span></div>'+
+ (isAdminUser()?'<button class="btn light" onclick="reviewDocumentDownloadsUI()">Quản lý yêu cầu tải</button>':'')+
+ '</div><div id="securePdfPages" style="height:68vh;overflow:auto;border:1px solid var(--line);border-radius:8px;background:#e8edf3;padding:14px;text-align:center"><div style="padding:24px;color:#536579">Đang tải hồ sơ…</div></div>'+
+ '<div style="text-align:right;margin-top:10px"><button class="btn light" onclick="closeModal()">Đóng</button></div>');
+ document.getElementById('securePdfZoomOut').onclick=()=>{securePdfScale=Math.max(.5,Math.round((securePdfScale-.1)*10)/10);document.getElementById('securePdfZoomLabel').textContent=Math.round(securePdfScale*100)+'%';renderSecurePdf();};
+ document.getElementById('securePdfZoomIn').onclick=()=>{securePdfScale=Math.min(2,Math.round((securePdfScale+.1)*10)/10);document.getElementById('securePdfZoomLabel').textContent=Math.round(securePdfScale*100)+'%';renderSecurePdf();};
+ try{const pdfjs=await ensureSecurePdfJs();const task=pdfjs.getDocument({url,withCredentials:false});securePdfDocument=await task.promise;if(!document.getElementById('securePdfPages'))return;await renderSecurePdf();}
+ catch(e){const host=document.getElementById('securePdfPages');if(host)host.innerHTML='<div style="padding:24px;color:#b42318;text-align:center">Không thể mở hồ sơ. '+xhtml(e.message||'Vui lòng thử lại.')+'</div>';}
+}
 function downloadOwnDocument(fileId){window.open(secureFileUrl(fileId,"download"),"_blank","noopener");}
 
 let documentDownloadCountdownTimer=null,documentDownloadStatusPollTimer=null,documentDownloadRefreshBusy=false;
