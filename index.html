@@ -1557,7 +1557,7 @@ function exportProviderTracking(){const rows=ptFilteredContracts(),header=['Mã 
 
 function providerName(id){const p=trainingProviders.find(x=>x.id===id)||trainingProviders.find(x=>x.name===id);return p?.name||id||'—';}
 function mapCourseSubject(x){return {id:x.MON_ID||'',jobId:x.CONGVIEC_ID||'',stt:Number(x.STT||0),name:x.TEN_MON||'',type:x.LOAI||'Lý thuyết',from:x.NGAY_BAT_DAU||'',to:x.NGAY_KET_THUC||'',hours:Number(x.SO_GIO||0),lecturerId:x.GIANG_VIEN_ID||'',location:x.DIA_DIEM||'',status:x.TRANG_THAI||'Chưa bắt đầu',result:x.KET_QUA_TONG||'',note:x.GHI_CHU||''};}
-function mapLecturer(x){return {id:x.GIANG_VIEN_ID||'',code:x.MA_GV||'',name:x.HO_TEN||'',gender:x.GIOI_TINH||'',academic:x.HOC_HAM_HOC_VI||'',providerId:x.DON_VI_DAO_TAO_ID||'',org:x.DON_VI_CONG_TAC||'',specialty:x.CHUYEN_MON||'',type:x.LOAI_GV||'Bên ngoài',phone:x.SO_DIEN_THOAI||'',email:x.EMAIL||'',safetyExpiry:x.THOI_HAN_THE_AT_NHOM3||'',note:x.GHI_CHU||'',status:x.TRANG_THAI||'Hoạt động'};}
+function mapLecturer(x){return {id:x.GIANG_VIEN_ID||'',code:x.MA_GV||'',name:x.HO_TEN||'',gender:x.GIOI_TINH||'',academic:x.HOC_HAM_HOC_VI||'',providerId:x.DON_VI_DAO_TAO_ID||'',org:x.DON_VI_CONG_TAC||'',specialty:x.CHUYEN_MON||'',type:x.LOAI_GV||'Bên ngoài',phone:x.SO_DIEN_THOAI||'',email:x.EMAIL||'',safetyExpiry:x.THOI_HAN_THE_AT_NHOM3||'',note:x.GHI_CHU||'',attachments:x.HOSO_DINH_KEM_JSON||'[]',status:x.TRANG_THAI||'Hoạt động'};}
 function mapCourseStudent(x){return {id:x.ID||'',jobId:x.CONGVIEC_ID||'',emp:x.MA_NV||'',name:x.HO_TEN||'',unit:x.DON_VI_ID||'',title:x.CHUC_DANH||'',role:x.VAI_TRO||'Học viên',status:x.TRANG_THAI_THAM_GIA||'Đang học',result:x.KET_QUA||'',score:x.DIEM??'',grade:x.XEP_LOAI||'',cert:x.CHUNG_CHI||'',certDate:x.NGAY_CAP||'',note:x.GHI_CHU||''};}
 function mapCourseResult(x){return {id:x.ID||'',jobId:x.CONGVIEC_ID||'',subjectId:x.MON_ID||'',emp:x.MA_NV||'',score:x.DIEM??'',result:x.KET_QUA||'',note:x.GHI_CHU||''};}
 function mapJobV2(j, stepRows, courseRows, matrixRows, subjectRows, studentRows, resultRows){
@@ -1612,8 +1612,64 @@ async function openLecturerMaster(){
 }
 
 function nextLecturerCodeClient(){let max=0;lecturers.forEach(g=>{const m=String(g.code||'').match(/^GV(\d+)$/i);if(m)max=Math.max(max,Number(m[1]));});return 'GV'+String(max+1).padStart(4,'0');}
-async function editLecturer(id){if(!isAdminUser()){toast('Chỉ Admin được khai báo hoặc sửa giảng viên');return}const g=lecturers.find(x=>x.id===id)||{};const code=g.code||nextLecturerCodeClient();const providerOptions='<option value="">Chọn đơn vị đã có hợp đồng</option>'+trainingProviders.filter(p=>p.active&&trainingContracts.some(c=>c.providerId===p.id)).map(p=>`<option value="${xhtml(p.id)}" ${(g.providerId===p.id||(!g.providerId&&g.org===p.name))?'selected':''}>${xhtml(p.name)}</option>`).join('');modal((id?'Sửa':'Thêm')+' giảng viên',`<div class="form"><div class="field"><label>Mã giảng viên</label><input id="gv_code" value="${xhtml(code)}" readonly title="Mã tự động cấp nối tiếp"></div><div class="field"><label>Họ tên *</label><input id="gv_name" value="${xhtml(g.name||'')}" placeholder="Nguyễn Văn A"></div><div class="field"><label>Giới tính</label><select id="gv_gender"><option value="">Chọn giới tính</option><option ${g.gender==='Nam'?'selected':''}>Nam</option><option ${g.gender==='Nữ'?'selected':''}>Nữ</option><option ${g.gender==='Khác'?'selected':''}>Khác</option></select></div><div class="field"><label>Học hàm, học vị</label><input id="gv_academic" value="${xhtml(g.academic||'')}" placeholder="Ví dụ: ThS., TS., PGS.TS."></div><div class="field"><label>Chuyên môn</label><input id="gv_spec" value="${xhtml(g.specialty||'')}" placeholder="Chuyên môn giảng dạy"></div><div class="field"><label>Đơn vị công tác</label><select id="gv_provider">${providerOptions}</select><small style="display:block;color:var(--muted);margin-top:5px;font-size:9px">Chỉ chọn đơn vị đào tạo đã được khai báo trong danh mục.</small></div><div class="field"><label>Loại GV</label><select id="gv_type"><option ${g.type==='Nội bộ'?'selected':''}>Nội bộ</option><option ${g.type==='Bên ngoài'||!g.type?'selected':''}>Bên ngoài</option></select></div><div class="field"><label>Số điện thoại</label><input id="gv_phone" value="${xhtml(g.phone||'')}" inputmode="tel"></div><div class="field"><label>Email</label><input id="gv_email" type="email" value="${xhtml(g.email||'')}" placeholder="ten@donvi.vn"></div><div class="field"><label>Thời hạn thẻ an toàn nhóm 3</label><input id="gv_safety" type="date" value="${xhtml(g.safetyExpiry||'')}"><small style="display:block;color:var(--muted);margin-top:5px;font-size:9px">Để trống nếu không áp dụng.</small></div><div class="field full"><label>Ghi chú</label><textarea id="gv_note" placeholder="Thông tin bổ sung">${xhtml(g.note||'')}</textarea></div></div><div style="text-align:right;margin-top:12px"><button class="btn primary" onclick="saveLecturerDo('${id}')">Lưu giảng viên</button></div>`);}
-async function saveLecturerDo(id){if(!isAdminUser()){toast('Chỉ Admin được khai báo hoặc sửa giảng viên');return}const providerId=document.getElementById('gv_provider').value;const selectedProvider=trainingProviders.find(p=>p.id===providerId);const b={giangVienId:id,maGv:document.getElementById('gv_code').value.trim(),hoTen:document.getElementById('gv_name').value.trim(),gioiTinh:document.getElementById('gv_gender').value,hocHamHocVi:document.getElementById('gv_academic').value.trim(),donViDaoTaoId:providerId,donViCongTac:selectedProvider?.name||'',chuyenMon:document.getElementById('gv_spec').value.trim(),loaiGv:document.getElementById('gv_type').value,soDienThoai:document.getElementById('gv_phone').value.trim(),email:document.getElementById('gv_email').value.trim(),thoiHanTheATNhom3:document.getElementById('gv_safety').value,ghiChu:document.getElementById('gv_note').value.trim(),trangThai:'Hoạt động'};if(!b.hoTen){toast('Vui lòng nhập họ tên');return}try{const r=await gsCall('saveLecturer',b);if(!r||!r.ok)throw new Error(r?.error||'Không lưu được giảng viên');await refreshFromServerV2();openLecturerMaster();toast('Đã lưu giảng viên ✓');}catch(e){toast('Lỗi: '+(e.message||e));}}
+async function editLecturer(id){
+ if(!isAdminUser()){toast('Chỉ Admin được khai báo hoặc sửa giảng viên');return}
+ const g=lecturers.find(x=>x.id===id)||{},code=g.code||nextLecturerCodeClient();
+ const providerOptions='<option value="">Chọn đơn vị đã có hợp đồng</option>'+trainingProviders.filter(p=>p.active&&trainingContracts.some(c=>c.providerId===p.id)).map(p=>`<option value="${xhtml(p.id)}" ${(g.providerId===p.id||(!g.providerId&&g.org===p.name))?'selected':''}>${xhtml(p.name)}</option>`).join('');
+ const body=`<div class="form">
+ <div class="field"><label>Mã giảng viên</label><input id="gv_code" value="${xhtml(code)}" readonly title="Mã tự động cấp nối tiếp"></div><div class="field"><label>Họ tên *</label><input id="gv_name" value="${xhtml(g.name||'')}" placeholder="Nguyễn Văn A"></div>
+ <div class="field"><label>Giới tính</label><select id="gv_gender"><option value="">Chọn giới tính</option><option ${g.gender==='Nam'?'selected':''}>Nam</option><option ${g.gender==='Nữ'?'selected':''}>Nữ</option><option ${g.gender==='Khác'?'selected':''}>Khác</option></select></div><div class="field"><label>Học hàm, học vị</label><input id="gv_academic" value="${xhtml(g.academic||'')}" placeholder="Ví dụ: ThS., TS., PGS.TS."></div>
+ <div class="field"><label>Chuyên môn</label><input id="gv_spec" value="${xhtml(g.specialty||'')}" placeholder="Chuyên môn giảng dạy"></div><div class="field"><label>Đơn vị công tác</label><select id="gv_provider">${providerOptions}</select><small style="display:block;color:var(--muted);margin-top:5px;font-size:9px">Chỉ chọn đơn vị đào tạo đã được khai báo trong danh mục.</small></div>
+ <div class="field"><label>Loại GV</label><select id="gv_type"><option ${g.type==='Nội bộ'?'selected':''}>Nội bộ</option><option ${g.type==='Bên ngoài'||!g.type?'selected':''}>Bên ngoài</option></select></div><div class="field"><label>Số điện thoại</label><input id="gv_phone" value="${xhtml(g.phone||'')}" inputmode="tel"></div>
+ <div class="field"><label>Email</label><input id="gv_email" type="email" value="${xhtml(g.email||'')}" placeholder="ten@donvi.vn"></div><div class="field"><label>Thời hạn thẻ an toàn nhóm 3</label><input id="gv_safety" type="date" value="${xhtml(g.safetyExpiry||'')}"><small style="display:block;color:var(--muted);margin-top:5px;font-size:9px">Để trống nếu không áp dụng.</small></div>
+ <div class="field full"><label>Hồ sơ giảng viên đính kèm</label><div id="gv_saved_files" style="display:grid;gap:7px;margin-bottom:9px"></div><div id="gv_pending_files" style="display:grid;gap:8px"></div><button type="button" class="btn light" style="margin-top:8px" onclick="addLecturerAttachmentRow()">＋ Thêm file hồ sơ</button><small style="display:block;color:var(--muted);margin-top:6px;font-size:10px">Có thể tải lên CV, bằng cấp/chứng chỉ, thẻ an toàn, quyết định hoặc hồ sơ liên quan. Tối đa 100 MB/file.</small></div>
+ <div class="field full"><label>Ghi chú</label><textarea id="gv_note" placeholder="Thông tin bổ sung">${xhtml(g.note||'')}</textarea></div>
+ </div><div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn primary" id="gv_save_btn" onclick="saveLecturerDo('${xhtml(id||'')}')">Lưu giảng viên</button></div>`;
+ modal((id?'Sửa':'Thêm')+' giảng viên',body);
+ renderSavedAttachments('gv_saved_files',g.attachments||'[]');
+}
+function addLecturerAttachmentRow(title=''){
+ const wrap=document.getElementById('gv_pending_files');if(!wrap)return;
+ const row=document.createElement('div');row.style.cssText='display:grid;grid-template-columns:minmax(120px,.8fr) minmax(160px,1.2fr) auto;gap:8px;align-items:center;padding:9px;border:1px solid var(--line);border-radius:9px;background:#f8fbff';
+ const name=document.createElement('input');name.type='text';name.placeholder='Tên hồ sơ (VD: Bằng tốt nghiệp)';name.value=title;
+ const fileWrap=document.createElement('div');fileWrap.style.cssText='display:grid;gap:4px;min-width:0';
+ const file=document.createElement('input');file.type='file';file.accept='.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.zip';
+ const picked=document.createElement('small');picked.style.cssText='color:var(--muted);overflow-wrap:anywhere';picked.textContent='Chưa chọn file';file.onchange=()=>picked.textContent=file.files?.[0]?.name||'Chưa chọn file';
+ fileWrap.append(file,picked);const del=document.createElement('button');del.type='button';del.className='btn light';del.textContent='Xóa';del.onclick=()=>row.remove();row.append(name,fileWrap,del);wrap.append(row);
+}
+async function uploadLecturerAttachment(file,title,lecturerId){
+ if(!file||!title)throw new Error('Mỗi hồ sơ phải có tên và file được chọn.');
+ if(!file.size||file.size>100*1024*1024)throw new Error('File “'+file.name+'” rỗng hoặc vượt quá 100 MB.');
+ const session=await gsCall('createTrainingLecturerUploadSession',{lecturerId,fileName:file.name,tenHoSo:title,mimeType:file.type||'application/octet-stream',size:file.size});
+ if(!session?.ok||!session.uploadKey)throw new Error(session?.error||'Không tạo được phiên tải hồ sơ giảng viên.');
+ let start=0,driveFileId='';
+ while(start<file.size){
+  const end=Math.min(start+(session.chunkSize||4*1024*1024),file.size),blob=file.slice(start,end);
+  const base64=await new Promise((resolve,reject)=>{const rd=new FileReader();rd.onload=()=>resolve(String(rd.result).split(',')[1]||'');rd.onerror=()=>reject(new Error('Không đọc được file '+file.name));rd.readAsDataURL(blob)});
+  const part=await gsCall('uploadTrainingLecturerFileChunk',{lecturerId,uploadKey:session.uploadKey,start,total:file.size,base64});
+  if(!part?.ok)throw new Error(part?.error||'Tải hồ sơ thất bại: '+file.name);start=end;if(part.done)driveFileId=part.driveFileId||'';
+ }
+ if(!driveFileId)throw new Error('Chưa xác nhận tải xong file '+file.name);
+ const fin=await gsCall('finalizeTrainingLecturerUpload',{lecturerId,uploadKey:session.uploadKey,driveFileId});
+ if(!fin?.ok||!fin.file)throw new Error(fin?.error||'Không ghi nhận được hồ sơ giảng viên.');
+ return fin.file;
+}
+async function saveLecturerDo(id){
+ if(!isAdminUser()){toast('Chỉ Admin được khai báo hoặc sửa giảng viên');return}
+ const providerId=document.getElementById('gv_provider').value,selectedProvider=trainingProviders.find(p=>p.id===providerId);
+ const b={giangVienId:id,maGv:document.getElementById('gv_code').value.trim(),hoTen:document.getElementById('gv_name').value.trim(),gioiTinh:document.getElementById('gv_gender').value,hocHamHocVi:document.getElementById('gv_academic').value.trim(),donViDaoTaoId:providerId,donViCongTac:selectedProvider?.name||'',chuyenMon:document.getElementById('gv_spec').value.trim(),loaiGv:document.getElementById('gv_type').value,soDienThoai:document.getElementById('gv_phone').value.trim(),email:document.getElementById('gv_email').value.trim(),thoiHanTheATNhom3:document.getElementById('gv_safety').value,ghiChu:document.getElementById('gv_note').value.trim(),trangThai:'Hoạt động'};
+ if(!b.hoTen){toast('Vui lòng nhập họ tên');return}
+ const pending=[...document.querySelectorAll('#gv_pending_files > div')].map(row=>({title:row.querySelector('input[type=text]')?.value.trim()||'',file:row.querySelector('input[type=file]')?.files?.[0]||null})).filter(x=>x.file);
+ for(const x of pending){if(!x.title){toast('Vui lòng nhập tên cho file '+x.file.name);return}if(!x.file.size||x.file.size>100*1024*1024){toast('File “'+x.file.name+'” rỗng hoặc vượt quá 100 MB.');return}}
+ const btn=document.getElementById('gv_save_btn');if(btn){btn.disabled=true;btn.textContent='Đang lưu…'}
+ modal('Đang lưu hồ sơ giảng viên',`<div style="text-align:center;padding:28px 18px"><div style="font-size:30px;margin-bottom:12px">⏳</div><b>Vui lòng chờ trong giây lát...</b><p>Đang lưu thông tin giảng viên${pending.length?' và tải hồ sơ đính kèm':''}. Vui lòng không đóng cửa sổ.</p></div>`);
+ try{
+  const r=await gsCall('saveLecturer',b);if(!r||!r.ok)throw new Error(r?.error||'Không lưu được giảng viên');
+  const savedId=r.data?.GIANG_VIEN_ID||id;if(!savedId)throw new Error('Đã lưu thông tin nhưng chưa nhận được mã giảng viên để đính kèm hồ sơ.');
+  for(const x of pending)await uploadLecturerAttachment(x.file,x.title,savedId);
+  await refreshFromServerV2();openLecturerMaster();toast('Đã lưu giảng viên'+(pending.length?' và hồ sơ đính kèm':'')+' ✓');
+ }catch(e){modal('Chưa hoàn tất',`<div style="padding:24px"><b>Không thể lưu đầy đủ hồ sơ giảng viên</b><p>${xhtml(e.message||e)}</p><p>Thông tin giảng viên có thể đã được lưu; hãy mở lại hồ sơ để kiểm tra trước khi thử lại.</p><div style="text-align:right"><button class="btn light" onclick="closeModal()">Đóng</button></div></div>`);}
+}
 function downloadStudentTemplate(id){
   if(typeof XLSX==='undefined'){toast('Chưa tải được thư viện Excel. Vui lòng thử lại.');return;}
   const headers=['STT','Mã NV','Họ tên','Đơn vị','Chức danh','Vai trò','Tình trạng','Kết quả','Điểm','Xếp loại','Chứng chỉ','Ngày cấp','Ghi chú'];
