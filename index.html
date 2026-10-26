@@ -855,7 +855,7 @@ function renderAssignments(){
  const visible=isAdminUser()?assignments:[];
  document.getElementById('assignTable').innerHTML=visible.map(a=>{const status=String(a.status||'');const cancelled=status==='Đã hủy';const completed=status==='Hoàn thành'||progress(a)===100;const statusText=cancelled?'Đã hủy':(completed?'Hoàn thành':(status==='Chờ xác định phương án triển khai'?status:'Đang thực hiện'));return `<tr><td>${xhtml(a.id)}</td><td><b>${xhtml(displayName(a))}</b></td><td>${xhtml(a.user)}</td><td>${a.start?vi(a.start):'—'} – ${a.end?vi(a.end):'—'}</td><td>${progress(a)}%</td><td>${a.steps?.length?`B${current(a)}/${a.steps.length}`:'Chưa khởi tạo'}</td><td><span class="badge ${cancelled?'red':(completed?'ok':'blue')}">${xhtml(statusText)}</span></td><td style="white-space:nowrap"><button class="btn light" onclick="openAdminDetail('${xhtml(a.id)}')">Xem</button> ${!cancelled&&!completed?`<button class="btn danger" onclick="openCancelJob('${xhtml(a.id)}')">Hủy giao việc</button>`:''} <button class="btn danger" onclick="openDeleteJob('${xhtml(a.id)}')">Xóa</button></td></tr>`}).join('')||'<tr><td colspan="8">Chưa có lớp được giao.</td></tr>';
  const tasks=isAdminUser()?(ordinaryTasks||[]):[];
- document.getElementById('ordinaryTaskTable').innerHTML=tasks.map(t=>{const rs=(ordinaryTaskReports||[]).filter(r=>r.taskId===t.id);return `<tr><td>${xhtml(t.id)}</td><td><b>${xhtml(t.content)}</b>${t.note?`<small style="display:block;color:var(--muted)">${xhtml(t.note)}</small>`:''}</td><td>${xhtml(t.assignee)}</td><td>${vi(t.deadline)}</td><td>${rs.length} lần</td><td><span class="badge ${String(t.status||'').startsWith('Hoàn thành')?'ok':'blue'}">${xhtml(t.status||'Đang thực hiện')}</span></td><td><button class="btn light" onclick="openOrdinaryTask('${t.id}')">Xem</button></td></tr>`;}).join('')||'<tr><td colspan="7">Chưa có công việc thông thường.</td></tr>';
+ document.getElementById('ordinaryTaskTable').innerHTML=tasks.map(t=>{const rs=(ordinaryTaskReports||[]).filter(r=>r.taskId===t.id);return `<tr><td>${xhtml(t.id)}</td><td><b>${xhtml(t.content)}</b>${t.note?`<small style="display:block;color:var(--muted)">${xhtml(t.note)}</small>`:''}</td><td>${xhtml(t.assignee)}</td><td>${vi(t.deadline)}</td><td>${rs.length} lần</td><td><span class="badge ${String(t.status||'').startsWith('Hoàn thành')?'ok':'blue'}">${xhtml(t.status||'Đang thực hiện')}</span></td><td style="white-space:nowrap"><button class="btn light" onclick="openOrdinaryTask('${xhtml(t.id)}')">Xem</button> <button class="btn danger" onclick="openDeleteOrdinaryTask('${xhtml(t.id)}')">Xóa</button></td></tr>`;}).join('')||'<tr><td colspan="7">Chưa có công việc thông thường.</td></tr>';
 }
 function openCancelJob(id){
  if(!isAdminUser()){toast('Chỉ Admin được hủy công việc');return}
@@ -879,6 +879,19 @@ async function confirmDeleteJob(id){
   const r=await gsCall('deleteJob',{id,actor:currentUser?.username||'system'});
   if(!r||!r.ok)throw new Error(typeof r?.error==='string'?r.error:(r?.error?.message||'Không xóa được nội dung.'));
   closeModal();toast('Đã xóa nội dung và dữ liệu liên quan.');await refreshFromServer();
+ }catch(e){toast('Chưa xóa được: '+(e.message||e));}
+}
+function openDeleteOrdinaryTask(id){
+ if(!isAdminUser()){toast('Chỉ Admin được xóa nội dung.');return;}
+ const t=(ordinaryTasks||[]).find(x=>String(x.id)===String(id));if(!t){toast('Không tìm thấy nhiệm vụ cần xóa.');return;}
+ modal('Xóa nhiệm vụ đã tạo',`<div class="note" style="border-color:#f3b5b5;background:#fff7f7;color:#8b1e1e"><b>Thao tác này không thể hoàn tác.</b><br>Xóa nhiệm vụ “${xhtml(t.content)}” cùng các báo cáo liên quan?</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn light" onclick="closeModal()">Không xóa</button><button class="btn danger" onclick="confirmDeleteOrdinaryTask('${xhtml(t.id)}')">Xác nhận xóa</button></div>`);
+}
+async function confirmDeleteOrdinaryTask(id){
+ if(!isAdminUser()){toast('Chỉ Admin được xóa nội dung.');return;}
+ try{
+  const r=await gsCall('deleteOrdinaryTask',{id,actor:currentUser?.username||'system'});
+  if(!r||!r.ok)throw new Error(typeof r?.error==='string'?r.error:(r?.error?.message||'Không xóa được nhiệm vụ.'));
+  closeModal();toast('Đã xóa nhiệm vụ và báo cáo liên quan.');await refreshFromServer();
  }catch(e){toast('Chưa xóa được: '+(e.message||e));}
 }
 
