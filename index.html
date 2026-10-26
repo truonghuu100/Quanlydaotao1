@@ -724,9 +724,9 @@ function plannedEnd(a){return a.steps&&a.steps.length?a.steps[a.steps.length-1].
 function workday(date,n){let d=new Date(date);let dir=n>=0?1:-1;let left=Math.abs(n);while(left){d.setDate(d.getDate()+dir);if(d.getDay()!==0)left--}return d}
 function iso(d){return d.toISOString().slice(0,10)}
 function vi(d){if(!d)return '—';return new Date(d+'T00:00:00').toLocaleDateString('vi-VN')}
-function progress(a){return Math.round(a.steps.filter(s=>s.status==='Hoàn thành').length/16*100)}
+function progress(a){const total=Math.max(1,(a.steps||[]).length);return Math.round((a.steps||[]).filter(s=>['Hoàn thành','Đã hoàn thành'].includes(s.status)).length/total*100)}
 function displayName(a){return a.confirm?.course?.trim()||a.name}
-function current(a){let s=a.steps.find(x=>x.status!=='Hoàn thành');return s?s.n:16}
+function current(a){let s=(a.steps||[]).find(x=>!['Hoàn thành','Đã hoàn thành'].includes(x.status));return s?s.n:(a.steps||[]).length||0}
 function stepUser(s,a){return s.performer||a.user}
 function hasWorkForUser(a,u){return a.user===u||a.steps.some(s=>stepUser(s,a)===u&&s.status!=='Hoàn thành')}
 function userOptions(selected){return users.filter(u=>u.status==='Hoạt động'&&u.role!=='Admin').map(u=>`<option value="${u.username}" ${u.username===selected?'selected':''}>${u.username} — ${u.name}</option>`).join('')}
@@ -2209,7 +2209,7 @@ async function saveImplementationPlan(id){
  const contractType=hasContract?'MO_LOP_HOP_DONG_NGUYEN_TAC':'MO_LOP_THUE_NGOAI';
  const patch={NHU_CAU_IDS_JSON:JSON.stringify(needIds),HOP_DONG_ID:contractId,NHU_CAU_BO_SUNG_SAU:needLater,HOP_DONG_BO_SUNG_SAU:contractLater,LOAI_CONGVIEC:contractType,TRANG_THAI:'Đang thực hiện',CHO_XAC_DINH_PHUONG_AN:false};
  try{
-  const r=await gsCall('updateJob',{id,patch,initializeWorkflow:!(a.steps&&a.steps.length),actor:currentUser?.username||'system'});
+  const r=await gsCall('updateJob',{id,patch,initializeWorkflow:true,actor:currentUser?.username||'system'});
   if(!r||!r.ok)throw new Error(r?.error||'Không lưu được phương án triển khai');
   a.needIds=needIds;a.contractId=contractId;a.needSupplementLater=needLater;a.contractSupplementLater=contractLater;a.status='Đang thực hiện';const selectedContract=(trainingContracts||[]).find(c=>String(c.id)===String(contractId));if(selectedContract?.providerId&&(!a.confirm?.provider||!trainingProviders.some(p=>p.id===a.confirm.provider)))a.confirm={...(a.confirm||{}),provider:selectedContract.providerId};
   await refreshFromServer();
