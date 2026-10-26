@@ -1252,7 +1252,8 @@ function modal(title,body){document.getElementById('mtitle').textContent=title;d
 let serverReady=false; let sessionToken='';
 // Persistent login: keep the session across F5, but expire after 30 minutes idle.
 const HPDQ_SESSION_KEY='HPDQ_TRAINING_LOGIN_SESSION_V1';
-const HPDQ_IDLE_LIMIT=30*60*1000;
+// Giữ đăng nhập cho đến khi người dùng chủ động đăng xuất; không tự hết hạn vì không hoạt động.
+const HPDQ_IDLE_LIMIT=Number.MAX_SAFE_INTEGER;
 let hpLastActivity=0, hpLastPersist=0, hpIdleTimer=null, hpActivityHandler=null;
 function hpSaveSessionActivity(force=false){
   if(!sessionToken||!currentUser)return;
@@ -1285,7 +1286,7 @@ async function hpExpireSession(){
 async function hpRestoreSession(){
   let saved=null;try{saved=JSON.parse(localStorage.getItem(HPDQ_SESSION_KEY)||'null');}catch(e){}
   if(!saved||!saved.token||!saved.username||!saved.lastActivityAt)return false;
-  if(Date.now()-Number(saved.lastActivityAt)>=HPDQ_IDLE_LIMIT){hpClearSavedSession();return false;}
+  // Không tự xóa phiên chỉ vì người dùng lâu ngày không hoạt động.
   sessionToken=String(saved.token);hpLastActivity=Number(saved.lastActivityAt);hpLastPersist=hpLastActivity;
   try{
     await loadServerState(saved.username);
