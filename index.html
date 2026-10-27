@@ -767,8 +767,10 @@ html,body{background:#f2f5fa!important;color:#0b1f41!important;font-family:Inter
 </section></main></div>
 <div id="modal" class="modal"><div class="modalbox"><div class="mh"><b id="mtitle">Thông tin</b><button class="close" onclick="closeModal()">×</button></div><div class="mb" id="mbody"></div></div></div><div id="toast" style="position:fixed;right:20px;bottom:20px;background:#173e69;color:#fff;padding:11px 15px;border-radius:8px;display:none;z-index:30;font-size:11px"></div>
 <script>
-// Use a global var to avoid temporal-dead-zone errors from legacy script initialization order.
+// Keep legacy training-needs data and option lists initialized before any handlers can use them.
 var trainingNeeds=[];
+var NEED_METHODS=['Mở lớp đào tạo tập trung','Hội thảo, trao đổi, chia sẻ kinh nghiệm'];
+var NEED_FIELDS=['An toàn lao động theo luật định','An toàn lao động khác','Cơ khí','Điện','Công nghệ','Nghiệp vụ khác'];
 let users=[{username:'admin',name:'Quản trị hệ thống',unit:'P.NS',role:'Admin',password:'123456',status:'Hoạt động',all:true,manageProviders:true},{username:'daotao',name:'Nhân viên đào tạo',unit:'P.NS',role:'Nhân viên đào tạo',password:'daotao123',status:'Hoạt động',all:false,manageProviders:false},{username:'manager',name:'Quản lý đơn vị',unit:'NM Cơ điện 1',role:'Quản lý đơn vị',password:'manager123',status:'Hoạt động',all:false,manageProviders:true}];
 let unitMaster=[{id:'DV01',name:'NM Cơ điện 1',active:true},{id:'DV02',name:'NM Cơ điện 2',active:true},{id:'DV03',name:'NM Luyện gang',active:true},{id:'DV04',name:'NM Luyện thép',active:true},{id:'DV05',name:'NM Nguyên liệu',active:true},{id:'DV06',name:'NM Luyện cốc',active:true},{id:'DV07',name:'P.ATMT',active:true},{id:'DV08',name:'Phòng Nhân sự',active:true}];
 let contractManagerUnits=[];
@@ -2225,8 +2227,7 @@ async function loadWorkflowTemplate(){
  }catch(e){status.textContent='Không tải được mẫu.';body.innerHTML='<tr><td colspan="4" style="color:#b91c1c">Lỗi: '+xhtml(e.message||e)+'</td></tr>';toast('Quản lý quy trình: '+(e.message||e));}
 }
 
-const NEED_METHODS=['Mở lớp đào tạo tập trung','Hội thảo, trao đổi, chia sẻ kinh nghiệm'];
-const NEED_FIELDS=['An toàn lao động theo luật định','An toàn lao động khác','Cơ khí','Điện','Công nghệ','Nghiệp vụ khác'];
+
 function needUnits(n){try{const ids=JSON.parse(n.DON_VI_IDS_JSON||'[]');return ids.map(id=>unitMaster.find(u=>String(u.id)===String(id))?.name||id).join(', ')}catch{return ''}}
 function needEvidence(n){let files=n.FILE_BANG_CHUNG||[];if(typeof files==='string'){try{files=JSON.parse(files)}catch{files=[]}}return Array.isArray(files)?files:[]}
 async function loadTrainingNeeds(){const r=await gsCall('getTrainingNeeds',{});if(!r||!r.ok)throw new Error(r?.error||'Không tải được nhu cầu đào tạo');trainingNeeds=Array.isArray(r.data)?r.data:[];renderTrainingNeeds();return trainingNeeds}
