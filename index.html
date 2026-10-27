@@ -2415,9 +2415,10 @@ async function createAssignment(){
 
 /* Narrow-scope workflow: assignee confirms training need and contract, or marks either as outstanding. */
 function implementationPlanPanel(a){
- const selectedNeedId=(a.needIds||[]).length?String(a.needIds[0]):'';
- const needOptions=(trainingNeeds||[]).map(n=>`<option value="${xhtml(n.NHU_CAU_ID)}" ${selectedNeedId===String(n.NHU_CAU_ID)?'selected':''}>${xhtml(n.TEN_KHOA_DAO_TAO||'Nhu cầu chưa có tên')} · còn ${Math.max(0,Number(n.SO_LUONG_HOC_VIEN||0)-Number(n.SO_LUONG_DA_DAP_UNG||0))} HV</option>`).join('');
- const contractOptions=(trainingContracts||[]).map(c=>`<option value="${xhtml(c.id)}" ${String(a.contractId||'')===String(c.id)?'selected':''}>${xhtml(c.number||c.id)} — ${xhtml(c.name||'Hợp đồng')} · ${xhtml(c.status||'')}</option>`).join('');
+ const selectedNeedIds=(a.needIds||[]).map(String);
+ const needOptions=(trainingNeeds||[]).map(n=>`<option value="${xhtml(n.NHU_CAU_ID)}" ${selectedNeedIds.includes(String(n.NHU_CAU_ID))?'selected':''}>${xhtml(n.TEN_KHOA_DAO_TAO||'Nhu cầu chưa có tên')} · còn ${Math.max(0,Number(n.SO_LUONG_HOC_VIEN||0)-Number(n.SO_LUONG_DA_DAP_UNG||0))} HV</option>`).join('');
+ const selectedContractIds=(a.contractIds||[a.contractId].filter(Boolean)).map(String);
+ const contractOptions=(trainingContracts||[]).map(c=>`<option value="${xhtml(c.id)}" ${selectedContractIds.includes(String(c.id))?'selected':''}>${xhtml(c.number||c.id)} — ${xhtml(c.name||'Hợp đồng')} · ${xhtml(c.status||'')}</option>`).join('');
  const hasPlan=!!(a.steps&&a.steps.length);
  const isAssignee=currentUser&&(currentUser.username===a.user||isAdminUser());
  const needLater=!!a.needSupplementLater,contractLater=!!a.contractSupplementLater;
@@ -2433,11 +2434,11 @@ function implementationPlanPanel(a){
  <div style="display:grid;gap:18px">
   <section>
    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px"><label for="implNeedIds" style="font-weight:700;color:#172f50;font-size:13px">Nhu cầu đào tạo tương ứng</label><label style="display:flex;align-items:center;gap:8px;color:#64748b;font-size:12px;white-space:nowrap;cursor:pointer"><input id="implNeedLater" type="checkbox" ${needLater?'checked':''} onchange="updateImplementationPlanState()" class="impl-switch">Bổ sung sau</label></div>
-   <select id="implNeedIds" onchange="updateImplementationPlanState()" style="width:100%;height:46px;border:1px solid #d6e0ef;border-radius:12px;background:#fff;padding:0 13px;color:#183153;font-size:13px;outline-offset:2px"><option value="">Chọn nhu cầu đào tạo</option>${needOptions}</select>
+   <select id="implNeedIds" multiple size="4" onchange="updateImplementationPlanState()" style="width:100%;min-height:100px;border:1px solid #d6e0ef;border-radius:12px;background:#fff;padding:8px 13px;color:#183153;font-size:13px;outline-offset:2px">${needOptions}</select><div style="font-size:11px;color:#718198;margin-top:5px">Có thể chọn nhiều nhu cầu (giữ Ctrl hoặc Cmd khi chọn).</div>
   </section>
   <section>
    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px"><label for="implContractId" style="font-weight:700;color:#172f50;font-size:13px">Hợp đồng tương ứng</label><label style="display:flex;align-items:center;gap:8px;color:#64748b;font-size:12px;white-space:nowrap;cursor:pointer"><input id="implContractLater" type="checkbox" ${contractLater?'checked':''} onchange="updateImplementationPlanState()" class="impl-switch">Bổ sung sau</label></div>
-   <select id="implContractId" onchange="updateImplementationPlanState()" style="width:100%;height:46px;border:1px solid #d6e0ef;border-radius:12px;background:#fff;padding:0 13px;color:#183153;font-size:13px"><option value="">Chưa chọn hợp đồng</option>${contractOptions}</select>
+   <select id="implContractId" multiple size="4" onchange="updateImplementationPlanState()" style="width:100%;min-height:100px;border:1px solid #d6e0ef;border-radius:12px;background:#fff;padding:8px 13px;color:#183153;font-size:13px">${contractOptions}</select><div style="font-size:11px;color:#718198;margin-top:5px">Có thể chọn nhiều hợp đồng (giữ Ctrl hoặc Cmd khi chọn).</div>
   </section>
  </div>
  ${(needLater||contractLater)?`<div style="margin-top:14px;padding:10px 12px;border-radius:10px;background:#fff8e8;border:1px solid #f6d28b;color:#805a16;font-size:12px">Hồ sơ sẽ được bổ sung sau: ${[needLater?'Nhu cầu đào tạo':'',contractLater?'Hợp đồng':''].filter(Boolean).join(' và ')}.</div>`:''}
@@ -2450,9 +2451,9 @@ function implementationPlanPanel(a){
 function updateImplementationPlanState(){
  const needSelected=[...(document.getElementById('implNeedIds')?.selectedOptions||[])].some(o=>o.value);
  const needLater=!!document.getElementById('implNeedLater')?.checked;
- const contractId=document.getElementById('implContractId')?.value||'';
+ const contractSelected=[...(document.getElementById('implContractId')?.selectedOptions||[])].some(o=>o.value);
  const contractLater=!!document.getElementById('implContractLater')?.checked;
- const valid=(needSelected||needLater)&&(!!contractId||contractLater)&&!(contractId&&contractLater);
+ const valid=(needSelected||needLater)&&(contractSelected||contractLater)&&!(contractSelected&&contractLater);
  const btn=document.getElementById('implSubmitBtn');if(btn)btn.disabled=!valid||btn.dataset.authorized!=='true';
  const badge=document.getElementById('implStatusBadge');if(badge){badge.textContent=valid?'Đủ thông tin':'Chờ xác nhận';badge.style.background=valid?'#e8f8ef':'#eaf0ff';badge.style.color=valid?'#18794e':'#315fe9';}
  const hint=document.getElementById('implFooterHint');if(hint)hint.textContent=valid?'Đã đủ thông tin để khởi tạo quy trình.':'Chọn nhu cầu và hợp đồng, hoặc bật “Bổ sung sau”.';
@@ -2473,22 +2474,22 @@ async function openWorkV2(id){
 }
 async function saveImplementationPlan(id){
  const a=assignments.find(x=>String(x.id)===String(id));if(!a)return;
- const selectedNeedId=document.getElementById('implNeedIds')?.value||'';
- const needIds=selectedNeedId?[selectedNeedId]:[];
- const contractId=document.getElementById('implContractId').value||'';
+ const needIds=[...(document.getElementById('implNeedIds')?.selectedOptions||[])].map(o=>o.value).filter(Boolean);
+ const contractIds=[...(document.getElementById('implContractId')?.selectedOptions||[])].map(o=>o.value).filter(Boolean);
+ const contractId=contractIds[0]||'';
  const needLater=!!document.getElementById('implNeedLater').checked,contractLater=!!document.getElementById('implContractLater').checked;
  if(!needIds.length&&!needLater){toast('Chọn ít nhất một nhu cầu hoặc tích “Bổ sung nhu cầu đào tạo sau”.');return}
- if(!contractId&&!contractLater){toast('Chọn hợp đồng hoặc tích “Bổ sung hợp đồng sau”.');return}
- if(contractId&&contractLater){toast('Chỉ chọn một trong hai: đã có hợp đồng hoặc bổ sung hợp đồng sau.');return}
+ if(!contractIds.length&&!contractLater){toast('Chọn ít nhất một hợp đồng hoặc tích “Bổ sung hợp đồng sau”.');return}
+ if(contractIds.length&&contractLater){toast('Chỉ chọn hợp đồng hoặc tích “Bổ sung hợp đồng sau”.');return}
  // Workflow depends ONLY on contract status. Training-need status never changes step count.
  const contract=(trainingContracts||[]).find(c=>String(c.id)===String(contractId));
- const hasContract=!!contractId&&!contractLater;
+ const hasContract=contractIds.length>0&&!contractLater;
  const contractType=hasContract?'MO_LOP_HOP_DONG_NGUYEN_TAC':'MO_LOP_THUE_NGOAI';
- const patch={NHU_CAU_IDS_JSON:JSON.stringify(needIds),HOP_DONG_ID:contractId,NHU_CAU_BO_SUNG_SAU:needLater,HOP_DONG_BO_SUNG_SAU:contractLater,LOAI_CONGVIEC:contractType,TRANG_THAI:'Đang thực hiện',CHO_XAC_DINH_PHUONG_AN:false};
+ const patch={NHU_CAU_IDS_JSON:JSON.stringify(needIds),HOP_DONG_IDS_JSON:JSON.stringify(contractIds),HOP_DONG_ID:contractId,NHU_CAU_BO_SUNG_SAU:needLater,HOP_DONG_BO_SUNG_SAU:contractLater,LOAI_CONGVIEC:contractType,TRANG_THAI:'Đang thực hiện',CHO_XAC_DINH_PHUONG_AN:false};
  try{
   const r=await gsCall('updateJob',{id,patch,initializeWorkflow:true,actor:currentUser?.username||'system'});
   if(!r||!r.ok)throw new Error(r?.error||'Không lưu được phương án triển khai');
-  a.needIds=needIds;a.contractId=contractId;a.needSupplementLater=needLater;a.contractSupplementLater=contractLater;a.status='Đang thực hiện';const selectedContract=(trainingContracts||[]).find(c=>String(c.id)===String(contractId));if(selectedContract?.providerId&&(!a.confirm?.provider||!trainingProviders.some(p=>p.id===a.confirm.provider)))a.confirm={...(a.confirm||{}),provider:selectedContract.providerId};
+  a.needIds=needIds;a.contractIds=contractIds;a.contractId=contractId;a.needSupplementLater=needLater;a.contractSupplementLater=contractLater;a.status='Đang thực hiện';const selectedContract=(trainingContracts||[]).find(c=>String(c.id)===String(contractId));if(selectedContract?.providerId&&(!a.confirm?.provider||!trainingProviders.some(p=>p.id===a.confirm.provider)))a.confirm={...(a.confirm||{}),provider:selectedContract.providerId};
   await refreshFromServer();
   const fresh=assignments.find(x=>String(x.id)===String(id));if(fresh)openWorkV2(id);
   toast((needLater||contractLater)?'Đã lưu phương án. Hệ thống tiếp tục theo dõi hồ sơ còn nợ.':'Đã xác nhận nhu cầu và hợp đồng, khởi tạo quy trình triển khai.');
