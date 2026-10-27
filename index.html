@@ -1557,8 +1557,24 @@ async function loadServerState(username, preloadedState){
   setLoginStatus('Hệ thống: đã kết nối',true);
 }
 async function bootstrapServer(){
-  try{const r=await gsCall('pingServer');if(!r||!r.ok)throw new Error(r?.error||'Ping thất bại');serverReady=true;setLoginStatus('Hệ thống: đã kết nối',true);}
-  catch(e){serverReady=false;setLoginStatus('Hệ thống: lỗi kết nối — '+(e.message||e),false);toast('Không kết nối được Google Apps Script');}
+  try{
+    const base=HPDQ_API_BASE;
+    if(!base)throw new Error('Chưa cấu hình URL API.');
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),10000);
+    let response;
+    try{response=await fetch(base+'/health?ts='+Date.now(),{method:'GET',cache:'no-store',signal:controller.signal});}
+    finally{clearTimeout(timeout);}
+    if(!response.ok)throw new Error('API phản hồi HTTP '+response.status);
+    const r=await response.json();
+    if(!r||!r.ok)throw new Error('API kiểm tra sức khỏe không hợp lệ');
+    serverReady=true;setLoginStatus('Hệ thống: đã kết nối',true);
+  }catch(e){
+    serverReady=false;
+    const message=e?.name==='AbortError'?'API không phản hồi sau 10 giây.':(e.message||String(e));
+    setLoginStatus('Hệ thống: lỗi kết nối — '+message,false);
+    console.error('Kiểm tra kết nối API thất bại:',e);
+  }
 }
 
 /* User profile: password change and avatar upload. Requires matching backend endpoints/fields for shared persistence. */
