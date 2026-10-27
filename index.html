@@ -388,6 +388,9 @@ body{background:#f2f5fa!important}
 .tc-page-legend{margin-top:14px;color:#64748b;font-size:12px;display:flex;align-items:center;gap:8px}
 .tc-page-legend span{width:10px;height:10px;background:#dbe8ff;border:1px solid #9bb8f6;border-radius:3px}
 @media(max-width:900px){.training-calendar-page{padding:12px}.tc-page-calendar{gap:3px}.tc-page-day{min-height:90px;padding:5px}.tc-page-week{font-size:10px}.tc-page-day-head{font-size:11px}.tc-page-day-head span{font-size:9px}.tc-hover-panel{position:fixed;left:12px!important;right:12px!important;top:20vh;width:auto;max-height:65vh}}
+html.session-restoring::after{content:"Đang khôi phục phiên đăng nhập…";position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#f1f5fb;color:#173153;font:600 14px system-ui,-apple-system,sans-serif;letter-spacing:.1px}
+html.session-restoring::before{content:"";position:fixed;z-index:2147483647;left:calc(50% - 13px);top:calc(50% - 46px);width:26px;height:26px;border:3px solid #cbd8ec;border-top-color:#2864ed;border-radius:50%;animation:hpdqSessionSpin .8s linear infinite}
+@keyframes hpdqSessionSpin{to{transform:rotate(360deg)}}
 </style><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 // ===== Module chi phí đào tạo =====
@@ -667,6 +670,14 @@ html,body{background:#f2f5fa!important;color:#0b1f41!important;font-family:Inter
 @media(max-width:680px){.modalbox:has(.need-editor-layout){width:98vw!important;max-height:97vh!important}.need-editor-layout{grid-template-columns:1fr}.need-editor-card:last-child{grid-column:auto}.need-editor-footer{margin-left:-22px;margin-right:-22px;padding:12px}.need-two-col{grid-template-columns:1fr 1fr}}
 </style>
 
+<script>
+(function(){
+ try{
+  var saved=JSON.parse(localStorage.getItem('HPDQ_TRAINING_LOGIN_SESSION_V1')||'null');
+  if(saved&&saved.token&&saved.username&&saved.lastActivityAt)document.documentElement.classList.add('session-restoring');
+ }catch(e){}
+})();
+</script>
 </head><body>
 <div id="login" class="login"><div class="login-brand"><div class="login-brand-top"><div class="login-brand-logo">HP</div><div><b>HPDQ Training</b><small>Hệ thống quản lý đào tạo</small></div></div><div class="login-brand-copy"><h2>Giao việc rõ ràng,<br>theo dõi kết quả đào tạo<br>đến từng bước.</h2><p>Một nơi để quản lý lớp học, phân công người phụ trách<br>và xác nhận kết quả thực tế.</p></div></div><div class="login-panel"><div class="loginbox"><h1>Đăng nhập</h1><p>Đăng nhập để vào hệ thống quản lý đào tạo.</p><div class="field"><label>Tên đăng nhập</label><input id="lu" autocomplete="username" value="" placeholder="Nhập tên đăng nhập"></div><div class="field"><label>Mật khẩu</label><input id="lp" type="password" autocomplete="current-password" value="" placeholder="Nhập mật khẩu" onkeydown="if(event.key==='Enter')doLogin()"></div><button class="btn primary" onclick="doLogin()">Đăng nhập</button><div id="loginGoogleStatus" class="demo">Đang kết nối hệ thống…</div></div></div></div>
 <div id="app" class="app hidden"><aside class="side"><div class="brand"><div class="logo">HP</div><div><b>HPDQ TRAINING</b><small>TRAINING MANAGEMENT SYSTEM</small></div></div><div class="section">Điều hành</div><div class="nav" id="nav"></div><div class="section">Quản trị</div><div class="nav"><button id="adminNav" data-page="admin" onclick="go('admin')"><span class="nav-icon">☼</span><span>Quản trị hệ thống</span></button></div></aside><main class="main"><header class="top"><b id="crumb">Dashboard</b><div class="userchip"><button class="btn light notification-bell" id="notificationBell" onclick="toggleNotificationCenter()">🔔 <span id="notificationUnreadCount">0</span></button><span id="userName">Admin</span><div class="avatar" id="avatar" title="Ảnh đại diện" onclick="openMyProfile()">AD</div><button class="profile-menu-btn" onclick="openMyProfile()">Tài khoản</button><button class="btn light" onclick="logout()">Đăng xuất</button></div></header><section class="content">
@@ -1621,8 +1632,12 @@ window.addEventListener('load',async()=>{
       document.getElementById('app')?.classList.add('hidden');
       setLoginStatus('Hệ thống: đã kết nối',true);
     }
+    document.documentElement.classList.remove('session-restoring');
   }catch(e){
     console.error('Khởi tạo phiên đăng nhập:',e);
+    document.documentElement.classList.remove('session-restoring');
+    document.getElementById('login')?.classList.remove('hidden');
+    document.getElementById('app')?.classList.add('hidden');
     setLoginStatus('Lỗi khởi tạo: '+(e.message||e),false);
   }
 });
