@@ -1002,7 +1002,7 @@ async function confirmCancelJob(id){
 function openDeleteJob(id){
  if(!isAdminUser()){toast('Chỉ Admin được xóa nội dung.');return;}
  const a=assignments.find(x=>String(x.id)===String(id));if(!a){toast('Không tìm thấy nội dung cần xóa.');return;}
- if(a.contractId){toast('Nội dung đang gắn với hợp đồng; cần gỡ liên kết trước khi xóa.');return;}
+
  modal('Xóa nội dung đã tạo',`<div class="note" style="border-color:#f3b5b5;background:#fff7f7;color:#8b1e1e"><b>Chú ý: thao tác này không thể hoàn tác.</b><br>Đại ca đang xóa “${xhtml(displayName(a))}” (mã ${xhtml(a.id)}). Hệ thống sẽ xóa công việc cùng các bước, thông tin lớp, chương trình, học viên và kết quả liên quan. Nhật ký kiểm toán được giữ nguyên.</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn light" onclick="closeModal()">Không xóa</button><button class="btn danger" onclick="confirmDeleteJob('${xhtml(a.id)}')">Xác nhận xóa</button></div>`);
 }
 async function confirmDeleteJob(id){
