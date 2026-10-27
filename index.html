@@ -1695,7 +1695,13 @@ window.addEventListener('load',async()=>{
   try{
     // Check API independently first so a slow/stale saved session cannot leave the login screen spinning.
     await bootstrapServer();
-    if(!serverReady)return;
+    if(!serverReady){
+      // Never leave the full-screen session-restoring overlay visible when the API is unavailable.
+      document.documentElement.classList.remove('session-restoring');
+      document.getElementById('login')?.classList.remove('hidden');
+      document.getElementById('app')?.classList.add('hidden');
+      return;
+    }
     // Wait for the saved session restoration to finish; do not reveal login while it is in progress.
     const restored=await hpRestoreSession();
     if(!restored){
