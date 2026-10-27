@@ -782,6 +782,7 @@ function navBuild(){
  const nav=document.getElementById('nav');
  nav.innerHTML=items.filter(x=>x[0].startsWith('__')||menuState[x[0]]&&canOpenPage(x[0])).map(x=>{let action=x[0]==='__matrix'?"goSection('dashTimeline','__matrix')":x[0]==='__performance'?"goSection('dashRanking','__performance')":`go('${x[0]}')`;return `<button data-page="${x[0]}" onclick="${action}"><span class="nav-icon">${x[1]}</span><span>${x[2]}</span></button>`}).join('');
  if(menuState.providerTracking&&canOpenPage('providerTracking'))nav.insertAdjacentHTML('beforeend',`<div class="nav-group" id="providerNavGroup"><button class="nav-parent ${document.getElementById('crumb')?.textContent?.includes('Đơn vị đào tạo')?'active':''}" onclick="openProviders()"><span class="nav-icon">♧</span><span>Đơn vị đào tạo</span></button></div>`);
+ if(canViewLecturerMaster())nav.insertAdjacentHTML('beforeend',`<button data-page="lecturerMaster" class="${document.getElementById('crumb')?.textContent==='Thông tin giảng viên'?'active':''}" onclick="openLecturerMaster()"><span class="nav-icon">♙</span><span>Thông tin giảng viên</span></button>`);
  const adminNav=document.getElementById('adminNav');if(adminNav)adminNav.style.display=isAdminUser()?'':'none';
 }
 function toggleProviderSubmenu(){providerMenuOpen=!providerMenuOpen;const el=document.getElementById('providerNavGroup');if(el)el.classList.toggle('open',providerMenuOpen)}
