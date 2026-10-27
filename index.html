@@ -795,7 +795,7 @@ const DEFAULT_UNITS=[{id:'DV01',name:'NM Cơ điện 1',active:true},{id:'DV02',
 const DEFAULT_PROVIDERS=[{id:'NCC01',name:'Trường Cao đẳng Cơ giới',active:true,managers:['admin','manager']},{id:'NCC02',name:'Trường Cao đẳng Kỹ thuật',active:true,managers:['admin']},{id:'NCC03',name:'Trung tâm Đào tạo HPDQ',active:true,managers:['admin','manager']}];
 let assignments=[{id:'EXT-26001',name:'Đào tạo vận hành thiết bị cơ khí',user:'daotao',target:'KTV/Công nhân NM Cơ điện 1',start:'2026-10-08',end:'2026-10-20',confirm:{course:'Đào tạo vận hành thiết bị cơ khí',provider:'',students:'',units:'',trainingTime:'',field:'Cơ khí'},steps:[]}];
 let ordinaryTasks=[];let ordinaryTaskReports=[];
-let logs=[];let currentUser=null;let menuState={dashboard:true,mywork:true,assign:true,admin:true,providerTracking:true,trainingCosts:true,trainingNeeds:true};
+let logs=[];let currentUser=null;let menuState={dashboard:true,mywork:true,assign:true,admin:true,providerTracking:true,trainingCosts:true,trainingNeeds:true,classrooms:true};
 const STORE_KEY='HPDQ_TRAINING_V6_STATE_V1';
 function clone(v){return JSON.parse(JSON.stringify(v));}
 function safeLoad(){try{const raw=localStorage.getItem(STORE_KEY);if(!raw)return false;const st=JSON.parse(raw);if(Array.isArray(st.users))users=st.users;if(Array.isArray(st.units))unitMaster=st.units;if(Array.isArray(st.providers))providerMaster=st.providers;if(Array.isArray(st.assignments))assignments=st.assignments;if(Array.isArray(st.logs))logs=st.logs;if(st.menuState)menuState={...menuState,...st.menuState};return true}catch(e){return false}}
