@@ -392,6 +392,8 @@ body{background:#f2f5fa!important}
 .tc-page-legend{margin-top:14px;color:#64748b;font-size:12px;display:flex;align-items:center;gap:8px}
 .tc-page-legend span{width:10px;height:10px;background:#dbe8ff;border:1px solid #9bb8f6;border-radius:3px}
 @media(max-width:900px){.training-calendar-page{padding:12px}.tc-page-calendar{gap:3px}.tc-page-day{min-height:90px;padding:5px}.tc-page-week{font-size:10px}.tc-page-day-head{font-size:11px}.tc-page-day-head span{font-size:9px}.tc-hover-panel{position:fixed;left:12px!important;right:12px!important;top:20vh;width:auto;max-height:65vh}}
+html.session-restoring #login{display:none!important}
+html.session-restoring #app{visibility:hidden!important}
 html.session-restoring::after{content:"Đang khôi phục phiên đăng nhập…";position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#f1f5fb;color:#173153;font:600 14px system-ui,-apple-system,sans-serif;letter-spacing:.1px}
 html.session-restoring::before{content:"";position:fixed;z-index:2147483647;left:calc(50% - 13px);top:calc(50% - 46px);width:26px;height:26px;border:3px solid #cbd8ec;border-top-color:#2864ed;border-radius:50%;animation:hpdqSessionSpin .8s linear infinite}
 @keyframes hpdqSessionSpin{to{transform:rotate(360deg)}}
@@ -1628,8 +1630,8 @@ window.addEventListener('load',async()=>{
     // Check API independently first so a slow/stale saved session cannot leave the login screen spinning.
     await bootstrapServer();
     if(!serverReady)return;
-    const restoreTimeout=new Promise(resolve=>setTimeout(()=>resolve(false),25000));
-    const restored=await Promise.race([hpRestoreSession(),restoreTimeout]);
+    // Wait for the saved session restoration to finish; do not reveal login while it is in progress.
+    const restored=await hpRestoreSession();
     if(!restored){
       sessionToken='';currentUser=null;
       document.getElementById('login')?.classList.remove('hidden');
