@@ -1768,11 +1768,11 @@ async function saveBulkLecturers(){
 }
 
 function canViewLecturerMaster(){return isAdminUser()||hasPermission('lecturers','view')||hasPermission('lecturers','edit')||hasPermission('lecturers','add')}
-function canEditLecturer(g){return isAdminUser()||(!!g&&hasPermission('lecturers','edit')&&canManageProvider(g.providerId))}
+function canEditLecturer(g){return isAdminUser()||(!!g&&hasPermission('lecturers','edit')&&canAccessLecturerProvider(g))}
 function canAddLecturerForProvider(providerId){return isAdminUser()||(!!providerId&&hasPermission('lecturers','add')&&canManageProvider(providerId))}
 function openLecturerMaster(){
   if(!canViewLecturerMaster()){toast('Chưa được cấp quyền xem danh mục giảng viên');return}
-  const visibleLecturers=isAdminUser()?lecturers:lecturers.filter(g=>canManageProvider(g.providerId));
+  const visibleLecturers=isAdminUser()?lecturers:lecturers.filter(g=>canAccessLecturerProvider(g));
   const canAdd=isAdminUser()||hasPermission('lecturers','add');
   const rows=visibleLecturers.map(g=>{const af=parseAttachmentList(g.attachments||'[]').find(f=>/^(avatar|ảnh đại diện)$/i.test(String(f.title||f.name||f.fileName||''))&&String(f.driveFileId||f.id||''));const aid=af?String(af.driveFileId||af.id):'';const avatar=aid?'<img alt="Avatar" style="width:38px;height:38px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px" src="'+secureFileUrl(aid,'view')+'">':'<span style="display:inline-flex;width:38px;height:38px;border-radius:50%;align-items:center;justify-content:center;background:#e8effb;color:#1e4e8c;font-weight:800;margin-right:8px;vertical-align:middle">'+xhtml((g.name||'GV').trim().split(/\s+/).map(s=>s[0]).slice(-2).join('').toUpperCase())+'</span>';return `<tr><td><b>${xhtml(g.code)}</b></td><td>${avatar}<b>${xhtml(g.name)}</b><small style="display:block;color:var(--muted)">${xhtml(g.gender||'Chưa khai báo')} · ${xhtml(g.academic||'')}</small></td><td>${xhtml(g.birthDate||'—')}</td><td>${xhtml(g.cccd||'—')}</td><td>${xhtml(g.phone||'—')}<small style="display:block;color:var(--muted)">${xhtml(g.email||'')}</small></td><td>${xhtml(g.org||'—')}</td><td>${xhtml(g.hktt||'—')}</td><td>${xhtml(g.specialty||'—')}</td><td>${xhtml(g.type||'—')}</td><td>${canEditLecturer(g)?`<button class="btn light" onclick="editLecturer('${xhtml(g.id)}')">Sửa</button>`:'—'}</td></tr>`}).join('');
   const h=providerFullHost();document.getElementById('crumb').textContent='Thông tin giảng viên';
@@ -1952,7 +1952,8 @@ function providerContractStatus(p, today=new Date()){
   if(contracts.length) return {label:'Không có hợp đồng nào đang phối hợp',detail:`${expired.length||contracts.length} hợp đồng đã hết hiệu lực hoặc thanh lý`,cls:'red',active:false,filter:'expired',count:0,expiredCount:expired.length||contracts.length};
   return {label:'Không có hợp đồng nào đang phối hợp',detail:'Đơn vị chưa có hợp đồng đào tạo',cls:'gray',active:false,filter:'none',count:0};
 }
-function canManageProvider(id){if(isAdminUser())return true;const p=trainingProviders.find(x=>x.id===id);return !!p&&p.managers.includes(currentUser?.username||'');}
+function canManageProvider(id){if(isAdminUser())return true;const key=String(id||'').trim();const username=String(currentUser?.username||'').trim().toLowerCase();const p=trainingProviders.find(x=>String(x.id||'').trim()===key);return !!p&&Array.isArray(p.managers)&&p.managers.some(u=>String(u||'').trim().toLowerCase()===username);}
+function canAccessLecturerProvider(g){if(isAdminUser())return true;if(!g)return false;if(canManageProvider(g.providerId))return true;const org=String(g.org||'').trim().toLowerCase();if(!org)return false;return trainingProviders.some(p=>String(p.name||'').trim().toLowerCase()===org&&canManageProvider(p.id));}
 function providerFullHost(){let h=document.getElementById('providerFullPage');if(!h){h=document.createElement('div');h.id='providerFullPage';h.className='page';h.style.cssText='padding:0;';document.querySelector('.content').appendChild(h)}document.querySelectorAll('.content > .page').forEach(x=>{if(x!==h)x.classList.remove('active')});h.classList.add('active');return h}
 function providerSubnav(active){return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 18px"><button class="btn ${active==='info'?'primary':'light'}" onclick="openProviders()">▣ Thông tin đơn vị đào tạo</button><button class="btn ${active==='contracts'?'primary':'light'}" onclick="openProviderContractsSection()">▤ Hợp đồng đào tạo</button><button class="btn ${active==='lecturers'?'primary':'light'}" onclick="openLecturerMaster()">♙ Thông tin giảng viên</button></div>`}
 async function openProviders(){
