@@ -354,7 +354,33 @@ body{background:#f2f5fa!important}
 .notification-bell{position:relative;display:inline-flex;align-items:center;gap:6px}.notification-bell span{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 4px;border-radius:99px;background:#ef4444;color:#fff;font-size:10px;font-weight:800}
 #notificationCenter{position:fixed;right:22px;top:66px;width:min(420px,calc(100vw - 28px));max-height:72vh;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 50px #0b1f3b30;z-index:9999;padding:14px}
 .notification-item{padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer}.notification-item.unread{background:#eff6ff;border-radius:10px;padding:12px}.notification-item b{display:block;margin-bottom:4px}.notification-item small{color:var(--muted)}
-.impl-switch{appearance:none;-webkit-appearance:none;width:36px!important;height:20px!important;min-width:36px;border-radius:20px;background:#e2e8f0;position:relative;cursor:pointer;transition:background .18s;padding:0!important;flex:0 0 36px}.impl-switch:checked{background:#315fe9}.impl-switch:before{content:"";position:absolute;width:16px;height:16px;left:2px;top:2px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002;transition:transform .18s}.impl-switch:checked:before{transform:translateX(16px)}.impl-switch:focus-visible{outline:2px solid #315fe9;outline-offset:2px}</style><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+.impl-switch{appearance:none;-webkit-appearance:none;width:36px!important;height:20px!important;min-width:36px;border-radius:20px;background:#e2e8f0;position:relative;cursor:pointer;transition:background .18s;padding:0!important;flex:0 0 36px}.impl-switch:checked{background:#315fe9}.impl-switch:before{content:"";position:absolute;width:16px;height:16px;left:2px;top:2px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0002;transition:transform .18s}.impl-switch:checked:before{transform:translateX(16px)}.impl-switch:focus-visible{outline:2px solid #315fe9;outline-offset:2px}
+/* Full-page training calendar */
+.training-calendar-page{padding:22px;min-height:calc(100vh - 110px);overflow:visible}
+.tc-page-toolbar{display:flex;align-items:center;gap:12px;margin:14px 0 12px;padding:12px 14px;background:#fff;border:1px solid #e2e8f0;border-radius:12px}
+.tc-page-toolbar h2{font-size:19px;text-transform:capitalize;margin:0;color:#142b4e}
+.tc-page-toolbar span{margin-left:auto;color:#64748b;font-size:12px}
+.tc-page-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;overflow:visible}
+.tc-page-week{text-align:center;padding:10px 4px;font-size:12px;font-weight:800;color:#52647e}
+.tc-page-day{position:relative;min-width:0;min-height:130px;padding:10px;background:#fff;border:1px solid #dbe4f0;border-radius:10px;color:#173153}
+.tc-page-day.empty{background:transparent;border-color:transparent}
+.tc-page-day.today{border:2px solid #2864ed}
+.tc-page-day.has-events{background:#f7faff;border-color:#b9cef9;cursor:help}
+.tc-page-day.has-events:hover{z-index:20;background:#eef4ff;border-color:#2864ed;box-shadow:0 7px 22px #0f2c511f}
+.tc-page-day-head{display:flex;align-items:center;justify-content:space-between;gap:4px;font-size:13px}
+.tc-page-day-head span{font-size:10px;color:#1d4ed8;background:#e1ebff;padding:3px 5px;border-radius:20px;white-space:nowrap}
+.tc-hover-panel{display:none;position:absolute;left:8px;top:34px;width:min(390px,calc(100vw - 50px));max-height:65vh;overflow:auto;padding:12px;background:#fff;border:1px solid #bfd0eb;border-radius:12px;box-shadow:0 14px 36px #102b4a33;text-align:left}
+.tc-page-day:hover .tc-hover-panel,.tc-page-day:focus-within .tc-hover-panel{display:block}
+.tc-page-day:nth-child(n+6) .tc-hover-panel{left:auto;right:8px}
+.tc-hover-date{font-weight:800;font-size:12px;color:#173153;padding-bottom:8px;border-bottom:1px solid #e5ebf3;margin-bottom:7px}
+.tc-hover-course{font-size:11px;line-height:1.55;padding:8px 0;border-bottom:1px solid #edf1f6;overflow-wrap:anywhere}
+.tc-hover-course:last-child{border-bottom:0}
+.tc-hover-course>b{display:block;color:#174bb3;font-size:12px;margin-bottom:4px}
+.tc-hover-course span{font-weight:700;color:#52647e}
+.tc-page-legend{margin-top:14px;color:#64748b;font-size:12px;display:flex;align-items:center;gap:8px}
+.tc-page-legend span{width:10px;height:10px;background:#dbe8ff;border:1px solid #9bb8f6;border-radius:3px}
+@media(max-width:900px){.training-calendar-page{padding:12px}.tc-page-calendar{gap:3px}.tc-page-day{min-height:90px;padding:5px}.tc-page-week{font-size:10px}.tc-page-day-head{font-size:11px}.tc-page-day-head span{font-size:9px}.tc-hover-panel{position:fixed;left:12px!important;right:12px!important;top:20vh;width:auto;max-height:65vh}}
+</style><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 // ===== Module chi phí đào tạo =====
 let trainingCostData={jobs:[],categories:[],costs:[],units:[],providers:[]};
@@ -699,6 +725,12 @@ html,body{background:#f2f5fa!important;color:#0b1f41!important;font-family:Inter
 <div class="card tc-time-card"><div class="cardhead tc-analytics-head"><b>Theo thời gian</b><span id="tcTimeCaption" class="tc-subtle"></span></div><div class="cardbody"><div id="tcTimeChart" class="tc-time-chart"></div></div></div>
 </div>
 <div class="card tc-detail-card" style="margin-top:14px"><div class="cardhead tc-detail-head"><b>Chi tiết chi phí theo khóa đào tạo</b><div class="tc-detail-actions"><div class="tc-tabs tc-view-tabs"><button class="tc-tab active" id="tcGroupedBtn" onclick="tcSetDetailMode('grouped')">Gộp theo khóa</button><button class="tc-tab" id="tcListBtn" onclick="tcSetDetailMode('list')">Danh sách</button></div><button class="btn light" onclick="loadTrainingCostData()">Làm mới</button><button class="btn light" id="tcCategoriesBtn" onclick="openTrainingCostCategories()" style="display:none">Danh mục chi phí</button></div></div><div class="tablewrap"><table class="table tc-detail-table"><thead><tr><th>Nhóm chi phí</th><th>Hạng mục</th><th>Ghi chú</th><th style="text-align:right">Số tiền</th><th></th></tr></thead><tbody id="tcTable"><tr><td colspan="5">Đang tải dữ liệu...</td></tr></tbody></table></div></div></div>
+<div id="trainingCalendarPage" class="page training-calendar-page">
+ <div class="title"><div><h1>Lịch đào tạo</h1><p>Lịch đào tạo theo tháng. Di chuột vào ngày có lịch để xem thông tin từng lớp.</p></div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn light" onclick="shiftTrainingCalendar(-1)">‹ Tháng trước</button><button class="btn light" onclick="trainingCalendarCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1);renderTrainingCalendar()">Hôm nay</button><button class="btn light" onclick="shiftTrainingCalendar(1)">Tháng sau ›</button></div></div>
+ <div class="tc-page-toolbar"><button class="btn light" onclick="shiftTrainingCalendar(-1)">‹</button><h2 id="tcMonthTitle">Lịch đào tạo</h2><button class="btn light" onclick="shiftTrainingCalendar(1)">›</button><span id="tcMonthSummary"></span></div>
+ <div id="tcCalendarPageGrid" class="tc-page-calendar"></div>
+ <div class="tc-page-legend"><span></span> Ngày có lịch đào tạo · Di chuột vào ngày để xem thông tin chi tiết</div>
+</div>
 </section></main></div>
 <div id="modal" class="modal"><div class="modalbox"><div class="mh"><b id="mtitle">Thông tin</b><button class="close" onclick="closeModal()">×</button></div><div class="mb" id="mbody"></div></div></div><div id="toast" style="position:fixed;right:20px;bottom:20px;background:#173e69;color:#fff;padding:11px 15px;border-radius:8px;display:none;z-index:30;font-size:11px"></div>
 <script>
@@ -780,7 +812,7 @@ function isAdminUser(){return !!currentUser&&currentUser.all===true} function ha
 function navBuild(){
  const items=[['dashboard','▦','Dashboard'],['mywork','☑','Công việc của tôi'],['assign','➤','Giao việc'],['__calendar','▦','Lịch đào tạo'],['__matrix','▦','Ma trận tiến độ'],['__performance','♙','Hiệu suất user'],['trainingNeeds','▤','Nhu cầu đào tạo'],['trainingCosts','▱','Chi phí đào tạo']];
  const nav=document.getElementById('nav');
- nav.innerHTML=items.filter(x=>x[0].startsWith('__')||menuState[x[0]]&&canOpenPage(x[0])).map(x=>{let action=x[0]==='__calendar'?"openTrainingCalendar()":x[0]==='__matrix'?"goSection('dashTimeline','__matrix')":x[0]==='__performance'?"goSection('dashRanking','__performance')":`go('${x[0]}')`;return `<button data-page="${x[0]}" onclick="${action}"><span class="nav-icon">${x[1]}</span><span>${x[2]}</span></button>`}).join('');
+ nav.innerHTML=items.filter(x=>x[0].startsWith('__')||menuState[x[0]]&&canOpenPage(x[0])).map(x=>{let action=x[0]==='__calendar'?"goTrainingCalendar()":x[0]==='__matrix'?"goSection('dashTimeline','__matrix')":x[0]==='__performance'?"goSection('dashRanking','__performance')":`go('${x[0]}')`;return `<button data-page="${x[0]}" onclick="${action}"><span class="nav-icon">${x[1]}</span><span>${x[2]}</span></button>`}).join('');
  if(menuState.providerTracking&&canOpenPage('providerTracking'))nav.insertAdjacentHTML('beforeend',`<div class="nav-group" id="providerNavGroup"><button class="nav-parent ${document.getElementById('crumb')?.textContent?.includes('Đơn vị đào tạo')?'active':''}" onclick="openProviders()"><span class="nav-icon">♧</span><span>Đơn vị đào tạo</span></button></div>`);
  if(canViewLecturerMaster())nav.insertAdjacentHTML('beforeend',`<button data-page="lecturerMaster" class="${document.getElementById('crumb')?.textContent==='Thông tin giảng viên'?'active':''}" onclick="openLecturerMaster()"><span class="nav-icon">♙</span><span>Thông tin giảng viên</span></button>`);
  const adminNav=document.getElementById('adminNav');if(adminNav)adminNav.style.display=isAdminUser()?'':'none';
@@ -817,18 +849,35 @@ function calendarEventsForMonth(){
  });
  return events;
 }
-function openTrainingCalendar(){trainingCalendarCursor=new Date(trainingCalendarCursor.getFullYear(),trainingCalendarCursor.getMonth(),1);renderTrainingCalendar()}
-function shiftTrainingCalendar(delta){trainingCalendarCursor=new Date(trainingCalendarCursor.getFullYear(),trainingCalendarCursor.getMonth()+delta,1);renderTrainingCalendar()}
-function renderTrainingCalendar(){
- const y=trainingCalendarCursor.getFullYear(),m=trainingCalendarCursor.getMonth(),events=calendarEventsForMonth(),first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate(),today=calendarDateKey(new Date()),names=['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','Chủ nhật'];
- let cells='';for(let i=0;i<offset;i++)cells+='<div class="tc-day empty"></div>';
- for(let n=1;n<=days;n++){const key=calendarDateKey(new Date(y,m,n)),list=events.filter(e=>e.date===key);cells+='<button class="tc-day '+(key===today?'today':'')+'" onclick="openTrainingCalendarDay(\''+key+'\')"><span class="tc-day-num">'+n+'</span>'+(list.slice(0,3).map(e=>'<span class="tc-event">'+xhtml(e.title)+'</span>').join(''))+(list.length>3?'<span class="tc-more">+'+(list.length-3)+' lớp khác</span>':'')+'</button>'}
- const monthName=new Intl.DateTimeFormat('vi-VN',{month:'long',year:'numeric'}).format(first);
- modal('Lịch đào tạo',`<style>.tc-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.tc-week{padding:8px 2px;text-align:center;font-size:11px;font-weight:800;color:#52647e}.tc-day{min-width:0;min-height:94px;border:1px solid #dfe7f2;border-radius:9px;background:#fff;text-align:left;padding:6px;display:flex;flex-direction:column;gap:4px;cursor:pointer;color:#183153}.tc-day:hover{border-color:#2864ed;background:#f6f9ff}.tc-day.empty{background:#f6f8fb;border-color:transparent}.tc-day.today{border:2px solid #2864ed}.tc-day-num{font-size:12px;font-weight:800}.tc-event{display:block;font-size:9px;line-height:1.3;background:#e8f0ff;color:#194db5;padding:3px 4px;border-radius:4px;overflow:hidden;max-height:28px}.tc-more{font-size:9px;color:#64748b}@media(max-width:700px){.tc-day{min-height:65px;padding:3px}.tc-event{font-size:8px}.tc-week{font-size:9px}}</style><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;flex-wrap:wrap"><button class="btn light" onclick="shiftTrainingCalendar(-1)">‹ Tháng trước</button><b style="font-size:17px;text-transform:capitalize">${monthName}</b><div style="display:flex;gap:6px"><button class="btn light" onclick="trainingCalendarCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1);renderTrainingCalendar()">Hôm nay</button><button class="btn light" onclick="shiftTrainingCalendar(1)">Tháng sau ›</button></div></div><div class="tc-calendar">${names.map(n=>'<div class="tc-week">'+n+'</div>').join('')}${cells}</div><div class="note" style="margin-top:12px">Bấm vào một ngày để xem lớp, thời gian, giảng viên và địa điểm. Có ${events.filter(e=>e.date.startsWith(y+'-'+String(m+1).padStart(2,'0'))).length} lượt lịch trong tháng.</div>`);
+function goTrainingCalendar(){
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ const page=document.getElementById('trainingCalendarPage');if(!page)return;
+ page.classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page==='__calendar'));
+ document.getElementById('crumb').textContent='Lịch đào tạo';closeModal();renderTrainingCalendar();
 }
-function openTrainingCalendarDay(key){
- const events=calendarEventsForMonth().filter(e=>e.date===key),parts=key.split('-'),date=new Date(+parts[0],+parts[1]-1,+parts[2]),label=new Intl.DateTimeFormat('vi-VN',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(date);
- modal(label,events.length?events.map(e=>'<div class="card" style="margin-bottom:9px"><div class="cardhead"><b>'+xhtml(e.title)+'</b><span class="badge blue">'+xhtml(e.subject)+'</span></div><div class="cardbody"><div><b>Giảng viên:</b> '+xhtml(e.lecturer)+'</div><div style="margin-top:5px"><b>Địa điểm:</b> '+xhtml(e.location||'Chưa cập nhật')+'</div><div style="margin-top:5px"><b>Thời gian lớp:</b> '+xhtml((e.course.confirm?.trainingFrom||'Chưa xác định')+' – '+(e.course.confirm?.trainingTo||'Chưa xác định'))+'</div><div style="margin-top:5px"><b>Phụ trách:</b> '+xhtml(e.course.user||'Chưa phân công')+'</div><div style="margin-top:10px"><button class="btn primary" onclick="closeModal();openCourseProfile(\''+xhtml(e.jobId)+'\')">Xem chi tiết khóa</button></div></div></div>').join(''):'<div class="note">Không có lịch đào tạo được ghi nhận trong ngày này.</div>');
+function openTrainingCalendar(){goTrainingCalendar()}
+function shiftTrainingCalendar(delta){trainingCalendarCursor=new Date(trainingCalendarCursor.getFullYear(),trainingCalendarCursor.getMonth()+delta,1);renderTrainingCalendar()}
+function calendarProviderName(a){const p=(trainingProviders||[]).find(p=>String(p.id)===String(a.providerId||a.trainingProviderId||a.confirm?.providerId));return p?.name||a.providerName||a.confirm?.providerName||a.confirm?.provider||'Chưa cập nhật'}
+function calendarStudentCount(a){const candidates=[a.studentCount,a.participantCount,a.learnerCount,a.confirm?.studentCount,a.confirm?.participantCount,a.confirm?.headcount,a.peopleCount];for(const n of candidates){if(n!==undefined&&n!==null&&n!=='')return n}return (a.participants||a.trainees||a.learners||[]).length||'Chưa cập nhật'}
+function calendarEventsForMonth(){
+ const events=[];
+ (visibleAssignments()||[]).forEach(a=>{
+  const title=displayName(a),subs=(a.subjects||[]).filter(s=>s.from||s.to),provider=calendarProviderName(a),students=calendarStudentCount(a);
+  if(subs.length){subs.forEach(s=>{const start=s.from||s.to,end=s.to||s.from;if(!start)return;const from=new Date(start+'T00:00:00'),to=new Date(end+'T00:00:00');if(isNaN(from)||isNaN(to))return;for(let d=new Date(from);d<=to&&((d-from)/86400000)<370;d.setDate(d.getDate()+1))events.push({date:calendarDateKey(d),jobId:a.id,title,subject:s.name||'Chưa cập nhật',lecturer:(lecturers.find(g=>String(g.id)===String(s.lecturerId))||{}).name||'Chưa phân công',location:s.location||a.confirm?.location||'Chưa cập nhật',provider,students,hours:s.hours||0,course:a})})}
+  else {const from=a.confirm?.trainingFrom||'',to=a.confirm?.trainingTo||from;if(!from)return;const d1=new Date(from+'T00:00:00'),d2=new Date((to||from)+'T00:00:00');if(isNaN(d1)||isNaN(d2))return;for(let d=new Date(d1);d<=d2&&((d-d1)/86400000)<370;d.setDate(d.getDate()+1))events.push({date:calendarDateKey(d),jobId:a.id,title,subject:'Chưa cập nhật',lecturer:'Chưa cập nhật',location:a.confirm?.location||'Chưa cập nhật',provider,students,hours:'',course:a})}
+ });
+ return events;
+}
+function renderTrainingCalendar(){
+ const page=document.getElementById('tcCalendarPageGrid');if(!page)return;
+ const y=trainingCalendarCursor.getFullYear(),m=trainingCalendarCursor.getMonth(),events=calendarEventsForMonth(),first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate(),today=calendarDateKey(new Date()),names=['Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7','Chủ nhật'];
+ document.getElementById('tcMonthTitle').textContent=new Intl.DateTimeFormat('vi-VN',{month:'long',year:'numeric'}).format(first);
+ document.getElementById('tcMonthSummary').textContent=events.filter(e=>e.date.startsWith(y+'-'+String(m+1).padStart(2,'0'))).length+' lượt lịch trong tháng';
+ let cells=names.map(n=>'<div class="tc-page-week">'+n+'</div>').join('');
+ for(let i=0;i<offset;i++)cells+='<div class="tc-page-day empty"></div>';
+ for(let n=1;n<=days;n++){const key=calendarDateKey(new Date(y,m,n)),list=events.filter(e=>e.date===key);const details=list.map(e=>'<div class="tc-hover-course"><b>'+xhtml(e.title)+'</b><div><span>Số lượng học viên:</span> '+xhtml(String(e.students))+'</div><div><span>Người giảng dạy:</span> '+xhtml(e.lecturer)+'</div><div><span>Đơn vị đào tạo:</span> '+xhtml(e.provider)+'</div><div><span>Địa điểm đào tạo:</span> '+xhtml(e.location)+'</div><div><span>Môn học:</span> '+xhtml(e.subject)+'</div></div>').join('');
+ cells+='<div class="tc-page-day '+(key===today?'today ':'')+(list.length?'has-events':'')+'"><div class="tc-page-day-head"><b>'+n+'</b>'+(list.length?'<span>'+list.length+' lớp</span>':'')+'</div>'+(list.length?'<div class="tc-hover-panel"><div class="tc-hover-date">'+xhtml(new Intl.DateTimeFormat('vi-VN',{day:'numeric',month:'long',year:'numeric'}).format(new Date(y,m,n)))+' · '+list.length+' lượt lịch</div>'+details+'</div>':'')+'</div>'}
+ page.innerHTML=cells;
 }
 function renderDashboard(){
  const allVisible=visibleAssignments();
