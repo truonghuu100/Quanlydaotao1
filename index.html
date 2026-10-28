@@ -1834,19 +1834,21 @@ function hpdqWaitForMinimumBootDuration(){
   const remaining=Math.max(0,HPDQ_BOOT_MIN_DURATION-(Date.now()-hpdqBootStartedAt));
   return new Promise(resolve=>setTimeout(resolve,remaining));
 }
-window.addEventListener('load',async()=>{
-  hpdqStartBootProgress();
+async function hpdqInitializeApp(){
+  if(window.__hpdqInitializeAppStarted)return;
+  window.__hpdqInitializeAppStarted=true;
+  if(!hpdqBootTimer)hpdqStartBootProgress();
   setLoginStatus('Đang kiểm tra kết nối API…',false);
   try{
-    await bootstrapServer();
-    if(!serverReady){
-      hpdqStopBootProgress();
-      document.documentElement.classList.remove('session-restoring');
-      document.getElementById('login')?.classList.remove('hidden');
-      document.getElementById('app')?.classList.add('hidden');
-      return;
-    }
-    const restored=await hpRestoreSession();
+    await Promise.race([
+      bootstrapServer(),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Kết nối máy chủ quá thời gian chờ. Vui lòng thử tải lại trang.')),25000))
+    ]);
+    if(!serverReady)throw new Error('Chưa kết nối được máy chủ. Vui lòng thử tải lại trang.');
+    const restored=await Promise.race([
+      hpRestoreSession(),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Khôi phục phiên đăng nhập quá thời gian chờ. Vui lòng thử tải lại trang.')),20000))
+    ]);
     hpdqBootReady=true;
     await hpdqWaitForMinimumBootDuration();
     hpdqSetBootProgress(100);
@@ -1867,7 +1869,11 @@ window.addEventListener('load',async()=>{
     document.getElementById('app')?.classList.add('hidden');
     setLoginStatus('Lỗi khởi tạo: '+(e.message||e),false);
   }
-});/* ===== END HPDQ GOOGLE APPS SCRIPT INTEGRATION ===== */
+}
+// Bắt đầu animation ngay; khởi tạo ứng dụng dù script chạy trước hay sau sự kiện load.
+hpdqStartBootProgress();
+if(document.readyState==='complete')hpdqInitializeApp();
+else window.addEventListener('load',hpdqInitializeApp,{once:true});/* ===== END HPDQ GOOGLE APPS SCRIPT INTEGRATION ===== */
 
 
 /* ===== FIX09: COURSE MASTER DETAIL / CURRICULUM / LECTURERS / STUDENTS / RESULTS ===== */
