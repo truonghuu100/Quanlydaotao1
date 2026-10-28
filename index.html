@@ -1294,7 +1294,7 @@ function classroomConfirmBlock(a){
  '<div class="field"><label>Số học viên dự kiến</label><input id="cf_roomStudents" type="number" min="1" value="'+xhtml(a.confirm.students||a.confirm.roomBookings?.[0]?.studentCount||'')+'" placeholder="Số học viên"></div>'+
  '<div class="field"><label>Từ ngày</label><input id="cf_roomFrom" type="date" value="'+xhtml(a.confirm.trainingFrom||a.confirm.roomBookings?.[0]?.startDate||'')+'"></div>'+
  '<div class="field"><label>Đến ngày</label><input id="cf_roomTo" type="date" value="'+xhtml(a.confirm.trainingTo||a.confirm.roomBookings?.[0]?.endDate||'')+'"></div></div>'+
- '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button type="button" class="btn light" onclick="checkConfirmRoom(\\''+xhtml(a.id)+'\\')">Kiểm tra phòng</button><button type="button" class="btn primary" onclick="registerConfirmRoom(\\''+xhtml(a.id)+'\\')">Đăng ký phòng dự kiến</button><span id="cf_roomCheckStatus" style="font-size:12px;color:var(--muted)">Vui lòng kiểm tra tình trạng phòng trước khi đăng ký.</span></div></div></div>';
+ '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button type="button" class="btn light" onclick="checkConfirmRoom(\''+xhtml(a.id)+'\')">Kiểm tra phòng</button><button type="button" class="btn primary" onclick="registerConfirmRoom(\''+xhtml(a.id)+'\')">Đăng ký phòng dự kiến</button><span id="cf_roomCheckStatus" style="font-size:12px;color:var(--muted)">Vui lòng kiểm tra tình trạng phòng trước khi đăng ký.</span></div></div></div>';
 }
 async function checkConfirmRoom(id){
  const status=document.getElementById('cf_roomCheckStatus');
