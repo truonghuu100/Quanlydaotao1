@@ -1294,7 +1294,34 @@ function classroomConfirmBlock(a){
  '<div class="field"><label>Số học viên dự kiến</label><input id="cf_roomStudents" type="number" min="1" value="'+xhtml(a.confirm.students||a.confirm.roomBookings?.[0]?.studentCount||'')+'" placeholder="Số học viên"></div>'+
  '<div class="field"><label>Từ ngày</label><input id="cf_roomFrom" type="date" value="'+xhtml(a.confirm.trainingFrom||a.confirm.roomBookings?.[0]?.startDate||'')+'"></div>'+
  '<div class="field"><label>Đến ngày</label><input id="cf_roomTo" type="date" value="'+xhtml(a.confirm.trainingTo||a.confirm.roomBookings?.[0]?.endDate||'')+'"></div></div>'+
- '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button type="button" class="btn light" onclick="registerConfirmRoom(\''+xhtml(a.id)+'\')">Đăng ký phòng dự kiến</button><small style="color:var(--muted)">Có thể đăng ký trước; hệ thống sẽ kiểm tra trùng lịch khi lưu.</small></div></div></div>';
+ '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button type="button" class="btn light" onclick="checkConfirmRoom(\\''+xhtml(a.id)+'\\')">Kiểm tra phòng</button><button type="button" class="btn primary" onclick="registerConfirmRoom(\\''+xhtml(a.id)+'\\')">Đăng ký phòng dự kiến</button><span id="cf_roomCheckStatus" style="font-size:12px;color:var(--muted)">Vui lòng kiểm tra tình trạng phòng trước khi đăng ký.</span></div></div></div>';
+}
+async function checkConfirmRoom(id){
+ const status=document.getElementById('cf_roomCheckStatus');
+ const roomIdValue=document.getElementById('cf_roomId')?.value||'';
+ const startDate=document.getElementById('cf_roomFrom')?.value||'';
+ const endDate=document.getElementById('cf_roomTo')?.value||'';
+ const studentCount=Number(document.getElementById('cf_roomStudents')?.value||0);
+ const setStatus=(msg,ok)=>{if(status){status.textContent=msg;status.style.color=ok?'#15803d':'#b91c1c';}};
+ if(!roomIdValue||!startDate||!endDate||startDate>endDate){setStatus('Vui lòng chọn phòng và khoảng ngày hợp lệ.',false);toast('Vui lòng chọn phòng và nhập khoảng ngày hợp lệ');return false;}
+ setStatus('Đang kiểm tra lịch phòng...',true);
+ try{
+  const r=await gsCall('getClassrooms',{});
+  if(!r?.ok)throw new Error(r?.error?.message||r?.error||'Không tải được lịch phòng');
+  classroomCache=(r.data||[]).map(x=>({...x,PHONG_ID:x.PHONG_ID||x.PHONG_HOC_ID||x.CLASSROOM_ID||x.id||x.roomId||'',TEN_PHONG:x.TEN_PHONG||x.TEN_PHONG_HOC||x.PHONG_HOC||x.name||x.roomName||'',SUC_CHUA_TOI_DA:x.SUC_CHUA_TOI_DA??x.capacity??0,TINH_TRANG_PHONG:x.TINH_TRANG_PHONG??x.status??'Hoạt động',assets:roomAssets(x),bookings:roomBookings(x)}));
+  const room=classroomCache.find(x=>roomId(x)===roomIdValue);
+  if(!room){setStatus('Không tìm thấy phòng đã chọn.',false);return false;}
+  if(String(room.TINH_TRANG_PHONG||'Hoạt động')!=='Hoạt động'){setStatus('Vui lòng kiểm tra lại, phòng này đang bận.',false);return false;}
+  if(studentCount>Number(room.SUC_CHUA_TOI_DA||0)){setStatus('Số học viên vượt quá sức chứa phòng.',false);return false;}
+  const overlap=(room.bookings||[]).some(b=>{
+   const state=String(b.TRANG_THAI||'Đã đăng ký').trim().toLowerCase();
+   if(['đã hủy','hủy','cancelled','canceled'].includes(state))return false;
+   const from=String(b.NGAY_BAT_DAU||b.startDate||'').slice(0,10),to=String(b.NGAY_KET_THUC||b.endDate||'').slice(0,10);
+   return from&&to&&startDate<=to&&endDate>=from;
+  });
+  if(overlap){setStatus('Vui lòng kiểm tra lại, phòng này đang bận.',false);return false;}
+  setStatus('Phòng sẵn sàng.',true);return true;
+ }catch(e){setStatus('Không kiểm tra được lịch phòng. Vui lòng thử lại.',false);toast('Lỗi kiểm tra phòng: '+(e.message||e));return false;}
 }
 async function registerConfirmRoom(id){
  const a=assignments.find(x=>x.id===id);if(!a)return;
@@ -1302,6 +1329,7 @@ async function registerConfirmRoom(id){
  if(!roomIdValue||!startDate||!endDate||startDate>endDate){toast('Vui lòng chọn phòng và nhập khoảng ngày hợp lệ');return}
  const room=classroomCache.find(r=>roomId(r)===roomIdValue);if(!room){toast('Không tìm thấy phòng đã chọn');return}
  if(studentCount>Number(room.SUC_CHUA_TOI_DA||0)){toast('Số học viên vượt quá sức chứa phòng');return}
+ if(!(await checkConfirmRoom(id)))return;
  const processing=showProcessingOverlay('Đang xử lý','Đang đăng ký phòng đào tạo dự kiến...');
  try{
   const r=await gsCall('saveClassroomBookings',{jobId:a.id,jobName:displayName(a),studentCount,intervals:[{roomId:roomIdValue,startDate,endDate,status:'Đăng ký dự kiến'}]});
