@@ -2551,6 +2551,12 @@ async function openWorkV2(id){
  const workflowType=a.contractSupplementLater||!a.contractId?'Quy trình đầy đủ 16 bước':'Quy trình rút gọn theo hợp đồng';
  modal('Bước 2/2 — Triển khai lớp: '+displayName(a),`<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span class="badge blue">${workflowType}</span><div><button class="btn light" onclick="openImplementationPlan('${xhtml(a.id)}')">Điều chỉnh Nhu cầu / Hợp đồng</button> <button class="btn primary" onclick="openCourseProfile('${xhtml(a.id)}')">Hồ sơ khóa đào tạo</button></div></div><div class="note"><b>Hợp đồng:</b> ${contractLabel}${provider?'<br><b>Đơn vị đào tạo mặc định theo hợp đồng:</b> '+xhtml(provider):''}<br>Thông tin khóa học được cập nhật ở phần bên dưới, ngay trong giao diện quy trình.</div>`+workBody(a,true));
 }
+function showProcessingOverlay(title='Đang xử lý',message='Vui lòng chờ trong giây lát...'){
+ const el=document.createElement('div');el.className='hp-processing-overlay';el.style.cssText='position:fixed;inset:0;z-index:1000000;background:rgba(9,27,54,.38);display:flex;align-items:center;justify-content:center;padding:20px';
+ el.innerHTML='<div style="width:min(340px,100%);background:#fff;border:1px solid #dce5f2;border-radius:16px;padding:26px 24px;text-align:center;box-shadow:0 18px 55px rgba(9,27,54,.22)"><div style="width:34px;height:34px;border:3px solid #dbe7ff;border-top-color:#2864f0;border-radius:50%;margin:0 auto 14px;animation:hpProcessingSpin .8s linear infinite"></div><div style="font-size:16px;font-weight:800;color:#183153">'+xhtml(title)+'</div><div style="font-size:12px;color:#718198;margin-top:7px">'+xhtml(message)+'</div></div>';
+ if(!document.getElementById('hpProcessingStyle')){const st=document.createElement('style');st.id='hpProcessingStyle';st.textContent='@keyframes hpProcessingSpin{to{transform:rotate(360deg)}}';document.head.appendChild(st)}
+ document.body.appendChild(el);return el;
+}
 async function saveImplementationPlan(id){
  const a=assignments.find(x=>String(x.id)===String(id));if(!a)return;
  const needIds=[...(document.getElementById('implNeedIds')?.selectedOptions||[])].map(o=>o.value).filter(Boolean);
@@ -2565,6 +2571,7 @@ async function saveImplementationPlan(id){
  const hasContract=contractIds.length>0&&!contractLater;
  const contractType=hasContract?'MO_LOP_HOP_DONG_NGUYEN_TAC':'MO_LOP_THUE_NGOAI';
  const patch={NHU_CAU_IDS_JSON:JSON.stringify(needIds),HOP_DONG_IDS_JSON:JSON.stringify(contractIds),HOP_DONG_ID:contractId,NHU_CAU_BO_SUNG_SAU:needLater,HOP_DONG_BO_SUNG_SAU:contractLater,LOAI_CONGVIEC:contractType,TRANG_THAI:'Đang thực hiện',CHO_XAC_DINH_PHUONG_AN:false};
+ const processing=showProcessingOverlay('Đang xử lý','Đang lưu nhu cầu, hợp đồng và khởi tạo quy trình...');
  try{
   const r=await gsCall('updateJob',{id,patch,initializeWorkflow:true,actor:currentUser?.username||'system'});
   if(!r||!r.ok)throw new Error(r?.error||'Không lưu được phương án triển khai');
@@ -2573,6 +2580,7 @@ async function saveImplementationPlan(id){
   const fresh=assignments.find(x=>String(x.id)===String(id));if(fresh)openWorkV2(id);
   toast((needLater||contractLater)?'Đã lưu phương án. Hệ thống tiếp tục theo dõi hồ sơ còn nợ.':'Đã xác nhận nhu cầu và hợp đồng, khởi tạo quy trình triển khai.');
  }catch(e){toast('Chưa lưu được phương án: '+(e.message||e));}
+ finally{processing?.remove();}
 }
 
 // Rebind the click handler after the newer implementation panel is defined.
