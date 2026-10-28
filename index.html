@@ -2206,10 +2206,27 @@ async function renderSecurePdf(){
 }
 async function openSecureDocument(fileId,title){
  const url=secureFileUrl(fileId,'view');
+ // Admin giữ trình xem gốc; user thường chỉ xem qua canvas PDF.js, không mở toolbar tải/in của trình duyệt.
+ if(isAdminUser()){
+  modal('Xem hồ sơ · '+xhtml(title),
+   '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-size:12px;color:var(--muted)">Quyền quản trị: có thể mở hồ sơ gốc để in hoặc tải.</span><a class="btn light" href="'+url+'" target="_blank" rel="noopener">Mở trong tab mới</a></div>'+
+   '<iframe title="Xem hồ sơ" src="'+url+'" style="display:block;width:100%;height:68vh;border:1px solid var(--line);border-radius:8px;background:#fff" referrerpolicy="no-referrer"></iframe>'+
+   '<div style="text-align:right;margin-top:10px"><button class="btn light" onclick="closeModal()">Đóng</button></div>');
+  return;
+ }
  modal('Xem hồ sơ · '+xhtml(title),
-  '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-size:12px;color:var(--muted)">Nếu định dạng được trình duyệt hỗ trợ, hồ sơ sẽ hiển thị bên dưới.</span><a class="btn light" href="'+url+'" target="_blank" rel="noopener">Mở trong tab mới</a></div>'+
-  '<iframe title="Xem hồ sơ" src="'+url+'" style="display:block;width:100%;height:68vh;border:1px solid var(--line);border-radius:8px;background:#fff" referrerpolicy="no-referrer"></iframe>'+
+  '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-size:12px;color:var(--muted)">Chế độ chỉ xem · chức năng in/tải bị ẩn với tài khoản thông thường.</span><span id="securePdfPageInfo" style="font-size:12px;color:var(--muted)">Đang tải hồ sơ…</span></div>'+
+  '<div id="securePdfPages" oncontextmenu="return false" style="height:68vh;overflow:auto;border:1px solid var(--line);border-radius:8px;background:#e9edf3;padding:12px;user-select:none;-webkit-user-select:none"></div>'+
   '<div style="text-align:right;margin-top:10px"><button class="btn light" onclick="closeModal()">Đóng</button></div>');
+ try{
+  const lib=await ensureSecurePdfJs();
+  const doc=await lib.getDocument({url, disableRange:true, disableStream:true}).promise;
+  securePdfDocument=doc;securePdfScale=1;securePdfPage=1;
+  await renderSecurePdf();
+ }catch(e){
+  const host=document.getElementById('securePdfPages');
+  if(host)host.innerHTML='<div style="padding:24px;color:#b42318;text-align:center">Không thể hiển thị hồ sơ ở chế độ chỉ xem. Vui lòng kiểm tra định dạng PDF hoặc quyền truy cập.</div>';
+ }
 }
 
 function downloadOwnDocument(fileId){window.open(secureFileUrl(fileId,"download"),"_blank","noopener");}
