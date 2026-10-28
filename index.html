@@ -1764,44 +1764,65 @@ function persistState(){return true}
 async function saveAndRender(){await refreshFromServer()}
 async function init(){try{renderAll();}catch(e){console.error(e)}}
 
-let hpdqBootProgress=0,hpdqBootTimer=null;
+let hpdqBootProgress=0,hpdqBootTimer=null,hpdqBootStartedAt=0,hpdqBootReady=false;
+const HPDQ_BOOT_MIN_DURATION=8000;
+const HPDQ_BOOT_SLOGANS=[
+  {at:0,title:'Đào tạo nâng cao hiệu quả nguồn nhân lực',detail:'Mỗi bước học tập — một bước tiến vững chắc.'},
+  {at:25,title:'Phát triển nguồn nhân lực là chìa khóa thành công',detail:'Con người vững mạnh — doanh nghiệp vươn xa.'},
+  {at:50,title:'Học tập liên tục — đổi mới không ngừng',detail:'Mỗi ngày tiến bộ, mỗi bước tạo giá trị.'},
+  {at:75,title:'Vững chuyên môn — giỏi thực tiễn — cùng phát triển',detail:'Sẵn sàng năng lực, bứt phá hiệu quả.'}
+];
+let hpdqBootSloganIndex=-1;
 function hpdqSetBootProgress(value){
   hpdqBootProgress=Math.max(0,Math.min(100,Number(value)||0));
   const pct=document.getElementById('hpdqBootPercent'),arc=document.getElementById('hpdqBootArc'),slogan=document.getElementById('hpdqBootSlogan'),sub=document.getElementById('hpdqBootSub');
   if(pct)pct.textContent=Math.round(hpdqBootProgress)+'%';
   if(arc)arc.style.strokeDashoffset=String(314.16*(1-hpdqBootProgress/100));
-  let title='Đào tạo nâng cao hiệu quả nguồn nhân lực',detail='Mỗi bước học tập — một bước tiến vững chắc.';
-  if(hpdqBootProgress>=85){title='Vững chuyên môn — giỏi thực tiễn — cùng phát triển';detail='Sẵn sàng năng lực, bứt phá hiệu quả.'}
-  else if(hpdqBootProgress>=60){title='Học tập liên tục — đổi mới không ngừng';detail='Mỗi ngày tiến bộ, mỗi bước tạo giá trị.'}
-  else if(hpdqBootProgress>=30){title='Phát triển nguồn nhân lực là chìa khóa thành công';detail='Con người vững mạnh — doanh nghiệp vươn xa.'}
-  if(slogan&&slogan.textContent!==title){slogan.style.opacity='0';setTimeout(()=>{slogan.textContent=title;slogan.style.opacity='1'},140)}
-  if(sub)sub.textContent=detail;
+  let next=0;
+  for(let i=1;i<HPDQ_BOOT_SLOGANS.length;i++){if(hpdqBootProgress>=HPDQ_BOOT_SLOGANS[i].at)next=i;}
+  if(next!==hpdqBootSloganIndex){
+    hpdqBootSloganIndex=next;
+    const item=HPDQ_BOOT_SLOGANS[next];
+    if(slogan){
+      slogan.style.opacity='0';
+      setTimeout(()=>{slogan.textContent=item.title;slogan.style.opacity='1';},220);
+    }
+    if(sub)sub.textContent=item.detail;
+  }
 }
 function hpdqStartBootProgress(){
+  hpdqBootStartedAt=Date.now();hpdqBootReady=false;hpdqBootSloganIndex=-1;
   hpdqSetBootProgress(0);
   if(hpdqBootTimer)clearInterval(hpdqBootTimer);
-  hpdqBootTimer=setInterval(()=>{if(hpdqBootProgress<54)hpdqSetBootProgress(Math.min(54,hpdqBootProgress+Math.max(.5,(54-hpdqBootProgress)*.08)))},450);
+  hpdqBootTimer=setInterval(()=>{
+    const elapsed=Date.now()-hpdqBootStartedAt;
+    // Smooth 0–100% over eight seconds; hold at 95% until the app is actually ready.
+    const timed=Math.min(100,elapsed/HPDQ_BOOT_MIN_DURATION*100);
+    hpdqSetBootProgress(hpdqBootReady?Math.min(99,timed):Math.min(95,timed));
+  },40);
 }
 function hpdqStopBootProgress(){if(hpdqBootTimer){clearInterval(hpdqBootTimer);hpdqBootTimer=null}}
+function hpdqWaitForMinimumBootDuration(){
+  const remaining=Math.max(0,HPDQ_BOOT_MIN_DURATION-(Date.now()-hpdqBootStartedAt));
+  return new Promise(resolve=>setTimeout(resolve,remaining));
+}
 window.addEventListener('load',async()=>{
   hpdqStartBootProgress();
   setLoginStatus('Đang kiểm tra kết nối API…',false);
   try{
-    // Check API independently first so a slow/stale saved session cannot leave the login screen spinning.
     await bootstrapServer();
-    if(serverReady)hpdqSetBootProgress(60);
     if(!serverReady){
       hpdqStopBootProgress();
-      // Never leave the full-screen session-restoring overlay visible when the API is unavailable.
       document.documentElement.classList.remove('session-restoring');
       document.getElementById('login')?.classList.remove('hidden');
       document.getElementById('app')?.classList.add('hidden');
       return;
     }
-    // Wait for the saved session restoration to finish; do not reveal login while it is in progress.
     const restored=await hpRestoreSession();
+    hpdqBootReady=true;
+    await hpdqWaitForMinimumBootDuration();
     hpdqSetBootProgress(100);
-    await new Promise(resolve=>setTimeout(resolve,450));
+    await new Promise(resolve=>setTimeout(resolve,320));
     hpdqStopBootProgress();
     if(!restored){
       sessionToken='';currentUser=null;
@@ -1818,8 +1839,7 @@ window.addEventListener('load',async()=>{
     document.getElementById('app')?.classList.add('hidden');
     setLoginStatus('Lỗi khởi tạo: '+(e.message||e),false);
   }
-});
-/* ===== END HPDQ GOOGLE APPS SCRIPT INTEGRATION ===== */
+});/* ===== END HPDQ GOOGLE APPS SCRIPT INTEGRATION ===== */
 
 
 /* ===== FIX09: COURSE MASTER DETAIL / CURRICULUM / LECTURERS / STUDENTS / RESULTS ===== */
