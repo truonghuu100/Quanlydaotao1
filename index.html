@@ -807,7 +807,7 @@ html,body{background:#f2f5fa!important;color:#0b1f41!important;font-family:Inter
  <div class="tc-page-legend"><span></span> Ngày có lịch đào tạo · Di chuột vào ngày để xem thông tin chi tiết</div>
 </div>
 </section></main></div>
-<div id="modal" class="modal"><div class="modalbox"><div class="mh"><b id="mtitle">Thông tin</b><button class="close" onclick="closeModal()">×</button></div><div class="mb" id="mbody"></div></div></div><div id="toast" style="position:fixed;right:20px;bottom:20px;background:#173e69;color:#fff;padding:11px 15px;border-radius:8px;display:none;z-index:30;font-size:11px"></div>
+<div id="modal" class="modal"><div class="modalbox"><div class="mh"><b id="mtitle">Thông tin</b><div style="display:flex;align-items:center;gap:8px"><button id="modalBackBtn" class="btn light" style="display:none;padding:6px 10px" onclick="modalGoBack()">← Quay lại</button><button class="close" onclick="closeModal()">×</button></div></div><div class="mb" id="mbody"></div></div></div><div id="toast" style="position:fixed;right:20px;bottom:20px;background:#173e69;color:#fff;padding:11px 15px;border-radius:8px;display:none;z-index:30;font-size:11px"></div>
 <script>
 // Keep legacy training-needs data and option lists initialized before any handlers can use them.
 var trainingNeeds=[];
@@ -1537,7 +1537,30 @@ function openMenu(){if(!isAdminUser()){toast('Chỉ Admin được cấu hình m
 function openAudit(){if(!isAdminUser()){toast('Chỉ Admin được xem Audit Log');return}modal('Nhật ký hoạt động',`<div class="note"><b>Nhật ký được lưu ngay trên trình duyệt và giữ lại sau khi tải lại trang.</b><br>Khi kết nối Google Sheet, chính cấu trúc này sẽ được ghi vào LOG/Audit Log trung tâm.</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px"><button class="btn light" onclick="exportBackup()">Xuất backup dữ liệu</button></div><div class="tablewrap"><table class="table"><thead><tr><th>Thời gian</th><th>User</th><th>Hành động</th><th>Đối tượng</th><th>Nội dung</th><th>Chi tiết</th></tr></thead><tbody>${logs.map(x=>`<tr><td>${x.time}</td><td>${x.user}</td><td>${x.action}</td><td>${x.obj}</td><td>${x.detail}</td><td>${x.before||x.after?'<button class="btn light" onclick="viewLog(\''+x.id+'\')">Xem</button>':'—'}</td></tr>`).join('')||'<tr><td colspan="6">Chưa có hoạt động.</td></tr>'}</tbody></table></div>`)}
 function viewLog(id){let x=logs.find(a=>a.id===id);if(!x)return;modal('Chi tiết nhật ký',`<div class="grid g2"><div class="card"><div class="cardhead"><b>Trước thay đổi</b></div><div class="cardbody"><pre style="white-space:pre-wrap;font:10px ui-monospace,monospace">${x.before?JSON.stringify(x.before,null,2):'Không có'}</pre></div></div><div class="card"><div class="cardhead"><b>Sau thay đổi</b></div><div class="cardbody"><pre style="white-space:pre-wrap;font:10px ui-monospace,monospace">${x.after?JSON.stringify(x.after,null,2):'Không có'}</pre></div></div></div>`)}
 function exportBackup(){const payload={exportedAt:new Date().toISOString(),users:users.map(u=>({...u,password:'••••••'})),units:unitMaster,providers:providerMaster,assignments,menuState,logs};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='HPDQ_TRAINING_BACKUP_'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);log('Xuất','Backup dữ liệu','SYSTEM','Admin xuất file backup tổng dữ liệu')}
-function modal(title,body){document.getElementById('mtitle').textContent=title;document.getElementById('mbody').innerHTML=body;document.getElementById('modal').classList.add('show')}function closeModal(){document.getElementById('modal').classList.remove('show')}
+let modalHistory=[];
+function modal(title,body){
+ const shell=document.getElementById('modal');
+ if(shell.classList.contains('show')){
+  const prevTitle=document.getElementById('mtitle').textContent;
+  const prevBody=document.getElementById('mbody').innerHTML;
+  if(prevTitle!==title||prevBody!==body)modalHistory.push({title:prevTitle,body:prevBody});
+ }
+ document.getElementById('mtitle').textContent=title;
+ document.getElementById('mbody').innerHTML=body;
+ const back=document.getElementById('modalBackBtn');
+ if(back)back.style.display=modalHistory.length?'inline-flex':'none';
+ shell.classList.add('show');
+}
+function modalGoBack(){
+ const prev=modalHistory.pop();
+ if(!prev)return;
+ document.getElementById('mtitle').textContent=prev.title;
+ document.getElementById('mbody').innerHTML=prev.body;
+ const back=document.getElementById('modalBackBtn');
+ if(back)back.style.display=modalHistory.length?'inline-flex':'none';
+ document.getElementById('modal').classList.add('show');
+}
+function closeModal(){document.getElementById('modal').classList.remove('show');modalHistory=[];}
 
 /* ===== HPDQ GOOGLE APPS SCRIPT INTEGRATION ===== */
 let serverReady=false; let sessionToken='';
