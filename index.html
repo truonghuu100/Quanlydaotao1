@@ -401,9 +401,26 @@ body{background:#f2f5fa!important}
 @media(max-width:900px){.training-calendar-page{padding:12px}.tc-page-calendar{gap:3px}.tc-page-day{min-height:90px;padding:5px}.tc-page-week{font-size:10px}.tc-page-day-head{font-size:11px}.tc-page-day-head span{font-size:9px}.tc-hover-panel{position:fixed;left:12px!important;right:12px!important;top:20vh;width:auto;max-height:65vh}}
 html.session-restoring #login{display:none!important}
 html.session-restoring #app{visibility:hidden!important}
-html.session-restoring::after{content:"Đang trở lại hệ thống, vui lòng đợi trong giây lát";position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#f1f5fb;color:#173153;font:600 14px system-ui,-apple-system,sans-serif;letter-spacing:.1px}
-html.session-restoring::before{content:"";position:fixed;z-index:2147483647;left:calc(50% - 13px);top:calc(50% - 46px);width:26px;height:26px;border:3px solid #cbd8ec;border-top-color:#2864ed;border-radius:50%;animation:hpdqSessionSpin .8s linear infinite}
-@keyframes hpdqSessionSpin{to{transform:rotate(360deg)}}
+#hpdqBootScreen{display:none;position:fixed;inset:0;z-index:2147483647;background:radial-gradient(circle at 50% 35%,#fff 0%,#f3f7ff 48%,#eaf1fb 100%);align-items:center;justify-content:center;color:#173153;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+html.session-restoring #hpdqBootScreen{display:flex}
+.hpdq-boot-card{width:min(440px,calc(100vw - 36px));padding:34px 28px 30px;border:1px solid #dce6f6;border-radius:24px;background:rgba(255,255,255,.92);box-shadow:0 24px 70px rgba(26,65,126,.13);text-align:center}
+.hpdq-boot-brand{display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:24px}
+.hpdq-boot-logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,#1f5fe5,#17418d);color:#fff;display:grid;place-items:center;font-weight:900;letter-spacing:-1px;box-shadow:0 7px 18px rgba(37,99,235,.25)}
+.hpdq-boot-brand b{display:block;font-size:16px;letter-spacing:.4px}.hpdq-boot-brand small{display:block;margin-top:3px;color:#7284a3;font-size:10px;letter-spacing:1.4px}
+.hpdq-boot-ring{width:174px;height:174px;margin:0 auto 22px;position:relative}
+.hpdq-boot-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.hpdq-boot-track,.hpdq-boot-progress{fill:none;stroke-width:8}
+.hpdq-boot-track{stroke:#e7edf7}
+.hpdq-boot-progress{stroke:url(#hpdqBootGradient);stroke-linecap:round;stroke-dasharray:314.16;stroke-dashoffset:314.16;transition:stroke-dashoffset .45s ease}
+.hpdq-boot-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#hpdqBootPercent{font-size:39px;line-height:1;font-weight:850;letter-spacing:-1.5px;color:#173153;font-variant-numeric:tabular-nums}
+.hpdq-boot-center small{margin-top:8px;color:#7b8da8;font-size:11px;letter-spacing:1.4px;text-transform:uppercase}
+#hpdqBootSlogan{min-height:52px;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:1.45;font-weight:750;color:#173153;transition:opacity .2s ease}
+#hpdqBootSub{margin-top:7px;color:#71829c;font-size:12px;line-height:1.6}
+.hpdq-boot-dots{display:flex;justify-content:center;gap:6px;margin-top:22px}.hpdq-boot-dots i{width:6px;height:6px;border-radius:50%;background:#cbd8ec;animation:hpdqBootPulse 1.1s infinite ease-in-out}.hpdq-boot-dots i:nth-child(2){animation-delay:.15s}.hpdq-boot-dots i:nth-child(3){animation-delay:.3s}
+@keyframes hpdqBootPulse{0%,80%,100%{transform:scale(.7);opacity:.45}40%{transform:scale(1);opacity:1;background:#e7a824}}
+@media(max-width:480px){.hpdq-boot-card{padding:28px 20px}.hpdq-boot-ring{width:154px;height:154px}#hpdqBootSlogan{font-size:15px}}
+@media(prefers-reduced-motion:reduce){.hpdq-boot-progress,.hpdq-boot-dots i{animation:none;transition:none}}
 </style><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 // ===== Module chi phí đào tạo =====
@@ -692,6 +709,18 @@ html,body{background:#f2f5fa!important;color:#0b1f41!important;font-family:Inter
 })();
 </script>
 </head><body>
+<div id="hpdqBootScreen" aria-live="polite" aria-label="Đang khởi tạo HPDQ Training">
+  <div class="hpdq-boot-card">
+    <div class="hpdq-boot-brand"><div class="hpdq-boot-logo">HP</div><div><b>HPDQ TRAINING</b><small>TRAINING MANAGEMENT SYSTEM</small></div></div>
+    <div class="hpdq-boot-ring">
+      <svg viewBox="0 0 120 120" role="img" aria-label="Tiến độ khởi động"><defs><linearGradient id="hpdqBootGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2864ed"/><stop offset="100%" stop-color="#e6ad2e"/></linearGradient></defs><circle class="hpdq-boot-track" cx="60" cy="60" r="50"/><circle id="hpdqBootArc" class="hpdq-boot-progress" cx="60" cy="60" r="50"/></svg>
+      <div class="hpdq-boot-center"><span id="hpdqBootPercent">0%</span><small>Đang khởi tạo</small></div>
+    </div>
+    <div id="hpdqBootSlogan">Đào tạo nâng cao hiệu quả nguồn nhân lực</div>
+    <div id="hpdqBootSub">Mỗi bước học tập — một bước tiến vững chắc.</div>
+    <div class="hpdq-boot-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+  </div>
+</div>
 <div id="login" class="login"><div class="login-brand"><div class="login-brand-top"><div class="login-brand-logo">HP</div><div><b>HPDQ Training</b><small>Hệ thống quản lý đào tạo</small></div></div><div class="login-brand-copy"><h2>Giao việc rõ ràng,<br>theo dõi kết quả đào tạo<br>đến từng bước.</h2><p>Một nơi để quản lý lớp học, phân công người phụ trách<br>và xác nhận kết quả thực tế.</p></div></div><div class="login-panel"><div class="loginbox"><h1>Đăng nhập</h1><p>Đăng nhập để vào hệ thống quản lý đào tạo.</p><div class="field"><label>Tên đăng nhập</label><input id="lu" autocomplete="username" value="" placeholder="Nhập tên đăng nhập"></div><div class="field"><label>Mật khẩu</label><input id="lp" type="password" autocomplete="current-password" value="" placeholder="Nhập mật khẩu" onkeydown="if(event.key==='Enter')doLogin()"></div><button class="btn primary" onclick="doLogin()">Đăng nhập</button><div id="loginGoogleStatus" class="demo">Đang kết nối hệ thống…</div></div></div></div>
 <div id="app" class="app hidden"><aside class="side"><div class="brand"><div class="logo">HP</div><div><b>HPDQ TRAINING</b><small>TRAINING MANAGEMENT SYSTEM</small></div></div><div class="section">Điều hành</div><div class="nav" id="nav"></div><div class="section">Quản trị</div><div class="nav"><button id="adminNav" data-page="admin" onclick="go('admin')"><span class="nav-icon">☼</span><span>Quản trị hệ thống</span></button></div></aside><main class="main"><header class="top"><b id="crumb">Dashboard</b><div class="userchip"><button class="btn light notification-bell" id="notificationBell" onclick="toggleNotificationCenter()">🔔 <span id="notificationUnreadCount">0</span></button><span id="userName">Admin</span><div class="avatar" id="avatar" title="Ảnh đại diện" onclick="openMyProfile()">AD</div><button class="profile-menu-btn" onclick="openMyProfile()">Tài khoản</button><button class="btn light" onclick="logout()">Đăng xuất</button></div></header><section class="content">
 <div id="dashboard" class="page active dashboard-page">
@@ -1735,12 +1764,34 @@ function persistState(){return true}
 async function saveAndRender(){await refreshFromServer()}
 async function init(){try{renderAll();}catch(e){console.error(e)}}
 
+let hpdqBootProgress=0,hpdqBootTimer=null;
+function hpdqSetBootProgress(value){
+  hpdqBootProgress=Math.max(0,Math.min(100,Number(value)||0));
+  const pct=document.getElementById('hpdqBootPercent'),arc=document.getElementById('hpdqBootArc'),slogan=document.getElementById('hpdqBootSlogan'),sub=document.getElementById('hpdqBootSub');
+  if(pct)pct.textContent=Math.round(hpdqBootProgress)+'%';
+  if(arc)arc.style.strokeDashoffset=String(314.16*(1-hpdqBootProgress/100));
+  let title='Đào tạo nâng cao hiệu quả nguồn nhân lực',detail='Mỗi bước học tập — một bước tiến vững chắc.';
+  if(hpdqBootProgress>=85){title='Vững chuyên môn — giỏi thực tiễn — cùng phát triển';detail='Sẵn sàng năng lực, bứt phá hiệu quả.'}
+  else if(hpdqBootProgress>=60){title='Học tập liên tục — đổi mới không ngừng';detail='Mỗi ngày tiến bộ, mỗi bước tạo giá trị.'}
+  else if(hpdqBootProgress>=30){title='Phát triển nguồn nhân lực là chìa khóa thành công';detail='Con người vững mạnh — doanh nghiệp vươn xa.'}
+  if(slogan&&slogan.textContent!==title){slogan.style.opacity='0';setTimeout(()=>{slogan.textContent=title;slogan.style.opacity='1'},140)}
+  if(sub)sub.textContent=detail;
+}
+function hpdqStartBootProgress(){
+  hpdqSetBootProgress(0);
+  if(hpdqBootTimer)clearInterval(hpdqBootTimer);
+  hpdqBootTimer=setInterval(()=>{if(hpdqBootProgress<54)hpdqSetBootProgress(Math.min(54,hpdqBootProgress+Math.max(.5,(54-hpdqBootProgress)*.08)))},450);
+}
+function hpdqStopBootProgress(){if(hpdqBootTimer){clearInterval(hpdqBootTimer);hpdqBootTimer=null}}
 window.addEventListener('load',async()=>{
+  hpdqStartBootProgress();
   setLoginStatus('Đang kiểm tra kết nối API…',false);
   try{
     // Check API independently first so a slow/stale saved session cannot leave the login screen spinning.
     await bootstrapServer();
+    if(serverReady)hpdqSetBootProgress(60);
     if(!serverReady){
+      hpdqStopBootProgress();
       // Never leave the full-screen session-restoring overlay visible when the API is unavailable.
       document.documentElement.classList.remove('session-restoring');
       document.getElementById('login')?.classList.remove('hidden');
@@ -1749,6 +1800,9 @@ window.addEventListener('load',async()=>{
     }
     // Wait for the saved session restoration to finish; do not reveal login while it is in progress.
     const restored=await hpRestoreSession();
+    hpdqSetBootProgress(100);
+    await new Promise(resolve=>setTimeout(resolve,450));
+    hpdqStopBootProgress();
     if(!restored){
       sessionToken='';currentUser=null;
       document.getElementById('login')?.classList.remove('hidden');
@@ -1757,6 +1811,7 @@ window.addEventListener('load',async()=>{
     }
     document.documentElement.classList.remove('session-restoring');
   }catch(e){
+    hpdqStopBootProgress();
     console.error('Khởi tạo phiên đăng nhập:',e);
     document.documentElement.classList.remove('session-restoring');
     document.getElementById('login')?.classList.remove('hidden');
