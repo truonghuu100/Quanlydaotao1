@@ -2408,7 +2408,7 @@ async function deleteTrainingContract(id){
 async function toggleTrainingProviderV2(id){try{const r=await gsCall('toggleTrainingProvider',{id});if(!r||!r.ok)throw new Error(r?.error||'Không cập nhật được trạng thái đơn vị');await refreshFromServerV2();openProviders();toast('Đã cập nhật trạng thái đơn vị ✓');}catch(e){toast('Lỗi: '+(e.message||e));}}
 
 
-let workflowTemplateDraft=[];
+var workflowTemplateDraft=[];
 function workflowNormalizeChildren(children){
  if(!Array.isArray(children))return [];
  return children.map(c=>typeof c==='string'?{name:c,days:0.5}:(c&&typeof c==='object'?{name:String(c.name||c.title||c.text||''),days:Math.max(0.5,Number(c.days)||0.5),mergeWithPrevious:!!c.mergeWithPrevious}:{name:String(c||''),days:0.5}));
