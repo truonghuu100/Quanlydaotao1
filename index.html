@@ -1053,8 +1053,8 @@ let classroomCache=[];
 function canViewClassrooms(){return isAdminUser()||hasPermission('classrooms','view')||hasPermission('classrooms','add')||hasPermission('classrooms','edit')}
 function canAddClassroom(){return isAdminUser()||hasPermission('classrooms','add')}
 function canEditClassroom(){return isAdminUser()||hasPermission('classrooms','edit')}
-function roomId(r){return String(r.PHONG_ID||r.id||'')}
-function roomName(r){return String(r.TEN_PHONG||r.name||'')}
+function roomId(r){return String(r.PHONG_ID||r.PHONG_HOC_ID||r.CLASSROOM_ID||r.id||r.roomId||'')}
+function roomName(r){return String(r.TEN_PHONG||r.TEN_PHONG_HOC||r.PHONG_HOC||r.name||r.roomName||'')}
 function roomAssets(r){if(Array.isArray(r.assets))return r.assets;try{return JSON.parse(r.TAI_SAN_JSON||'[]')}catch{return []}}
 function roomBookings(r){return Array.isArray(r.bookings)?r.bookings:[]}
 async function loadClassrooms(){
@@ -1261,7 +1261,7 @@ function classroomConfirmBlock(a){
  const existing=rows.length?'<div class="card" style="padding:10px;box-shadow:none;margin-bottom:10px">'+rows.map((x,i)=>{const room=classroomCache.find(r=>roomId(r)===String(x.roomId));return '<div style="padding:6px 0;'+(i?'border-top:1px solid var(--line);':'')+'"><b>'+xhtml(room?roomName(room):('Phòng '+String(x.roomId||'')))+'</b><div style="font-size:12px;color:var(--muted);margin-top:3px">'+fmt(x.startDate)+' – '+fmt(x.endDate)+' · '+xhtml(x.status||'Đăng ký dự kiến')+'</div></div>'}).join('')+'</div>':'';
  return '<div class="field span2"><label>Phòng đào tạo</label>'+existing+
  '<div class="card" style="padding:12px;box-shadow:none"><div class="form">'+
- '<div class="field"><label>Phòng dự kiến</label><select id="cf_roomId"><option value="">— Chọn phòng —</option>'+classroomCache.filter(r=>{const st=String(r.TINH_TRANG_PHONG??r.status??'Hoạt động').trim().toLowerCase();return !['ngừng hoạt động','ngừng sử dụng','không hoạt động','đã xóa','inactive'].includes(st)}).map(r=>'<option value="'+xhtml(roomId(r))+'">'+xhtml(roomName(r))+' · Sức chứa '+Number(r.SUC_CHUA_TOI_DA||r.capacity||0)+'</option>').join('')+'</select></div>'+
+ '<div class="field"><label>Phòng dự kiến</label><select id="cf_roomId"><option value="">— Chọn phòng —</option>'+classroomCache.filter(r=>{const st=String(r.TINH_TRANG_PHONG??r.status??'Hoạt động').trim().toLowerCase();return !['ngừng hoạt động','ngừng sử dụng','không hoạt động','đã xóa','inactive'].includes(st)}).map(r=>'<option value="'+xhtml(roomId(r))+'">'+xhtml(roomName(r)||('Phòng học '+roomId(r)))+' · Sức chứa '+Number(r.SUC_CHUA_TOI_DA||r.capacity||0)+'</option>').filter(Boolean).join('')+'</select></div>'+
  '<div class="field"><label>Số học viên dự kiến</label><input id="cf_roomStudents" type="number" min="1" value="'+xhtml(a.confirm.students||a.confirm.roomBookings?.[0]?.studentCount||'')+'" placeholder="Số học viên"></div>'+
  '<div class="field"><label>Từ ngày</label><input id="cf_roomFrom" type="date" value="'+xhtml(a.confirm.trainingFrom||a.confirm.roomBookings?.[0]?.startDate||'')+'"></div>'+
  '<div class="field"><label>Đến ngày</label><input id="cf_roomTo" type="date" value="'+xhtml(a.confirm.trainingTo||a.confirm.roomBookings?.[0]?.endDate||'')+'"></div></div>'+
@@ -1415,7 +1415,7 @@ function openContractManagerUnits(){if(!isAdminUser()){toast('Chỉ Admin đư�
 function addContractManagerUnit(){contractManagerUnits.push({id:'QLHD-'+String(Date.now()).slice(-6),name:'',active:true});openContractManagerUnits()}
 function toggleContractManagerUnit(id){const u=contractManagerUnits.find(x=>x.id===id);if(u){u.active=!u.active;openContractManagerUnits()}}
 async function saveContractManagerUnits(){const payload=contractManagerUnits.map((u,i)=>({id:u.id,name:document.getElementById('cmu_name_'+i)?.value.trim()||u.name,active:u.active}));if(payload.some(x=>!x.name)){toast('Vui lòng nhập tên cho tất cả đơn vị');return}try{const r=await gsCall('saveContractManagerUnits',{units:payload});if(!r||!r.ok)throw new Error(r?.error||'Không lưu được danh mục');await loadContractManagerUnits();closeModal();toast('Đã lưu danh mục đơn vị quản lý hợp đồng')}catch(e){toast('Lỗi lưu danh mục: '+(e.message||e))}}
-function canManageProviders(){return !!currentUser&&(currentUser.role==='Admin'||currentUser.manageProviders===true)}
+function canManageProviders(){return !!currentUser&&(isAdminUser()||currentUser.manageProviders===true||['view','add','edit'].some(a=>hasPermission('contracts',a)||hasPermission('trainingContracts',a)||hasPermission('providers',a)||hasPermission('trainingProviders',a)))}
 function openProviders(){
  if(!canManageProviders()){toast('Bạn không có quyền quản lý đơn vị đào tạo');return}
  const rows=providerMaster.map(p=>`<tr><td>${xhtml(p.id)}</td><td><b>${xhtml(p.name||'Chưa khai báo')}</b><div class="muted" style="font-size:11px">${xhtml(p.address||'Chưa có địa chỉ')}</div></td><td>${xhtml(p.taxCode||'—')}</td><td>${xhtml(p.contact||'—')}<div class="muted" style="font-size:11px">${xhtml(p.phone||'')}</div></td><td>${trainingContracts.filter(c=>String(c.providerId)===String(p.id)).length}</td><td>${lecturers.filter(g=>String(g.providerId)===String(p.id)).length}</td><td><span class="badge ${p.active?'ok':'red'}">${p.active?'Đang dùng':'Ngừng dùng'}</span></td><td><button class="btn light" onclick="editProviderProfile('${xhtml(p.id)}')">Chi tiết / Sửa</button></td></tr>`).join('');
