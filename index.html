@@ -1134,10 +1134,24 @@ async function ensureClassroomsLoaded(force=false){
  })();
  try{return await classroomLoadPromise}finally{classroomLoadPromise=null}
 }
+async function refreshClassroomData({renderMenu=true}={}){
+ const r=await gsCall('getClassrooms',{});
+ if(!r?.ok)throw new Error(r?.error?.message||r?.error||'Không tải được dữ liệu phòng học mới nhất');
+ classroomCache=(r.data||[]).map(x=>({...x,
+  PHONG_ID:x.PHONG_ID||x.PHONG_HOC_ID||x.CLASSROOM_ID||x.id||x.roomId||'',
+  TEN_PHONG:x.TEN_PHONG||x.TEN_PHONG_HOC||x.PHONG_HOC||x.name||x.roomName||'',
+  SUC_CHUA_TOI_DA:x.SUC_CHUA_TOI_DA??x.capacity??0,
+  TINH_TRANG_PHONG:x.TINH_TRANG_PHONG??x.status??'Hoạt động',
+  assets:roomAssets(x),bookings:roomBookings(x)
+ }));
+ classroomLoadPromise=null;
+ if(renderMenu&&document.getElementById('classroomTable'))renderClassrooms();
+ return classroomCache;
+}
 async function loadClassrooms(){
  if(!canViewClassrooms()){toast('Bạn chưa được cấp quyền xem phòng học');return}
  const table=document.getElementById('classroomTable');if(table)table.innerHTML='<tr><td colspan="8">Đang tải dữ liệu phòng học…</td></tr>';
- try{const r=await gsCall('getClassrooms',{});if(!r?.ok)throw new Error(r?.error?.message||r?.error||'Không tải được danh sách phòng');classroomCache=(r.data||[]).map(x=>({...x,assets:roomAssets(x),bookings:roomBookings(x)}));renderClassrooms()}
+ try{await refreshClassroomData({renderMenu:false});renderClassrooms()}
  catch(e){if(table)table.innerHTML='<tr><td colspan="8">Lỗi tải dữ liệu: '+xhtml(e.message||e)+'</td></tr>';toast('Không tải được phòng học: '+(e.message||e))}
 }
 function renderClassrooms(){
@@ -1158,8 +1172,9 @@ async function cancelClassroomBookingUI(bookingId){
  try{
   const r=await gsCall('cancelClassroomBooking',{bookingId});
   if(!r||!r.ok)throw new Error(r?.error?.message||r?.error||'Không hủy được đăng ký phòng.');
-  await loadClassrooms();
-  toast(r.alreadyCancelled?'Đăng ký phòng đã được hủy trước đó.':'Đã hủy đăng ký phòng. Có thể chọn phòng khác hoặc đăng ký lại lịch.');
+  await refreshClassroomData();
+  await refreshFromServerV2();
+  toast(r.alreadyCancelled?'Đăng ký phòng đã được hủy trước đó.':'Đã hủy đăng ký phòng và đồng bộ lịch phòng.');
  }catch(e){toast('Không thể hủy đăng ký phòng: '+(e.message||e));}
 }
 function openClassroomEditor(id=''){
@@ -1173,9 +1188,9 @@ async function saveClassroomUI(id){
  const name=document.getElementById('roomNameInput')?.value.trim()||'',location=document.getElementById('roomLocationInput')?.value.trim()||'',capacity=Number(document.getElementById('roomCapacityInput')?.value||0),status=document.getElementById('roomStatusInput')?.value||'Hoạt động';
  const assets=[...document.querySelectorAll('#roomAssetRows .room-asset-row')].map(r=>({name:r.querySelector('.room-asset-name').value.trim(),quantity:Number(r.querySelector('.room-asset-qty').value||1),note:r.querySelector('.room-asset-note').value.trim()})).filter(a=>a.name);
  if(!name||!location||!Number.isInteger(capacity)||capacity<1){toast('Vui lòng nhập tên, địa điểm và sức chứa hợp lệ');return}
- try{const r=await gsCall('saveClassroom',{id,name,location,capacity,status,assets});if(!r?.ok)throw new Error(r?.error?.message||r?.error||'Không lưu được phòng học');closeModal();await loadClassrooms();toast('Đã lưu thông tin phòng học');}catch(e){toast('Lỗi lưu phòng học: '+(e.message||e))}
+ try{const r=await gsCall('saveClassroom',{id,name,location,capacity,status,assets});if(!r?.ok)throw new Error(r?.error?.message||r?.error||'Không lưu được phòng học');closeModal();await refreshClassroomData();toast('Đã lưu thông tin phòng học và đồng bộ danh mục');}catch(e){toast('Lỗi lưu phòng học: '+(e.message||e))}
 }
-async function deleteClassroomUI(id){if(!isAdminUser()){toast('Chỉ Admin được xóa phòng học');return}const r=classroomCache.find(x=>roomId(x)===String(id));if(!r||!confirm('Xóa phòng '+roomName(r)+'? Chỉ xóa được phòng không còn lịch sử dụng.'))return;try{const out=await gsCall('deleteClassroom',{id});if(!out?.ok)throw new Error(out?.error?.message||out?.error||'Không xóa được phòng');await loadClassrooms();toast('Đã xóa phòng học');}catch(e){toast('Không thể xóa phòng: '+(e.message||e))}}
+async function deleteClassroomUI(id){if(!isAdminUser()){toast('Chỉ Admin được xóa phòng học');return}const r=classroomCache.find(x=>roomId(x)===String(id));if(!r||!confirm('Xóa phòng '+roomName(r)+'? Chỉ xóa được phòng không còn lịch sử dụng.'))return;try{const out=await gsCall('deleteClassroom',{id});if(!out?.ok)throw new Error(out?.error?.message||out?.error||'Không xóa được phòng');await refreshClassroomData();toast('Đã xóa phòng học và đồng bộ danh mục');}catch(e){toast('Không thể xóa phòng: '+(e.message||e))}}
 let createRoomIntervals=[];
 function addCreateRoomInterval(prefillStart=''){createRoomIntervals.push({roomId:'',startDate:prefillStart||document.getElementById('astart')?.value||'',endDate:prefillStart||document.getElementById('astart')?.value||''});renderCreateRoomIntervals();if(!classroomCache.length)ensureClassroomsLoaded().then(()=>renderCreateRoomIntervals()).catch(e=>{const host=document.getElementById('classRoomBookings');if(host)host.insertAdjacentHTML('beforeend','<small style="color:#b91c1c">Không tải được danh sách phòng: '+xhtml(e.message||e)+'</small>')})}
 function renderCreateRoomIntervals(){
@@ -1186,7 +1201,7 @@ function renderCreateRoomIntervals(){
  host.querySelectorAll('.create-room-end').forEach(e=>e.onchange=()=>{createRoomIntervals[Number(e.dataset.index)].endDate=e.value;renderCreateRoomIntervals()});
 }
 function openCreateAssignment(){if(!isAdminUser()){toast('Chỉ Admin được giao việc');return}let opts=users.filter(u=>u.role!=='Admin').map(u=>`<option value="${u.username}">${u.username} — ${u.name}</option>`).join('');modal('Mở lớp thuê ngoài',`<div class="note">Chọn hình thức mở lớp. Lớp mới hoàn toàn dùng đủ 16 bước; lớp đã có hợp đồng nguyên tắc bỏ B02–B09. Ngày khai giảng là mốc bắt đầu B10, hệ thống tính ngược các bước chuẩn bị. Bắt buộc đăng ký phòng theo từng khoảng thời gian; có thể chọn phòng khác cho các giai đoạn khác nhau.</div><div class="form"><div class="field full"><label>Tên lớp / khóa đào tạo</label><input id="aname" placeholder="Ví dụ: Đào tạo NDT UT cấp II"></div><div class="field full"><label>Hình thức mở lớp *</label><select id="aclassType"><option value="MO_LOP_THUE_NGOAI">Mở lớp mới hoàn toàn — đủ 16 bước</option><option value="MO_LOP_HOP_DONG_NGUYEN_TAC">Mở lớp đã có hợp đồng nguyên tắc — bỏ bước 2–9</option></select></div><div class="field"><label>User phụ trách</label><select id="auser">${opts}</select></div><div class="field"><label>Ngày khai giảng (mốc bắt đầu B10)</label><input id="astart" type="date" onchange="createRoomIntervals.forEach(x=>{if(!x.startDate)x.startDate=this.value;if(!x.endDate)x.endDate=this.value});renderCreateRoomIntervals()"></div><div class="field full"><label>Nhu cầu đào tạo bắt buộc *</label><select id="ademand" onchange="updateClassDemandRemaining()"><option value="">Đang tải nhu cầu…</option></select><small id="ademandRemaining" style="color:var(--muted)">Chọn nhu cầu còn số lượng.</small></div><div class="field"><label>Số học viên đáp ứng từ nhu cầu *</label><input id="ademandQty" type="number" min="1" step="1" value="1" oninput="updateClassDemandRemaining();renderCreateRoomIntervals()"></div><div class="field full"><label>Đối tượng triển khai</label><textarea id="atarget" placeholder="Ví dụ: KTV, chuyên viên NM Cơ điện 1"></textarea></div><div class="field full"><label>Ghi chú</label><textarea id="anote" rows="2" placeholder="Thông tin bổ sung (không bắt buộc)"></textarea></div><div class="field full"><label>Lịch sử dụng phòng đào tạo *</label><div id="classRoomBookings"></div><button class="btn light" type="button" onclick="addCreateRoomInterval()">＋ Thêm khoảng thời gian / chọn phòng khác</button><small style="display:block;color:var(--muted);margin-top:6px">Các khoảng ngày không được trùng nhau trong cùng một phòng. Phòng đã có lịch sẽ bị từ chối khi lưu.</small></div></div><div style="text-align:right;margin-top:15px"><button class="btn primary" onclick="createAssignment()">Giao việc & mở lớp</button></div>`);createRoomIntervals=[];addCreateRoomInterval();loadClassrooms().then(()=>renderCreateRoomIntervals()).catch(()=>{});loadTrainingNeeds().then(()=>{const sel=document.getElementById('ademand');if(sel){const available=trainingNeeds.filter(n=>Number(n.SO_LUONG_HOC_VIEN||0)>Number(n.SO_LUONG_DA_DAP_UNG||0));sel.innerHTML='<option value="">— Chọn nhu cầu đào tạo —</option>'+available.map(n=>`<option value="${xhtml(n.NHU_CAU_ID)}">${xhtml(n.TEN_KHOA_DAO_TAO)} — còn ${Math.max(0,Number(n.SO_LUONG_HOC_VIEN||0)-Number(n.SO_LUONG_DA_DAP_UNG||0))} HV</option>`).join('');updateClassDemandRemaining();}}).catch(e=>toast('Không tải được nhu cầu đào tạo: '+e.message));}
-async function createAssignment(){let name=document.getElementById('aname').value.trim(),user=document.getElementById('auser').value,start=document.getElementById('astart').value,target=document.getElementById('atarget').value.trim(),demandId=document.getElementById('ademand')?.value||'',demandQty=Number(document.getElementById('ademandQty')?.value||0);if(!name||!user||!start||!target||!demandId||demandQty<1){toast('Vui lòng nhập đủ thông tin, chọn nhu cầu và số học viên');return}const intervals=createRoomIntervals.map((x,i)=>({roomId:document.querySelector('.create-room-id[data-index="'+i+'"]')?.value||x.roomId,startDate:document.querySelector('.create-room-start[data-index="'+i+'"]')?.value||x.startDate,endDate:document.querySelector('.create-room-end[data-index="'+i+'"]')?.value||x.endDate}));if(!intervals.length||intervals.some(x=>!x.roomId||!x.startDate||!x.endDate||x.startDate>x.endDate)){toast('Vui lòng chọn phòng và khoảng ngày hợp lệ cho tất cả các lịch');return}let a={id:'EXT-'+String(Date.now()).slice(-6),name,user,target,start,end:'',demandId,demandQty,contractType:document.getElementById('aclassType')?.value||'MO_LOP_THUE_NGOAI',confirm:{course:'',provider:'',students:'',units:'',trainingTime:'',field:'',roomBookings:intervals},steps:[]};try{const booked=await gsCall('saveClassroomBookings',{jobId:a.id,jobName:name,studentCount:demandQty,intervals});if(!booked?.ok)throw new Error(booked?.error?.message||booked?.error||'Không đăng ký được phòng học');}catch(e){toast('Không thể mở lớp vì đăng ký phòng thất bại: '+(e.message||e));return}buildSteps(a);a.end=plannedEnd(a);assignments.unshift(a);log('Thêm','Giao việc',a.id,'Mở lớp thuê ngoài và giao cho '+user,null,{id:a.id,name,user,target,start,plannedEnd:a.end,roomBookings:intervals});sendUserNotification(user,'Nhiệm vụ mới được giao','Có nhiệm vụ mới: '+name+'. Hạn dự kiến: '+a.end,'task','#mywork');closeModal();saveAndRender();toast('Đã đăng ký phòng, giao việc và tạo matrix 16 bước')}
+async function createAssignment(){let name=document.getElementById('aname').value.trim(),user=document.getElementById('auser').value,start=document.getElementById('astart').value,target=document.getElementById('atarget').value.trim(),demandId=document.getElementById('ademand')?.value||'',demandQty=Number(document.getElementById('ademandQty')?.value||0);if(!name||!user||!start||!target||!demandId||demandQty<1){toast('Vui lòng nhập đủ thông tin, chọn nhu cầu và số học viên');return}const intervals=createRoomIntervals.map((x,i)=>({roomId:document.querySelector('.create-room-id[data-index="'+i+'"]')?.value||x.roomId,startDate:document.querySelector('.create-room-start[data-index="'+i+'"]')?.value||x.startDate,endDate:document.querySelector('.create-room-end[data-index="'+i+'"]')?.value||x.endDate}));if(!intervals.length||intervals.some(x=>!x.roomId||!x.startDate||!x.endDate||x.startDate>x.endDate)){toast('Vui lòng chọn phòng và khoảng ngày hợp lệ cho tất cả các lịch');return}let a={id:'EXT-'+String(Date.now()).slice(-6),name,user,target,start,end:'',demandId,demandQty,contractType:document.getElementById('aclassType')?.value||'MO_LOP_THUE_NGOAI',confirm:{course:'',provider:'',students:'',units:'',trainingTime:'',field:'',roomBookings:intervals},steps:[]};try{const booked=await gsCall('saveClassroomBookings',{jobId:a.id,jobName:name,studentCount:demandQty,intervals});if(!booked?.ok)throw new Error(booked?.error?.message||booked?.error||'Không đăng ký được phòng học');}catch(e){toast('Không thể mở lớp vì đăng ký phòng thất bại: '+(e.message||e));return}buildSteps(a);a.end=plannedEnd(a);assignments.unshift(a);log('Thêm','Giao việc',a.id,'Mở lớp thuê ngoài và giao cho '+user,null,{id:a.id,name,user,target,start,plannedEnd:a.end,roomBookings:intervals});sendUserNotification(user,'Nhiệm vụ mới được giao','Có nhiệm vụ mới: '+name+'. Hạn dự kiến: '+a.end,'task','#mywork');await refreshClassroomData();closeModal();await refreshFromServerV2();toast('Đã đăng ký phòng, đồng bộ danh mục và tạo matrix 16 bước')}
 function mapOrdinaryTaskRow(t){return {id:String(t.TASK_ID||''),content:String(t.NOI_DUNG_CONG_VIEC||''),assignee:String(t.NGUOI_NHAN||''),deadline:String(t.NGAY_CAN_HOAN_THANH||'').slice(0,10),note:String(t.GHI_CHU||''),status:String(t.TRANG_THAI||'Đang thực hiện'),createdAt:t.CREATED_AT||'',createdBy:String(t.CREATED_BY||'')}}
 function mapOrdinaryReportRow(r){let files=[];try{files=JSON.parse(r.FILES_JSON||'[]');if(!Array.isArray(files))files=[]}catch(e){}return {id:String(r.REPORT_ID||''),taskId:String(r.TASK_ID||''),round:Number(r.LAN_BAO_CAO||0),content:String(r.NOI_DUNG_KET_QUA||''),files,createdAt:r.CREATED_AT||'',createdBy:String(r.CREATED_BY||''),status:String(r.TRANG_THAI||'Đã gửi')}}
 function openCreateOrdinaryTask(){
@@ -1395,7 +1410,7 @@ async function registerConfirmRoom(id){
   if(!r?.ok)throw new Error(r?.error?.message||r?.error||'Không đăng ký được phòng');
   a.confirm.roomBookings=[{roomId:roomIdValue,startDate,endDate,studentCount,status:'Đăng ký dự kiến'}];
   log('Đăng ký','Phòng đào tạo',id,'Đăng ký phòng dự kiến tại bước xác nhận khóa',null,clone(a.confirm.roomBookings));
-  closeModal();saveAndRender();toast('Đã đăng ký phòng đào tạo dự kiến');
+  await refreshClassroomData();closeModal();await refreshFromServerV2();toast('Đã đăng ký phòng đào tạo dự kiến và đồng bộ danh mục phòng');
  }catch(e){toast('Không đăng ký được phòng: '+(e.message||e))}
  finally{processing?.remove()}
 }
@@ -1889,6 +1904,7 @@ async function saveConfirm(id){
     if(roomIdValue){
       const booked=await gsCall('saveClassroomBookings',{jobId:id,jobName:course,studentCount:roomStudents,intervals:[{roomId:roomIdValue,startDate:roomFrom,endDate:roomTo}]});
       if(!booked||!booked.ok)throw new Error(booked?.error?.message||booked?.error||'Thông tin khóa đã lưu nhưng không lưu được đăng ký phòng');
+      await refreshClassroomData();
     }
     closeModal();
     await refreshFromServerV2();
