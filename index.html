@@ -1734,9 +1734,13 @@ async function hpRestoreSession(){
   let saved=null;try{saved=JSON.parse(localStorage.getItem(HPDQ_SESSION_KEY)||'null');}catch(e){}
   if(!saved||!saved.token||!saved.username||!saved.lastActivityAt)return false;
   // Không tự xóa phiên chỉ vì người dùng lâu ngày không hoạt động.
-  sessionToken=String(saved.token);hpLastActivity=Number(saved.lastActivityAt);hpLastPersist=hpLastActivity;
+  const restoreToken=String(saved.token);
+  sessionToken=restoreToken;hpLastActivity=Number(saved.lastActivityAt);hpLastPersist=hpLastActivity;
   try{
     await loadServerState(saved.username);
+    // A timed-out restore may finish after a fresh manual login. Never let that
+    // older asynchronous operation replace or clear the newer authenticated session.
+    if(sessionToken!==restoreToken)return false;
     const user=(users||[]).find(u=>String(u.username||'').toLowerCase()===String(saved.username).toLowerCase()&&String(u.status||'')==='Hoạt động');
     if(!user)throw new Error('Tài khoản không còn hoạt động.');
     currentUser=user;
@@ -1745,7 +1749,10 @@ async function hpRestoreSession(){
     document.getElementById('avatar').textContent=currentUser.username.slice(0,2).toUpperCase();applyCurrentUserAvatar();
     renderAll();go(currentUser.role==='Admin'?'dashboard':'mywork');hpStartIdleMonitor();
     return true;
-  }catch(e){sessionToken='';currentUser=null;hpClearSavedSession();return false;}
+  }catch(e){
+    if(sessionToken===restoreToken){sessionToken='';currentUser=null;hpClearSavedSession();}
+    return false;
+  }
 }
 
 const HPDQ_API_BASE = String(
