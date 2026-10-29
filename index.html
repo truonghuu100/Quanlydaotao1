@@ -2908,6 +2908,7 @@ async function openImplementationPlan(id){
  const a=assignments.find(x=>String(x.id)===String(id));if(!a)return;
  try{await loadTrainingNeeds()}catch(e){console.warn('Không tải được nhu cầu đào tạo',e)}
  modal('Bước 1/2 — Xác định Nhu cầu và Hợp đồng',implementationPlanPanel(a));
+ setTimeout(()=>{renderImplementationNeedAllocations();updateImplementationPlanState()},0);
 }
 async function openWorkV2(id){
  const a=assignments.find(x=>String(x.id)===String(id));if(!a)return;
@@ -2953,8 +2954,9 @@ async function saveImplementationPlan(id){
   if(!r||!r.ok)throw new Error(r?.error||'Không lưu được phương án triển khai');
   a.needIds=needIds;a.contractIds=contractIds;a.contractId=contractId;a.needSupplementLater=needLater;a.contractSupplementLater=contractLater;a.status='Đang thực hiện';const selectedContract=(trainingContracts||[]).find(c=>String(c.id)===String(contractId));if(selectedContract?.providerId&&(!a.confirm?.provider||!trainingProviders.some(p=>p.id===a.confirm.provider)))a.confirm={...(a.confirm||{}),provider:selectedContract.providerId};
   await refreshFromServer();
+  if(!needLater&&needIds.length)await loadTrainingNeeds();
   const fresh=assignments.find(x=>String(x.id)===String(id));if(fresh)openWorkV2(id);
-  toast((needLater||contractLater)?'Đã lưu phương án. Hệ thống tiếp tục theo dõi hồ sơ còn nợ.':'Đã xác nhận nhu cầu và hợp đồng, khởi tạo quy trình triển khai.');
+  toast((needLater||contractLater)?'Đã lưu phương án. Hệ thống tiếp tục theo dõi hồ sơ còn nợ.':'Đã xác nhận nhu cầu, ghi nhận số học viên đã đáp ứng và khởi tạo quy trình triển khai.');
  }catch(e){toast('Chưa lưu được phương án: '+(e.message||e));}
  finally{processing?.remove();}
 }
