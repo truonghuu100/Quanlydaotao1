@@ -1775,6 +1775,18 @@ async function gsCall(fn, payload){
   let result;
   try { result = await response.json(); }
   catch (error) { throw new Error(`API trả về dữ liệu không hợp lệ (HTTP ${response.status}).`); }
+  // Do not leave a stale logged-in shell visible after the API rejects an expired session.
+  if(response.status===401 && sessionToken){
+    hpStopIdleMonitor();
+    hpClearSavedSession();
+    sessionToken='';
+    currentUser=null;
+    document.getElementById('app')?.classList.add('hidden');
+    document.getElementById('login')?.classList.remove('hidden');
+    setLoginStatus('Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.',false);
+    if(!window.__hpdqExpiredSessionNotice){window.__hpdqExpiredSessionNotice=true;toast('Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.');}
+    throw new Error(result?.error||'Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.');
+  }
   // The legacy UI handles {ok:false,error} itself, so preserve JSON bodies for HTTP 4xx/5xx.
   return result;
 }
