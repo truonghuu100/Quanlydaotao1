@@ -1361,7 +1361,7 @@ function classroomConfirmBlock(a){
  const rows=Array.isArray(a?.confirm?.roomBookings)?a.confirm.roomBookings:[];
  const activeBooking=rows.find(x=>String(x.status||'')!=='Đã hủy')||{};
  const fmt=d=>{if(!d)return '—';const p=String(d).slice(0,10).split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:d};
- const existing=rows.length?'<div class="card" style="padding:10px;box-shadow:none;margin-bottom:10px">'+rows.map((x,i)=>{const room=classroomCache.find(r=>roomId(r)===String(x.roomId));return '<div style="padding:6px 0;'+(i?'border-top:1px solid var(--line);':'')+'"><b>'+xhtml(room?roomName(room):('Phòng '+String(x.roomId||'')))+'</b><div style="font-size:12px;color:var(--muted);margin-top:3px">'+fmt(x.startDate)+' – '+fmt(x.endDate)+' · '+xhtml(x.status||'Đăng ký dự kiến')+'</div></div>'}).join('')+'</div>':'';
+ const existing=rows.length?'<div class="card" style="padding:10px;box-shadow:none;margin-bottom:10px">'+rows.map((x,i)=>{const room=classroomCache.find(r=>roomId(r)===String(x.roomId));return '<div style="padding:6px 0;'+(i?'border-top:1px solid var(--line);':'')+'"><b>'+xhtml(room?roomName(room):(x.roomName||('Phòng '+String(x.roomId||''))))+'</b><div style="font-size:12px;color:var(--muted);margin-top:3px">'+fmt(x.startDate)+' – '+fmt(x.endDate)+' · '+xhtml(x.status||'Đăng ký dự kiến')+'</div></div>'}).join('')+'</div>':'';
  return '<div class="field span2"><label>Phòng đào tạo</label>'+existing+
  '<div class="card" style="padding:12px;box-shadow:none"><div class="form">'+
  '<div class="field"><label>Phòng dự kiến</label><select id="cf_roomId"><option value="">— Chọn phòng —</option>'+classroomCache.filter(r=>{const st=String(r.TINH_TRANG_PHONG??r.status??'Hoạt động').trim().toLowerCase();return !['ngừng hoạt động','ngừng sử dụng','không hoạt động','đã xóa','inactive'].includes(st)}).map(r=>'<option value="'+xhtml(roomId(r))+'" '+(String(roomId(r))===String(activeBooking.roomId||'')?'selected':'')+'>'+xhtml(roomName(r)||('Phòng học '+roomId(r)))+' · Sức chứa '+Number(r.SUC_CHUA_TOI_DA||r.capacity||0)+'</option>').filter(Boolean).join('')+'</select></div>'+
@@ -1401,7 +1401,8 @@ async function registerConfirmRoom(id){
  const a=assignments.find(x=>x.id===id);if(!a)return;
  const roomIdValue=document.getElementById('cf_roomId')?.value||'',startDate=document.getElementById('cf_roomFrom')?.value||'',endDate=document.getElementById('cf_roomTo')?.value||'',studentCount=Number(document.getElementById('cf_roomStudents')?.value||a.confirm.students||0);
  if(!roomIdValue||!startDate||!endDate||startDate>endDate){toast('Vui lòng chọn phòng và nhập khoảng ngày hợp lệ');return}
- const room=classroomCache.find(r=>roomId(r)===roomIdValue);if(!room){toast('Không tìm thấy phòng đã chọn');return}
+ try{await refreshClassroomData({renderMenu:false});}catch(e){toast('Không tải được danh mục phòng mới nhất. Lịch đăng ký hiện tại được giữ nguyên; vui lòng thử lại.');return}
+ const room=classroomCache.find(r=>roomId(r)===roomIdValue);if(!room){toast('Phòng đã chọn không có trong danh mục mới nhất. Lịch hiện tại được giữ nguyên; vui lòng tải lại danh sách phòng.');return}
  if(studentCount>Number(room.SUC_CHUA_TOI_DA||0)){toast('Số học viên vượt quá sức chứa phòng');return}
  if(!(await checkConfirmRoom(id)))return;
  const processing=showProcessingOverlay('Đang xử lý','Đang đăng ký phòng đào tạo dự kiến...');
