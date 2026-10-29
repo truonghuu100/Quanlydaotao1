@@ -789,6 +789,55 @@ html,body{scroll-behavior:auto!important}
  }catch(e){}
 })();
 </script>
+
+<style id="calendar-admin-layout-fix">
+/* Scoped layout correction: training calendar */
+#trainingCalendarPage.page.active{display:block!important;width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow:visible;transform:none}
+#trainingCalendarPage .title{gap:16px;flex-wrap:wrap;align-items:flex-start}
+#trainingCalendarPage .title>div{min-width:0;max-width:100%}
+#trainingCalendarPage .title>div:last-child{justify-content:flex-start}
+#trainingCalendarPage .tc-filter-panel{width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(180px,2fr) repeat(2,minmax(130px,1fr)) repeat(2,minmax(160px,1.2fr)) auto}
+#trainingCalendarPage .tc-filter-field,#trainingCalendarPage .tc-filter-actions{min-width:0}
+#trainingCalendarPage .tc-filter-field input,#trainingCalendarPage .tc-filter-field select{max-width:100%;min-width:0}
+#trainingCalendarPage .tc-page-toolbar{min-width:0;flex-wrap:wrap}
+#trainingCalendarPage .tc-page-toolbar h2{min-width:0;flex:0 1 auto}
+#trainingCalendarPage .tc-page-toolbar span{margin-left:auto;min-width:0}
+#trainingCalendarPage .tc-page-calendar{width:100%;max-width:100%;min-width:0;grid-template-columns:repeat(7,minmax(0,1fr));align-items:stretch}
+#trainingCalendarPage .tc-page-day{min-width:0;overflow-wrap:anywhere}
+#trainingCalendarPage .tc-page-day-head{min-width:0;flex-wrap:wrap}
+#trainingCalendarPage .tc-page-day-head span{max-width:100%;white-space:normal}
+#trainingCalendarPage .tc-hover-panel{z-index:50;overflow-wrap:anywhere}
+@media(max-width:1200px){#trainingCalendarPage .tc-filter-panel{grid-template-columns:repeat(3,minmax(0,1fr))}#trainingCalendarPage .tc-filter-keyword{grid-column:span 2}}
+@media(max-width:760px){
+#trainingCalendarPage{padding:12px!important}
+#trainingCalendarPage .tc-filter-panel{grid-template-columns:repeat(2,minmax(0,1fr));padding:10px}
+#trainingCalendarPage .tc-filter-keyword,#trainingCalendarPage .tc-filter-provider{grid-column:1/-1}
+#trainingCalendarPage .tc-page-calendar{gap:3px}
+#trainingCalendarPage .tc-page-day{min-height:78px;padding:4px;border-radius:6px}
+#trainingCalendarPage .tc-page-week{padding:7px 1px;font-size:10px}
+#trainingCalendarPage .tc-page-day-head{font-size:11px}
+#trainingCalendarPage .tc-page-day-head span{font-size:9px;padding:2px 3px}
+#trainingCalendarPage .tc-page-toolbar span{width:100%;margin-left:0}
+}
+@media(max-width:420px){#trainingCalendarPage .tc-page-day{min-height:60px;padding:3px}#trainingCalendarPage .tc-page-day-head{font-size:10px}#trainingCalendarPage .tc-page-day-head span{display:none}}
+/* Scoped layout correction: system administration tabs and active panel */
+#admin.page.active{display:block!important;width:100%;max-width:100%;min-width:0;box-sizing:border-box;transform:none!important}
+#admin .admin-tabs{display:flex!important;flex-flow:row wrap!important;align-items:stretch!important;gap:7px!important;width:100%;max-width:100%;overflow:visible!important}
+#admin .admin-tab{flex:0 1 auto!important;max-width:100%;white-space:normal!important;line-height:1.35;min-width:0}
+#admin .admin-tab-panel{display:none!important;visibility:hidden!important;width:100%;min-width:0;max-width:100%;transform:none!important;animation:none!important}
+#admin .admin-tab-panel.active{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;inset:auto!important;min-height:1px;width:100%;max-width:100%;overflow:visible}
+#admin .admin-tab-panel.active>.card,#admin .admin-tab-panel.active>.admin-feature-card,#admin .admin-tab-panel.active>.admin-panel-toolbar{width:100%;max-width:100%;min-width:0}
+#admin .admin-panel-toolbar{flex-wrap:wrap;min-width:0}
+#admin .admin-user-table-card{min-width:0;max-width:100%}
+#admin .admin-tab-panel .tablewrap{max-width:100%;overflow-x:auto}
+@media(max-width:760px){
+#admin .admin-tab{flex:1 1 145px!important;text-align:center;padding:9px 10px}
+#admin .admin-feature-card{flex-wrap:wrap;padding:16px}
+#admin .admin-panel-toolbar{padding:14px}
+#admin .admin-user-table-card .cardhead{flex-wrap:wrap}
+}
+</style>
+
 </head><body>
 <div id="hpdqBootScreen" aria-live="polite" aria-label="Đang khởi tạo HPDQ Training">
   <div class="hpdq-boot-card">
