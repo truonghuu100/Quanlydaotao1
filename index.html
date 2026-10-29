@@ -2760,7 +2760,44 @@ async function createAssignment(){
  try{const r=await gsCall('createJob',{tenCongViec:name,userPhuTrach:user,ngayBatDauDuKien:start,doiTuong:target,ghiChu:document.getElementById('anote')?.value.trim()||'',loaiCongViec:classType,donViHocVienIds:units,demandAllocations:allocations,actor:currentUser?.username||'system'});if(!r||!r.ok)throw new Error(r?.error||'Không tạo được lớp');closeModal();toast('Đã mở lớp và ghi nhận các nhu cầu được đáp ứng ✓');refreshFromServer().catch(e=>console.warn('Làm mới dữ liệu sau khi mở lớp thất bại',e))}catch(e){toast('Lỗi: '+(e.message||e))}
 }
 
-const _goTrainingNeeds=go;go=function(id){_goTrainingNeeds(id);if(id==='trainingNeeds'&&document.getElementById('trainingNeeds')?.classList.contains('active'))loadTrainingNeeds().catch(e=>toast('Không tải được nhu cầu: '+e.message));};
+// Auto-load training needs whenever its page becomes active or the authenticated state refreshes.
+let _trainingNeedsAutoLoadPromise=null;
+let _trainingNeedsLastAutoLoadAt=0;
+function scheduleTrainingNeedsAutoLoad(force=false){
+  const page=document.getElementById('trainingNeeds');
+  if(!page||!page.classList.contains('active'))return;
+  // Wait until login/session restoration has completed; never replace real data with an unauthenticated empty result.
+  if(!sessionToken)return;
+  const now=Date.now();
+  if(_trainingNeedsAutoLoadPromise)return;
+  if(!force&&now-_trainingNeedsLastAutoLoadAt<1200)return;
+  _trainingNeedsLastAutoLoadAt=now;
+  _trainingNeedsAutoLoadPromise=loadTrainingNeeds().catch(e=>{
+    console.warn('Tự động tải nhu cầu đào tạo thất bại:',e);
+    const body=document.getElementById('trainingNeedsTable');
+    if(body&&!trainingNeeds.length)body.innerHTML='<tr><td colspan="9" style="padding:24px;color:#b42318;text-align:center">Chưa tải được dữ liệu nhu cầu đào tạo. Hệ thống sẽ thử tải lại khi kết nối sẵn sàng.</td></tr>';
+  }).finally(()=>{_trainingNeedsAutoLoadPromise=null;});
+}
+const _goTrainingNeeds=go;
+go=function(id){
+  _goTrainingNeeds(id);
+  if(id==='trainingNeeds')setTimeout(()=>scheduleTrainingNeedsAutoLoad(true),0);
+};
+const _needsPage=document.getElementById('trainingNeeds');
+if(_needsPage&&typeof MutationObserver!=='undefined'){
+  new MutationObserver(()=>scheduleTrainingNeedsAutoLoad(true)).observe(_needsPage,{attributes:true,attributeFilter:['class']});
+}
+// When login/session restoration refreshes server data while the needs page is already open, load its records too.
+if(typeof loadServerStateV2==='function'){
+  const _loadServerStateV2BeforeNeedsAutoLoad=loadServerStateV2;
+  loadServerStateV2=async function(...args){
+    const result=await _loadServerStateV2BeforeNeedsAutoLoad.apply(this,args);
+    setTimeout(()=>scheduleTrainingNeedsAutoLoad(true),0);
+    return result;
+  };
+}
+window.addEventListener('pageshow',()=>setTimeout(()=>scheduleTrainingNeedsAutoLoad(true),0));
+setTimeout(()=>scheduleTrainingNeedsAutoLoad(true),0);
 </script>
 <div id="hpUploadOverlay" aria-live="polite" role="dialog" aria-modal="true" aria-labelledby="hpUploadTitle">
  <div id="hpUploadPanel">
