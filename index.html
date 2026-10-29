@@ -1712,20 +1712,21 @@ function mapStep(s, matrixById){
   let history=[]; try{history=s.LICH_SU_JSON?JSON.parse(s.LICH_SU_JSON):[];}catch(e){}
   let files=[];try{files=s.HOSO_LIENQUAN_JSON?JSON.parse(s.HOSO_LIENQUAN_JSON):[];if(!Array.isArray(files))files=[];}catch(e){files=[];} return {n:n,name:s.TEN_BUOC||m.TEN_BUOC||'',days:Number(s.SO_NGAY_LAM_VIEC||m.SO_NGAY_LAM_VIEC||0),start:s.NGAY_BAT_DAU_DU_KIEN||'',end:s.NGAY_KET_THUC_DU_KIEN||'',status:s.TRANG_THAI||'Chưa thực hiện',result:s.KET_QUA_THUC_TE||'',actualDate:s.NGAY_KET_QUA||'',updatedAt:s.CAP_NHAT_CUOI||'',updatedBy:s.NGUOI_THUC_HIEN||'',performer:s.NGUOI_THUC_HIEN||'',history,files};
 }
-function mapJob(j, stepRows, courseRows, matrixRows){
+function mapJob(j, stepRows, courseRows, matrixRows, bookingRows=[]){
   const matrixById={}; matrixRows.forEach(m=>matrixById[String(m.BUOC_ID)]=m);
   const cr=courseRows.find(x=>String(x.CONGVIEC_ID)===String(j.CONGVIEC_ID))||{};
   const ss=stepRows.filter(x=>String(x.CONGVIEC_ID)===String(j.CONGVIEC_ID)).sort((a,b)=>(Number(matrixById[String(a.BUOC_ID)]?.THU_TU||a.BUOC_ID.replace(/\D/g,'')))-(Number(matrixById[String(b.BUOC_ID)]?.THU_TU||b.BUOC_ID.replace(/\D/g,''))));
   const steps=ss.map(s=>mapStep(s,matrixById));
   const alloc=(()=>{try{return cr.PHAN_BO_HV_JSON?JSON.parse(cr.PHAN_BO_HV_JSON):[];}catch(e){return [];}})();
-  return {id:j.CONGVIEC_ID,name:j.TEN_CONGVIEC||'',user:j.USER_PHU_TRACH||'',createdBy:j.CREATED_BY||'',target:j.DOI_TUONG_TRIEN_KHAI||'',note:j.GHI_CHU||'',status:j.TRANG_THAI||'',cancelReason:j.LY_DO_HUY||'',needIds:(()=>{try{return JSON.parse(j.NHU_CAU_IDS_JSON||'[]').map(x=>typeof x==='string'?x:String(x.id||x.NHU_CAU_ID||'' )).filter(Boolean)}catch(e){return []}})(),contractId:j.HOP_DONG_ID||'',needSupplementLater:String(j.NHU_CAU_BO_SUNG_SAU)==='true'||j.NHU_CAU_BO_SUNG_SAU===true,contractSupplementLater:String(j.HOP_DONG_BO_SUNG_SAU)==='true'||j.HOP_DONG_BO_SUNG_SAU===true,start:j.NGAY_BAT_DAU_DU_KIEN?String(j.NGAY_BAT_DAU_DU_KIEN).slice(0,10):'',end:steps.length?steps[steps.length-1].end:'',confirm:{course:cr.TEN_KHOA_CHINH_THUC||'',provider:cr.DONVI_DAO_TAO_ID||'',students:cr.SO_HV_TONG||'',units:alloc,trainingTime:(cr.NGAY_DAO_TAO_TU&&cr.NGAY_DAO_TAO_DEN)?String(cr.NGAY_DAO_TAO_TU).slice(0,10)+' - '+String(cr.NGAY_DAO_TAO_DEN).slice(0,10):'',trainingFrom:cr.NGAY_DAO_TAO_TU?String(cr.NGAY_DAO_TAO_TU).slice(0,10):'',trainingTo:cr.NGAY_DAO_TAO_DEN?String(cr.NGAY_DAO_TAO_DEN).slice(0,10):'',field:cr.LINH_VUC_DAO_TAO||'',ghiChu:cr.GHI_CHU||''},steps,assignmentHistory:[]};
+  const roomBookings=(bookingRows||[]).filter(x=>String(x.CONGVIEC_ID||'')===String(j.CONGVIEC_ID||'')).map(x=>({bookingId:String(x.PHIEU_DAT_PHONG_ID||x.id||''),roomId:String(x.PHONG_ID||''),roomName:String(x.TEN_PHONG||''),startDate:String(x.NGAY_BAT_DAU||'').slice(0,10),endDate:String(x.NGAY_KET_THUC||'').slice(0,10),status:String(x.TRANG_THAI||'Đã đăng ký'),studentCount:Number(x.SO_HOC_VIEN||0)})).sort((a,b)=>(a.status==='Đã hủy')-(b.status==='Đã hủy')||a.startDate.localeCompare(b.startDate));
+  return {id:j.CONGVIEC_ID,name:j.TEN_CONGVIEC||'',user:j.USER_PHU_TRACH||'',createdBy:j.CREATED_BY||'',target:j.DOI_TUONG_TRIEN_KHAI||'',note:j.GHI_CHU||'',status:j.TRANG_THAI||'',cancelReason:j.LY_DO_HUY||'',needIds:(()=>{try{return JSON.parse(j.NHU_CAU_IDS_JSON||'[]').map(x=>typeof x==='string'?x:String(x.id||x.NHU_CAU_ID||'' )).filter(Boolean)}catch(e){return []}})(),contractId:j.HOP_DONG_ID||'',needSupplementLater:String(j.NHU_CAU_BO_SUNG_SAU)==='true'||j.NHU_CAU_BO_SUNG_SAU===true,contractSupplementLater:String(j.HOP_DONG_BO_SUNG_SAU)==='true'||j.HOP_DONG_BO_SUNG_SAU===true,start:j.NGAY_BAT_DAU_DU_KIEN?String(j.NGAY_BAT_DAU_DU_KIEN).slice(0,10):'',end:steps.length?steps[steps.length-1].end:'',confirm:{course:cr.TEN_KHOA_CHINH_THUC||'',provider:cr.DONVI_DAO_TAO_ID||'',students:cr.SO_HV_TONG||'',units:alloc,roomBookings,trainingTime:(cr.NGAY_DAO_TAO_TU&&cr.NGAY_DAO_TAO_DEN)?String(cr.NGAY_DAO_TAO_TU).slice(0,10)+' - '+String(cr.NGAY_DAO_TAO_DEN).slice(0,10):'',trainingFrom:cr.NGAY_DAO_TAO_TU?String(cr.NGAY_DAO_TAO_TU).slice(0,10):'',trainingTo:cr.NGAY_DAO_TAO_DEN?String(cr.NGAY_DAO_TAO_DEN).slice(0,10):'',field:cr.LINH_VUC_DAO_TAO||'',ghiChu:cr.GHI_CHU||''},steps,assignmentHistory:[]};
 }
 async function loadServerState(username, preloadedState){
   const state=preloadedState || await gsCall('getAppState',{username:username||currentUser?.username||''});
   if(!state || !state.ok) throw new Error(state?.error||'Không đọc được dữ liệu Google');
   users=(state.users||[]).map(mapUser);
   unitMaster=(state.units||[]).map(u=>({id:u.DONVI_ID||'',name:u.TEN_DON_VI||'',active:String(u.TRANG_THAI||'Hoạt động')==='Hoạt động'}));
-  assignments=(state.jobs||[]).map(j=>mapJob(j,state.steps||[],state.courses||[],state.matrix||[]));
+  assignments=(state.jobs||[]).map(j=>mapJob(j,state.steps||[],state.courses||[],state.matrix||[],state.classroomBookings||[]));
   matrix=(state.matrix||[]).sort((a,b)=>Number(a.THU_TU)-Number(b.THU_TU)).map(x=>Number(x.SO_NGAY_LAM_VIEC)||0);
   stepNames=(state.matrix||[]).sort((a,b)=>Number(a.THU_TU)-Number(b.THU_TU)).map(x=>x.TEN_BUOC||'');
   logs=(state.audit||[]).map(x=>({id:x.LOG_ID||'',time:x.SERVER_TIMESTAMP?new Date(x.SERVER_TIMESTAMP).toLocaleString('vi-VN'):'',iso:x.SERVER_TIMESTAMP||'',user:x.USERNAME||'',action:x.ACTION||'',obj:x.MODULE||'',detail:x.DESCRIPTION||'',before:x.BEFORE_DATA||'',after:x.AFTER_DATA||''})).reverse();
@@ -1868,12 +1869,30 @@ async function saveStep(id,n){
   try{const r=await gsCall('updateStep',{congViecId:id,buocId:'B'+String(n).padStart(2,'0'),trangThai:status,ngayKetQua:actualDate,ketQua:result,actor:currentUser?.username||'system'});if(!r||!r.ok)throw new Error(r?.error||'Không cập nhật được bước');s.status=status;s.actualDate=actualDate;s.result=result;s.updatedAt=new Date().toISOString();s.updatedBy=currentUser?.username||'system';if(!Array.isArray(s.history))s.history=[];s.history.push({revision:s.history.length+1,updatedAt:s.updatedAt,updatedBy:s.updatedBy,status,actualDate,result});if(status==='Hoàn thành'&&n<16&&a.steps[n]&&a.steps[n].status==='Chưa bắt đầu')a.steps[n].status='Đang thực hiện';renderAll();closeModal();toast('Đã lưu bước '+n+' ✓');}catch(e){toast('Lỗi: '+(e.message||e));}
 }
 async function saveConfirm(id){
-  const a=assignments.find(x=>x.id===id);if(!a)return;let total=Number(document.getElementById('cf_students').value||0),alloc=readUnitAlloc(),sum=alloc.reduce((n,x)=>n+Number(x.qty||0),0);
-  if(total>0&&sum>total){toast('Tổng số theo đơn vị không được lớn hơn tổng số học viên');return} if(total>0&&sum!==total){toast('Tổng số theo từng đơn vị phải bằng tổng số học viên');return}
+  const a=assignments.find(x=>x.id===id);if(!a)return;
+  let total=Number(document.getElementById('cf_students').value||0),alloc=readUnitAlloc(),sum=alloc.reduce((n,x)=>n+Number(x.qty||0),0);
+  if(total>0&&sum>total){toast('Tổng số theo đơn vị không được lớn hơn tổng số học viên');return}
+  if(total>0&&sum!==total){toast('Tổng số theo từng đơn vị phải bằng tổng số học viên');return}
   const course=document.getElementById('cf_course').value.trim(),provider=document.getElementById('cf_provider').value,field=document.getElementById('cf_field').value;
   const from=document.getElementById('cf_trainingFrom')?.value||'',to=document.getElementById('cf_trainingTo')?.value||'',ghiChu=document.getElementById('cf_note')?.value.trim()||'';
-  if(!from||!to){toast('Vui lòng nhập đầy đủ Từ ngày và Đến ngày đào tạo');return} if(from>to){toast('Ngày bắt đầu đào tạo không được sau ngày kết thúc');return} if(!course){toast('Vui lòng cập nhật tên chính thức của khóa đào tạo');return} if(!provider){toast('Vui lòng chọn đơn vị đào tạo');return}
-  try{const r=await gsCall('updateCourseInfo',{congViecId:id,tenKhoaChinhThuc:course,donViDaoTaoId:provider,soHvTong:total,phanBoHv:alloc,ngayTu:from,ngayDen:to,linhVuc:field,ghiChu:ghiChu,actor:currentUser?.username||'system'});if(!r||!r.ok)throw new Error(r?.error||'Không lưu được thông tin khóa');a.confirm={...a.confirm,course,provider,students:total,units:alloc,trainingFrom:from,trainingTo:to,trainingTime:from+' - '+to,field,ghiChu:ghiChu};renderAll();closeModal();toast('Đã lưu thông tin xác nhận khóa ✓');}catch(e){toast('Lỗi: '+(e.message||e));}
+  const roomIdValue=document.getElementById('cf_roomId')?.value||'',roomFrom=document.getElementById('cf_roomFrom')?.value||'',roomTo=document.getElementById('cf_roomTo')?.value||'',roomStudents=Number(document.getElementById('cf_roomStudents')?.value||total||0);
+  if(!from||!to){toast('Vui lòng nhập đầy đủ Từ ngày và Đến ngày đào tạo');return}
+  if(from>to){toast('Ngày bắt đầu đào tạo không được sau ngày kết thúc');return}
+  if(!course){toast('Vui lòng cập nhật tên chính thức của khóa đào tạo');return}
+  if(!provider){toast('Vui lòng chọn đơn vị đào tạo');return}
+  if(roomIdValue&&(!roomFrom||!roomTo||roomFrom>roomTo)){toast('Vui lòng nhập khoảng ngày sử dụng phòng hợp lệ');return}
+  const btn=document.querySelector('button[onclick="saveConfirm(\''+id+'\')"]');if(btn){btn.disabled=true;btn.textContent='Đang lưu…';}
+  try{
+    const r=await gsCall('updateCourseInfo',{congViecId:id,tenKhoaChinhThuc:course,donViDaoTaoId:provider,soHvTong:total,phanBoHv:alloc,ngayTu:from,ngayDen:to,linhVuc:field,ghiChu:ghiChu,actor:currentUser?.username||'system'});
+    if(!r||!r.ok)throw new Error(r?.error?.message||r?.error||'Không lưu được thông tin khóa');
+    if(roomIdValue){
+      const booked=await gsCall('saveClassroomBookings',{jobId:id,jobName:course,studentCount:roomStudents,intervals:[{roomId:roomIdValue,startDate:roomFrom,endDate:roomTo}]});
+      if(!booked||!booked.ok)throw new Error(booked?.error?.message||booked?.error||'Thông tin khóa đã lưu nhưng không lưu được đăng ký phòng');
+    }
+    closeModal();
+    await refreshFromServerV2();
+    toast('Đã lưu và tải lại thông tin xác nhận khóa'+(roomIdValue?' cùng đăng ký phòng':'')+' ✓');
+  }catch(e){toast('Lỗi lưu thông tin: '+(e.message||e));if(btn){btn.disabled=false;btn.textContent='Lưu thông tin xác nhận';}}
 }
 async function createUser(){
   let u=document.getElementById('uu').value.trim().toLowerCase(),name=document.getElementById('un').value.trim(),p=document.getElementById('up').value,unit=document.getElementById('ud').value.trim(),role=document.getElementById('ur').value,status=document.getElementById('us').value;
