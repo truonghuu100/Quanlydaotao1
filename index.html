@@ -714,9 +714,11 @@ html,body{scroll-behavior:auto!important}
 /* Admin visibility safeguard: keep the active workspace and its first panel visible. */
 #admin.page.active{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;top:auto!important;margin-top:0!important;transform:none!important}
 #admin .admin-tabs{position:relative!important;z-index:1!important}
-#admin .admin-tab-panel{visibility:hidden}
-#admin .admin-tab-panel.active{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;min-height:1px!important}
+#admin .admin-tab-panel:not(.active){display:none!important;visibility:hidden!important}
+#admin .admin-tab-panel.active{display:block!important;visibility:visible!important;opacity:1!important;position:relative!important;min-height:1px!important;transform:none!important}
 #admin .admin-panel-toolbar,#admin .admin-user-table-card{visibility:visible!important;opacity:1!important}
+#admin .admin-tab-panel.active *{visibility:visible}
+#admin .admin-tab-panel.active .hidden{display:none!important}
 
 /* FIX: hide the login screen after a successful sign-in.
    The later .login { display:grid!important } rule was overriding .hidden. */
@@ -1026,20 +1028,26 @@ function calendarEventsForMonth(){
  return events;
 }
 function resetPageViewport(page){
+ // Reset only real scroll containers. Do not repeatedly mutate every ancestor:
+ // that caused the calendar/admin layout to jump while data and panels were rendering.
  const reset=()=>{
-  const nodes=new Set([document.scrollingElement,document.documentElement,document.body,document.querySelector('.main'),document.querySelector('.content'),page]);
-  let node=page;while(node){nodes.add(node);node=node.parentElement}
+  const nodes=[document.scrollingElement,document.documentElement,document.body,document.querySelector('.main'),document.querySelector('.content'),page];
   nodes.forEach(el=>{if(el){el.scrollTop=0;el.scrollLeft=0}});
   window.scrollTo({top:0,left:0,behavior:'auto'});
  };
- reset();requestAnimationFrame(reset);requestAnimationFrame(()=>requestAnimationFrame(reset));[80,220,500,850,1100].forEach(ms=>setTimeout(reset,ms));
+ reset();
+ requestAnimationFrame(()=>requestAnimationFrame(reset));
 }
 function goTrainingCalendar(){
- document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.style.removeProperty('display')});
+ document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.style.removeProperty('display');p.style.removeProperty('visibility');p.style.removeProperty('opacity')});
+ const dynamicProviderPage=document.getElementById('providerFullPage');
+ if(dynamicProviderPage){dynamicProviderPage.classList.remove('active');dynamicProviderPage.style.setProperty('display','none','important')}
  const page=document.getElementById('trainingCalendarPage');if(!page)return;
- page.classList.add('active');page.style.removeProperty('display');
+ page.classList.add('active');page.style.setProperty('display','block','important');page.style.visibility='visible';page.style.opacity='1';
  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page==='__calendar'));
- document.getElementById('crumb').textContent='Lịch đào tạo';closeModal();renderTrainingCalendar();resetPageViewport(page);
+ const crumb=document.getElementById('crumb');if(crumb)crumb.textContent='Lịch đào tạo';
+ closeModal();
+ requestAnimationFrame(()=>{renderTrainingCalendar();resetPageViewport(page)});
 }
 function openTrainingCalendar(){goTrainingCalendar()}
 function shiftTrainingCalendar(delta){trainingCalendarCursor=new Date(trainingCalendarCursor.getFullYear(),trainingCalendarCursor.getMonth()+delta,1);renderTrainingCalendar()}
@@ -1056,7 +1064,9 @@ function calendarEventsForMonth(){
 }
 function resetTrainingCalendarFilters(){['tcFilterKeyword','tcFilterFrom','tcFilterTo','tcFilterProvider','tcFilterLecturer'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});renderTrainingCalendar()}
 function renderTrainingCalendar(){
- const page=document.getElementById('tcCalendarPageGrid');if(!page)return;
+ const page=document.getElementById('tcCalendarPageGrid');
+ if(!page)return;
+ try{
  const providerSelect=document.getElementById('tcFilterProvider'),lecturerSelect=document.getElementById('tcFilterLecturer');
  const keepProvider=providerSelect?.value||'',keepLecturer=lecturerSelect?.value||'';
  if(providerSelect){const providers=[...new Map((trainingProviders||[]).map(p=>[String(p.id),p])).values()];providerSelect.innerHTML='<option value="">Tất cả đơn vị</option>'+providers.map(p=>'<option value="'+xhtml(String(p.id))+'">'+xhtml(p.name||p.companyName||p.id)+'</option>').join('');providerSelect.value=[...providerSelect.options].some(o=>o.value===keepProvider)?keepProvider:''}
@@ -1078,6 +1088,12 @@ function renderTrainingCalendar(){
  for(let n=1;n<=days;n++){const key=calendarDateKey(new Date(y,m,n)),list=events.filter(e=>e.date===key);const details=list.map(e=>'<div class="tc-hover-course"><b>'+xhtml(e.title)+'</b><div><span>Số lượng học viên:</span> '+xhtml(String(e.students))+'</div><div><span>Người giảng dạy:</span> '+xhtml(e.lecturer)+'</div><div><span>Đơn vị đào tạo:</span> '+xhtml(e.provider)+'</div><div><span>Địa điểm đào tạo:</span> '+xhtml(e.location)+'</div><div><span>Môn học:</span> '+xhtml(e.subject)+'</div></div>').join('');
  cells+='<div class="tc-page-day '+(key===today?'today ':'')+(list.length?'has-events':'')+'"><div class="tc-page-day-head"><b>'+n+'</b>'+(list.length?'<span>'+list.length+' lớp</span>':'')+'</div>'+(list.length?'<div class="tc-hover-panel"><div class="tc-hover-date">'+xhtml(new Intl.DateTimeFormat('vi-VN',{day:'numeric',month:'long',year:'numeric'}).format(new Date(y,m,n)))+' · '+list.length+' lượt lịch</div>'+details+'</div>':'')+'</div>'}
  page.innerHTML=cells;
+ }catch(error){
+  console.error('Lỗi hiển thị Lịch đào tạo:',error);
+  page.innerHTML='<div class="card" style="grid-column:1/-1;padding:24px;color:#b91c1c">Không thể hiển thị lịch đào tạo. Vui lòng tải lại trang; nếu lỗi tiếp diễn, kiểm tra dữ liệu lịch và nhật ký trình duyệt.</div>';
+  const title=document.getElementById('tcMonthTitle');if(title)title.textContent='Lịch đào tạo';
+  const summary=document.getElementById('tcMonthSummary');if(summary)summary.textContent='Chưa tải được lịch';
+ }
 }
 function renderDashboard(){
  const allVisible=visibleAssignments();
