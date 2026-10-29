@@ -2857,6 +2857,12 @@ async function openImplementationPlan(id){
 async function openWorkV2(id){
  const a=assignments.find(x=>String(x.id)===String(id));if(!a)return;
  if(!(a.steps&&a.steps.length)){await openImplementationPlan(id);return;}
+ try{
+  await refreshClassroomData({renderMenu:false});
+ }catch(e){
+  console.warn('Không tải được danh mục phòng khi mở bước triển khai lớp:',e);
+  toast('Chưa tải được danh mục phòng học. Hãy kiểm tra kết nối rồi mở lại bước triển khai lớp; lịch đã đăng ký không bị thay đổi.');
+ }
  const contract=(trainingContracts||[]).find(c=>String(c.id)===String(a.contractId||''));
  const provider=contract?providerName(contract.providerId):'';
  const contractLabel=contract?`${xhtml(contract.number||contract.id)} — ${xhtml(contract.name||'Hợp đồng')}`:(a.contractSupplementLater?'Chưa có hợp đồng — bổ sung sau':'Chưa xác định hợp đồng');
