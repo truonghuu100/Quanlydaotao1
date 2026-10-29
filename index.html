@@ -2051,8 +2051,8 @@ function mapCourseSubject(x){return {id:x.MON_ID||'',jobId:x.CONGVIEC_ID||'',stt
 function mapLecturer(x){return {id:x.GIANG_VIEN_ID||'',code:x.MA_GV||'',name:x.HO_TEN||'',gender:x.GIOI_TINH||'',academic:x.HOC_HAM_HOC_VI||'',birthDate:x.NGAY_SINH||'',cccd:x.SO_CCCD||'',hktt:x.HKTT||'',providerId:x.DON_VI_DAO_TAO_ID||'',org:x.DON_VI_CONG_TAC||'',specialty:x.CHUYEN_MON||'',type:x.LOAI_GV||'Bên ngoài',phone:x.SO_DIEN_THOAI||'',email:x.EMAIL||'',safetyExpiry:x.THOI_HAN_THE_AT_NHOM3||'',note:x.GHI_CHU||'',attachments:x.HOSO_DINH_KEM_JSON||'[]',status:x.TRANG_THAI||'Hoạt động'};}
 function mapCourseStudent(x){return {id:x.ID||'',jobId:x.CONGVIEC_ID||'',emp:x.MA_NV||'',name:x.HO_TEN||'',unit:x.DON_VI_ID||'',title:x.CHUC_DANH||'',role:x.VAI_TRO||'Học viên',status:x.TRANG_THAI_THAM_GIA||'Đang học',result:x.KET_QUA||'',score:x.DIEM??'',grade:x.XEP_LOAI||'',cert:x.CHUNG_CHI||'',certDate:x.NGAY_CAP||'',note:x.GHI_CHU||''};}
 function mapCourseResult(x){return {id:x.ID||'',jobId:x.CONGVIEC_ID||'',subjectId:x.MON_ID||'',emp:x.MA_NV||'',score:x.DIEM??'',result:x.KET_QUA||'',note:x.GHI_CHU||''};}
-function mapJobV2(j, stepRows, courseRows, matrixRows, subjectRows, studentRows, resultRows){
-  const base=mapJob(j,stepRows,courseRows,matrixRows);
+function mapJobV2(j, stepRows, courseRows, matrixRows, subjectRows, studentRows, resultRows, bookingRows=[]){
+  const base=mapJob(j,stepRows,courseRows,matrixRows,bookingRows);
   base.subjects=subjectRows.filter(x=>String(x.CONGVIEC_ID)===String(j.CONGVIEC_ID)).map(mapCourseSubject).sort((a,b)=>a.stt-b.stt);
   base.students=studentRows.filter(x=>String(x.CONGVIEC_ID)===String(j.CONGVIEC_ID)).map(mapCourseStudent);
   base.results=resultRows.filter(x=>String(x.CONGVIEC_ID)===String(j.CONGVIEC_ID)).map(mapCourseResult);
@@ -2063,7 +2063,7 @@ async function loadServerStateV2(username){
   if(!state||!state.ok)throw new Error(state?.error||'Không đọc được dữ liệu Google');
   users=(state.users||[]).map(mapUser);
   unitMaster=(state.units||[]).map(u=>({id:u.DONVI_ID||'',name:u.TEN_DON_VI||'',active:String(u.TRANG_THAI||'Hoạt động')==='Hoạt động'}));
-  assignments=(state.jobs||[]).map(j=>mapJobV2(j,state.steps||[],state.courses||[],state.matrix||[],state.subjects||[],state.students||[],state.results||[]));
+  assignments=(state.jobs||[]).map(j=>mapJobV2(j,state.steps||[],state.courses||[],state.matrix||[],state.subjects||[],state.students||[],state.results||[],state.classroomBookings||[]));
   ordinaryTasks=(state.ordinaryTasks||[]).map(mapOrdinaryTaskRow);
   ordinaryTaskReports=(state.ordinaryTaskReports||[]).map(mapOrdinaryReportRow).sort((a,b)=>new Date(a.createdAt||0)-new Date(b.createdAt||0));
   lecturers=(state.lecturers||[]).map(mapLecturer);
