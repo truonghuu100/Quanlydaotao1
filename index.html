@@ -1037,12 +1037,12 @@ function resetPageViewport(page){
  // Reset only real scroll containers. Do not repeatedly mutate every ancestor:
  // that caused the calendar/admin layout to jump while data and panels were rendering.
  const reset=()=>{
-  const nodes=[document.scrollingElement,document.documentElement,document.body,document.querySelector('.main'),document.querySelector('.content'),page];
+  const nodes=[document.scrollingElement,document.documentElement,document.body,document.getElementById('app'),document.querySelector('.main'),document.querySelector('.content'),page];
   nodes.forEach(el=>{if(el){el.scrollTop=0;el.scrollLeft=0}});
   window.scrollTo({top:0,left:0,behavior:'auto'});
  };
  reset();
- requestAnimationFrame(()=>requestAnimationFrame(reset));
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{reset();const app=document.getElementById('app');if(app)app.scrollTo({top:0,left:0,behavior:'auto'});const main=document.querySelector('.main');if(main)main.scrollTo({top:0,left:0,behavior:'auto'});const content=document.querySelector('.content');if(content)content.scrollTo({top:0,left:0,behavior:'auto'});}));
 }
 function goTrainingCalendar(){
  document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');resetPagePresentation(p)});
