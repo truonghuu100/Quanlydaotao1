@@ -464,14 +464,26 @@ function renderTrainingCosts(){
  let html='';
  groups.forEach(entries=>{
    const first=entries[0],sum=entries.reduce((n,x)=>n+x.amount,0);
-   if(tcDetailMode==='grouped')html+=`<tr class="tc-course-header"><td colspan="3"><b>${xhtml(first.title)}</b><small>${xhtml(first.courseId)} · Đợt thanh toán ${first.paymentRound||1} · ${first.date?vi(first.date):'Chưa có ngày'} · ${xhtml(first.field||'Chưa phân loại')} · ${xhtml(first.provider)}</small></td><td class="tc-course-total"><span>Tổng ${entries.length} khoản</span><b>${tcMoney(sum)}</b></td><td><button class="btn light" onclick="openTrainingCostRoundEditor('${xhtml(first.courseId)}',${first.paymentRound||1})">Xem / Sửa đợt</button></td></tr>`;
+   if(tcDetailMode==='grouped')html+=`<tr class="tc-course-header"><td colspan="3"><b>${xhtml(first.title)}</b><small>${xhtml(first.courseId)} · Đợt thanh toán ${first.paymentRound||1} · ${first.date?vi(first.date):'Chưa có ngày'} · ${xhtml(first.field||'Chưa phân loại')} · ${xhtml(first.provider)}</small></td><td class="tc-course-total"><span>Tổng ${entries.length} khoản</span><b>${tcMoney(sum)}</b></td><td><button class="btn light" onclick="openTrainingCostRoundEditor('${xhtml(first.courseId)}',${first.paymentRound||1})">Xem / Sửa đợt</button> ${isAdminUser()?'<button class="btn danger" onclick="deleteTrainingCostEntriesUI(\''+xhtml(first.courseId)+'\','+(first.paymentRound||1)+',\'\')">Xóa đợt</button>':''}</td></tr>`;
    entries.forEach(x=>{
      const pct=sum?(x.amount/sum*100):0;
      const courseContext=tcDetailMode==='list'?`<small class="tc-list-context">${xhtml(x.title)} · Đợt ${x.paymentRound||1} · ${x.date?vi(x.date):'—'}</small>`:'';
-     html+=`<tr class="tc-cost-detail-row"><td><span class="tc-group-pill"><i></i>${xhtml(x.group)}</span>${courseContext}</td><td><b>${xhtml(x.category)}</b></td><td>${xhtml(x.note||'—')}<small class="tc-evidence-count">${(()=>{try{const f=JSON.parse((trainingCostData.costs.find(c=>String(c.CONGVIEC_ID)===String(x.courseId)&&String(c.CATEGORY_ID)===String(x.categoryId)&&tcRoundNumber(c)===(x.paymentRound||1))||{}).HOSO_CHI_PHI_JSON||'[]');return Array.isArray(f)&&f.length?'📎 '+f.length+' hồ sơ':''}catch{return ''}})()}</small></td><td class="tc-amount-cell"><b>${tcMoney(x.amount)}</b><small>${pct.toFixed(1)}% của đợt</small></td><td>${(isAdminUser()||hasPermission('trainingCosts','edit'))?`<button class="btn light tc-edit-btn" onclick="openTrainingCostRoundEditor('${xhtml(x.courseId)}',${x.paymentRound||1})">Sửa</button>`:''}</td></tr>`;
+     html+=`<tr class="tc-cost-detail-row"><td><span class="tc-group-pill"><i></i>${xhtml(x.group)}</span>${courseContext}</td><td><b>${xhtml(x.category)}</b></td><td>${xhtml(x.note||'—')}<small class="tc-evidence-count">${(()=>{try{const f=JSON.parse((trainingCostData.costs.find(c=>String(c.CONGVIEC_ID)===String(x.courseId)&&String(c.CATEGORY_ID)===String(x.categoryId)&&tcRoundNumber(c)===(x.paymentRound||1))||{}).HOSO_CHI_PHI_JSON||'[]');return Array.isArray(f)&&f.length?'📎 '+f.length+' hồ sơ':''}catch{return ''}})()}</small></td><td class="tc-amount-cell"><b>${tcMoney(x.amount)}</b><small>${pct.toFixed(1)}% của đợt</small></td><td>${(isAdminUser()||hasPermission('trainingCosts','edit'))?`<button class="btn light tc-edit-btn" onclick="openTrainingCostRoundEditor('${xhtml(x.courseId)}',${x.paymentRound||1})">Sửa</button>`:''} ${isAdminUser()?'<button class="btn danger" onclick="deleteTrainingCostEntriesUI(\''+xhtml(x.courseId)+'\','+(x.paymentRound||1)+',\''+xhtml(x.categoryId)+'\')">Xóa</button>':''}</td></tr>`;
    });
  });
  body.innerHTML=html;
+}
+async function deleteTrainingCostEntriesUI(courseId,paymentRound='',categoryId=''){
+ if(!isAdminUser()){toast('Chỉ Admin được xóa chi phí đào tạo.');return;}
+ const isRound=!categoryId;
+ const scope=isRound?'toàn bộ khoản chi của đợt thanh toán '+paymentRound:'khoản chi “'+tcCatName(categoryId)+'” trong đợt '+paymentRound;
+ if(!confirm('Xác nhận xóa '+scope+'? Thao tác này không thể hoàn tác.'))return;
+ try{
+  const r=await gsCall('deleteTrainingCostEntries',{courseId,paymentRound,categoryId});
+  if(!r||!r.ok)throw new Error(r?.error||'Không xóa được dữ liệu chi phí');
+  await loadTrainingCostData();
+  toast('Đã xóa '+(r.deleted||0)+' khoản chi.');
+ }catch(e){toast('Không thể xóa chi phí: '+(e.message||e));}
 }
 function tcCompactMoney(n){const v=Number(n)||0;if(v>=1e9)return (v/1e9).toLocaleString('vi-VN',{maximumFractionDigits:1})+' tỷ';if(v>=1e6)return (v/1e6).toLocaleString('vi-VN',{maximumFractionDigits:0})+' triệu';if(v>=1e3)return (v/1e3).toLocaleString('vi-VN',{maximumFractionDigits:0})+' nghìn';return String(v);}
 function tcRoundNumber(c){return Math.max(1,Math.floor(Number(c.LAN_THANH_TOAN||c.PAYMENT_ROUND||1)));}
