@@ -2862,7 +2862,7 @@ function implementationPlanPanel(a){
  <div style="display:grid;gap:18px">
   <section>
    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px"><label for="implNeedIds" style="font-weight:700;color:#172f50;font-size:13px">Nhu cầu đào tạo tương ứng</label><label style="display:flex;align-items:center;gap:8px;color:#64748b;font-size:12px;white-space:nowrap;cursor:pointer"><input id="implNeedLater" type="checkbox" ${needLater?'checked':''} onchange="updateImplementationPlanState()" class="impl-switch">Bổ sung sau</label></div>
-   <select id="implNeedIds" multiple size="4" onchange="updateImplementationPlanState()" style="width:100%;min-height:100px;border:1px solid #d6e0ef;border-radius:12px;background:#fff;padding:8px 13px;color:#183153;font-size:13px;outline-offset:2px">${needOptions}</select><div style="font-size:11px;color:#718198;margin-top:5px">Có thể chọn nhiều nhu cầu (giữ Ctrl hoặc Cmd khi chọn).</div>
+   <select id="implNeedIds" multiple size="4" onchange="renderImplementationNeedAllocations();updateImplementationPlanState()" style="width:100%;min-height:100px;border:1px solid #d6e0ef;border-radius:12px;background:#fff;padding:8px 13px;color:#183153;font-size:13px;outline-offset:2px">${needOptions}</select><div style="font-size:11px;color:#718198;margin-top:5px">Có thể chọn nhiều nhu cầu (giữ Ctrl hoặc Cmd khi chọn). Nhập số lượng theo từng đơn vị để hệ thống trừ nhu cầu ngay khi khởi tạo lớp.</div><div id="implNeedAllocations" style="margin-top:10px"></div>
   </section>
   <section>
    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px"><label for="implContractId" style="font-weight:700;color:#172f50;font-size:13px">Hợp đồng tương ứng</label><label style="display:flex;align-items:center;gap:8px;color:#64748b;font-size:12px;white-space:nowrap;cursor:pointer"><input id="implContractLater" type="checkbox" ${contractLater?'checked':''} onchange="updateImplementationPlanState()" class="impl-switch">Bổ sung sau</label></div>
@@ -2876,15 +2876,33 @@ function implementationPlanPanel(a){
  </div>
  </div>`;
 }
+function renderImplementationNeedAllocations(){
+ const host=document.getElementById('implNeedAllocations');if(!host)return;
+ const selected=[...(document.getElementById('implNeedIds')?.selectedOptions||[])].map(o=>String(o.value)).filter(Boolean);
+ if(!selected.length){host.innerHTML='';return;}
+ host.innerHTML=selected.map(id=>{
+  const n=(trainingNeeds||[]).find(x=>String(x.NHU_CAU_ID)===id);if(!n)return '';
+  let ids=[];try{ids=JSON.parse(n.DON_VI_IDS_JSON||'[]').map(String)}catch{}
+  const units=ids.map(uid=>{const u=(unitMaster||[]).find(x=>String(x.id)===uid);return {id:uid,name:u?.name||uid}}); 
+  const remaining=Math.max(0,Number(n.SO_LUONG_HOC_VIEN||0)-Number(n.SO_LUONG_DA_DAP_UNG||0));
+  return '<div style="border:1px solid #dbe5f1;border-radius:10px;padding:10px 12px;margin-top:8px;background:#f8fafc"><div style="font-weight:700;color:#183153;font-size:12px">'+xhtml(n.TEN_KHOA_DAO_TAO||id)+' · còn '+remaining+' HV</div><div style="font-size:11px;color:#718198;margin:4px 0 8px">Nhập số học viên sẽ đáp ứng tại từng đơn vị. Tổng phân bổ không được vượt nhu cầu còn lại.</div>'+units.map(u=>'<label style="display:grid;grid-template-columns:minmax(0,1fr) 100px;gap:10px;align-items:center;margin-top:6px;font-size:12px;color:#334b68"><span>'+xhtml(u.name)+'</span><input class="impl-need-qty" type="number" min="0" step="1" value="0" data-need-id="'+xhtml(id)+'" data-unit-id="'+xhtml(u.id)+'" oninput="updateImplementationPlanState()" style="width:100%;padding:7px 9px;border:1px solid #d6e0ef;border-radius:8px"></label>').join('')+'</div>';
+ }).join('');
+}
+function collectImplementationDemandAllocations(){
+ const selected=[...(document.getElementById('implNeedIds')?.selectedOptions||[])].map(o=>String(o.value)).filter(Boolean);
+ return selected.map(demandId=>({demandId,unitQuantities:[...document.querySelectorAll('.impl-need-qty[data-need-id="'+CSS.escape(demandId)+'"]')].map(input=>({unitId:input.dataset.unitId,quantity:Number(input.value||0)})).filter(x=>x.quantity>0)}));
+}
 function updateImplementationPlanState(){
  const needSelected=[...(document.getElementById('implNeedIds')?.selectedOptions||[])].some(o=>o.value);
  const needLater=!!document.getElementById('implNeedLater')?.checked;
  const contractSelected=[...(document.getElementById('implContractId')?.selectedOptions||[])].some(o=>o.value);
  const contractLater=!!document.getElementById('implContractLater')?.checked;
- const valid=(needSelected||needLater)&&(contractSelected||contractLater)&&!(contractSelected&&contractLater);
+ const allocations=collectImplementationDemandAllocations();
+ const quantitiesValid=!needSelected||allocations.length>0&&allocations.every(a=>a.unitQuantities.length>0&&a.unitQuantities.every(q=>Number.isInteger(q.quantity)&&q.quantity>0));
+ const valid=(needSelected||needLater)&&(contractSelected||contractLater)&&!(contractSelected&&contractLater)&&quantitiesValid;
  const btn=document.getElementById('implSubmitBtn');if(btn)btn.disabled=!valid||btn.dataset.authorized!=='true';
  const badge=document.getElementById('implStatusBadge');if(badge){badge.textContent=valid?'Đủ thông tin':'Chờ xác nhận';badge.style.background=valid?'#e8f8ef':'#eaf0ff';badge.style.color=valid?'#18794e':'#315fe9';}
- const hint=document.getElementById('implFooterHint');if(hint)hint.textContent=valid?'Đã đủ thông tin để khởi tạo quy trình.':'Chọn nhu cầu và hợp đồng, hoặc bật “Bổ sung sau”.';
+ const hint=document.getElementById('implFooterHint');if(hint)hint.textContent=valid?'Đã đủ thông tin để khởi tạo quy trình.':'Chọn nhu cầu, nhập số lượng theo từng đơn vị và xác định hợp đồng, hoặc bật “Bổ sung sau”.';
 }
 async function openImplementationPlan(id){
  const a=assignments.find(x=>String(x.id)===String(id));if(!a)return;
@@ -2925,10 +2943,13 @@ async function saveImplementationPlan(id){
  const contract=(trainingContracts||[]).find(c=>String(c.id)===String(contractId));
  const hasContract=contractIds.length>0&&!contractLater;
  const contractType=hasContract?'MO_LOP_HOP_DONG_NGUYEN_TAC':'MO_LOP_THUE_NGOAI';
+ const demandAllocations=collectImplementationDemandAllocations();
+ if(needIds.length&&!needLater&&demandAllocations.some(x=>!x.unitQuantities.length)){toast('Vui lòng nhập số lượng học viên theo từng đơn vị cho mỗi nhu cầu đã chọn.');return}
+ if(needIds.length&&!needLater&&demandAllocations.some(x=>x.unitQuantities.some(q=>!Number.isInteger(q.quantity)||q.quantity<1))){toast('Số lượng phân bổ phải là số nguyên dương.');return}
  const patch={NHU_CAU_IDS_JSON:JSON.stringify(needIds),HOP_DONG_IDS_JSON:JSON.stringify(contractIds),HOP_DONG_ID:contractId,NHU_CAU_BO_SUNG_SAU:needLater,HOP_DONG_BO_SUNG_SAU:contractLater,LOAI_CONGVIEC:contractType,TRANG_THAI:'Đang thực hiện',CHO_XAC_DINH_PHUONG_AN:false};
- const processing=showProcessingOverlay('Đang xử lý','Đang lưu nhu cầu, hợp đồng và khởi tạo quy trình...');
+ const processing=showProcessingOverlay('Đang xử lý','Đang lưu nhu cầu, phân bổ số học viên và khởi tạo quy trình...');
  try{
-  const r=await gsCall('updateJob',{id,patch,initializeWorkflow:true,actor:currentUser?.username||'system'});
+  const r=await gsCall('updateJob',{id,patch,initializeWorkflow:true,demandAllocations:needLater?[]:demandAllocations,actor:currentUser?.username||'system'});
   if(!r||!r.ok)throw new Error(r?.error||'Không lưu được phương án triển khai');
   a.needIds=needIds;a.contractIds=contractIds;a.contractId=contractId;a.needSupplementLater=needLater;a.contractSupplementLater=contractLater;a.status='Đang thực hiện';const selectedContract=(trainingContracts||[]).find(c=>String(c.id)===String(contractId));if(selectedContract?.providerId&&(!a.confirm?.provider||!trainingProviders.some(p=>p.id===a.confirm.provider)))a.confirm={...(a.confirm||{}),provider:selectedContract.providerId};
   await refreshFromServer();
