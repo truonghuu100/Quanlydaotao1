@@ -2779,8 +2779,8 @@ function adminSetTab(tab,button){
   if(!isAdminUser()){toast('Chỉ Admin được truy cập quản trị hệ thống');return;}
   document.querySelectorAll('.admin-tab').forEach(el=>el.classList.toggle('active',el===button));
   document.querySelectorAll('.admin-tab-panel').forEach(el=>el.classList.toggle('active',el.id==='adminPanel-'+tab));
-  const panel=document.getElementById('adminPanel-'+tab);
-  if(panel) panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  // Keep the admin workspace anchored in place. scrollIntoView() on a tab panel
+  // can scroll the whole document unexpectedly and leave a large blank area above it.
   if(tab==='downloadRequests') reviewDocumentDownloadsInline();
 }
 
