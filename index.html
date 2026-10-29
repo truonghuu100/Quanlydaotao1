@@ -896,6 +896,32 @@ html body #app #admin>.title p{display:block!important;visibility:visible!import
 #app #admin .admin-tabs{height:auto!important;min-height:0!important}
 #app #admin .admin-tab-panel.active{position:relative!important;top:auto!important;transform:none!important;float:none!important}
 </style>
+
+<style id="calendar-admin-scroll-root-fix">
+/* Root fix: keep the application shell fixed and scroll only the content pane.
+   This prevents the main workspace from reopening hundreds of pixels below the fixed sidebar. */
+@media(min-width:761px){
+ html,body{height:100%!important;min-height:100%!important;overflow:hidden!important}
+ #app.app{height:100vh!important;min-height:0!important;overflow:hidden!important}
+ #app.app>.side{position:fixed!important;left:0!important;top:0!important;bottom:0!important;height:100vh!important;overflow-x:hidden!important;overflow-y:auto!important}
+ #app.app>.main{display:flex!important;flex-direction:column!important;position:relative!important;top:0!important;height:100vh!important;min-height:0!important;overflow:hidden!important;margin-left:262px!important;width:calc(100% - 262px)!important;max-width:none!important;padding:0!important;transform:none!important}
+ #app.app>.main>.top{position:relative!important;top:auto!important;left:auto!important;right:auto!important;flex:0 0 74px!important;height:74px!important;min-height:74px!important;width:100%!important;box-sizing:border-box!important}
+ #app.app>.main>.content{position:relative!important;flex:1 1 auto!important;height:auto!important;min-height:0!important;max-height:none!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain!important;scroll-behavior:auto!important;width:100%!important;max-width:none!important;margin:0!important;padding:24px 26px!important;box-sizing:border-box!important}
+ #app.app>.main>.content>.page.active{position:relative!important;top:auto!important;margin-top:0!important;transform:none!important;animation:none!important}
+}
+@media(min-width:761px) and (max-width:1100px){
+ #app.app>.main{margin-left:230px!important;width:calc(100% - 230px)!important}
+ #app.app>.side{width:230px!important}
+}
+@media(max-width:760px){
+ html,body{height:auto!important;min-height:100%!important;overflow:auto!important}
+ #app.app{height:auto!important;min-height:100vh!important;overflow:visible!important}
+ #app.app>.main{display:block!important;height:auto!important;min-height:0!important;overflow:visible!important;width:100%!important;margin-left:0!important}
+ #app.app>.main>.top{position:relative!important;flex:none!important}
+ #app.app>.main>.content{height:auto!important;min-height:0!important;overflow:visible!important;padding:16px!important}
+}
+</style>
+
 </head><body>
 <div id="hpdqBootScreen" aria-live="polite" aria-label="Đang khởi tạo HPDQ Training">
   <div class="hpdq-boot-card">
