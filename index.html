@@ -838,6 +838,32 @@ html,body{scroll-behavior:auto!important}
 }
 </style>
 
+
+<style id="calendar-admin-layout-fix-v2">
+/* Final scoped override for the two affected pages; neutralize conflicting global title/card skins. */
+#trainingCalendarPage.page.active,#admin.page.active{position:relative!important;inset:auto!important;top:auto!important;transform:none!important;animation:none!important;margin-block-start:0!important;padding-block-start:0!important}
+#trainingCalendarPage>.title,#admin>.title{
+ display:flex!important;flex-direction:row!important;align-items:flex-start!important;justify-content:space-between!important;
+ position:relative!important;inset:auto!important;top:auto!important;float:none!important;
+ height:auto!important;min-height:0!important;max-height:none!important;
+ margin:0 0 18px!important;padding:0!important;
+ background:transparent!important;border:0!important;border-radius:0!important;
+ box-shadow:none!important;overflow:visible!important;transform:none!important;
+}
+#trainingCalendarPage>.title>div:first-child,#admin>.title>div:first-child{display:block!important;position:relative!important;inset:auto!important;float:none!important;flex:1 1 300px!important;min-width:0!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important}
+#trainingCalendarPage>.title h1,#admin>.title h1{display:block!important;position:static!important;visibility:visible!important;opacity:1!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;color:#061d3d!important;font-size:30px!important;line-height:1.2!important;transform:none!important}
+#trainingCalendarPage>.title p,#admin>.title p{display:block!important;position:static!important;margin:7px 0 0!important;padding:0!important;color:#718198!important}
+#trainingCalendarPage>.title>div:last-child{display:flex!important;flex:0 1 auto!important;flex-direction:row!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:wrap!important;gap:8px!important;margin:0!important;padding:0!important}
+#trainingCalendarPage .tc-filter-panel{margin-top:14px!important}
+#trainingCalendarPage .tc-page-toolbar{margin-top:14px!important}
+#admin>.admin-tabs{margin-top:0!important}
+@media(max-width:760px){
+ #trainingCalendarPage>.title,#admin>.title{flex-direction:column!important;gap:12px!important}
+ #trainingCalendarPage>.title>div:last-child{justify-content:flex-start!important}
+}
+/* Only reset the document/page viewport for these pages; no repeated ancestor scrollIntoView. */
+</style>
+
 </head><body>
 <div id="hpdqBootScreen" aria-live="polite" aria-label="Đang khởi tạo HPDQ Training">
   <div class="hpdq-boot-card">
