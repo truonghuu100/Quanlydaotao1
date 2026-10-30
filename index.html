@@ -855,6 +855,7 @@ html,body{scroll-behavior:auto!important}
 <button class="admin-tab" data-admin-tab="contractUnits" onclick="adminSetTab('contractUnits',this)">▦ Đơn vị quản lý hợp đồng</button>
 <button class="admin-tab" data-admin-tab="providers" onclick="adminSetTab('providers',this)">♧ Đơn vị đào tạo</button>
 <button class="admin-tab" data-admin-tab="lecturers" onclick="adminSetTab('lecturers',this)">♙ Danh mục giảng viên</button>
+<button class="admin-tab" data-admin-tab="fields" onclick="adminSetTab(&quot;fields&quot;,this)">▦ Lĩnh vực đào tạo</button>
 <button class="admin-tab" data-admin-tab="workflow" onclick="adminSetTab('workflow',this)">☷ Quản lý quy trình 16 bước</button>
 
 </div>
@@ -866,6 +867,7 @@ html,body{scroll-behavior:auto!important}
 <div class="admin-tab-panel" id="adminPanel-contractUnits"><div class="admin-feature-card"><div class="admin-feature-icon">▦</div><div class="admin-feature-copy"><h2>Đơn vị quản lý hợp đồng</h2><p>Khai báo danh sách công ty chịu trách nhiệm quản lý hợp đồng và theo dõi chi phí riêng.</p></div><button class="btn primary" onclick="loadContractManagerUnits().then(openContractManagerUnits)">Quản lý danh mục</button></div></div>
 <div class="admin-tab-panel" id="adminPanel-providers"><div class="admin-feature-card"><div class="admin-feature-icon">♧</div><div class="admin-feature-copy"><h2>Đơn vị đào tạo</h2><p>Quản lý hồ sơ pháp lý, thông tin liên hệ và hợp đồng của các đơn vị đào tạo bên ngoài.</p></div><button class="btn primary" onclick="openProviders()">Quản lý đơn vị đào tạo</button></div></div>
 <div class="admin-tab-panel" id="adminPanel-lecturers"><div class="admin-feature-card"><div class="admin-feature-icon">♙</div><div class="admin-feature-copy"><h2>Danh mục giảng viên</h2><p>Khai báo và cập nhật hồ sơ giảng viên dùng chung để lựa chọn khi khai báo khóa học.</p></div><button class="btn primary" onclick="openLecturerMaster()">Quản lý giảng viên</button></div></div>
+<div class="admin-tab-panel" id="adminPanel-fields"><div class="admin-feature-card"><div class="admin-feature-icon">▦</div><div class="admin-feature-copy"><h2>Danh mục lĩnh vực đào tạo</h2><p>Admin quản lý danh mục dùng chung. Người triển khai lớp chỉ được chọn lĩnh vực đang hoạt động.</p></div><button class="btn primary" onclick="openTrainingFieldCategories()">Quản lý danh mục</button></div></div>
 <div class="admin-tab-panel" id="adminPanel-workflow">
  <div class="card"><div class="cardhead"><b>Thiết lập mẫu quy trình triển khai khóa đào tạo</b><span class="badge blue">Áp dụng cho lớp tạo mới</span></div>
  <div class="cardbody">
@@ -3019,6 +3021,7 @@ function adminSetTab(tab,button){
   // Keep the admin workspace anchored in place. scrollIntoView() on a tab panel
   // can scroll the whole document unexpectedly and leave a large blank area above it.
   if(tab==='downloadRequests') reviewDocumentDownloadsInline();
+  if(tab==='fields') loadTrainingFieldCategories().then(()=>openTrainingFieldCategories()).catch(e=>toast('Không tải được danh mục lĩnh vực: '+(e.message||e)));
   if(document.getElementById('admin')?.classList.contains('active')){document.documentElement.scrollTop=0;document.body.scrollTop=0;window.scrollTo(0,0);}
 }
 
