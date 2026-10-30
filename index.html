@@ -2065,7 +2065,7 @@ async function saveStep(id,n){
     toast('Đã lưu kết quả bước '+n+' và cập nhật lịch sử ✓');
   }catch(e){
     toast('Lỗi: '+(e.message||e));
-    const retryBtn=document.querySelector('button[onclick="saveStep(\\''+id+'\\','+n+')"]');
+    const retryAction="saveStep('"+id+"',"+n+")"; const retryBtn=[...document.querySelectorAll('button[onclick]')].find(el=>el.getAttribute('onclick')===retryAction);
     if(retryBtn){retryBtn.disabled=false;retryBtn.textContent='Lưu kết quả';}
   }
 }
