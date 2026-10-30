@@ -82,7 +82,8 @@ async function weeklyLoadData(){
   weeklyReportLoading=true;
   const root=document.getElementById("weeklyReportRoot");
   if(root)root.innerHTML='<div class="card" style="padding:28px;text-align:center;color:var(--muted)">Đang tải báo cáo tuần…</div>';
-  const response=await gsCall("getWeeklyReportData",{weekKey:info.key});
+  const previousInfo=weeklyGetInfo(weeklyWeekOffset-1);
+  const response=await gsCall("getWeeklyReportData",{weekKey:info.key,previousWeekKey:previousInfo.key});
   if(!response||!response.ok)throw new Error(response?.error||"Không tải được báo cáo tuần.");
   weeklyReportModel.week=info;
   weeklyReportModel.report=response.report||null;
@@ -99,6 +100,12 @@ async function weeklyLoadData(){
     weeklyReportModel.files=Array.isArray(parsed.files)?parsed.files:[];
   }else{
     weeklyReportModel.tasks=weeklySourceTasks(info);
+    const previousTasks=weeklyParseJson(response.previousReport?.TASKS_JSON,[]);
+    const existingSources=new Set(weeklyReportModel.tasks.filter(t=>t.sourceId).map(t=>String(t.source)+":"+String(t.sourceId)));
+    previousTasks.filter(t=>t.status!=="Hoàn thành").forEach(t=>{
+      if(t.sourceId&&existingSources.has(String(t.source)+":"+String(t.sourceId)))return;
+      weeklyReportModel.tasks.push({...t,id:"CARRY_"+String(t.id||Date.now())+"_"+Math.random().toString(36).slice(2,6),source:"Chuyển tiếp",locked:false,carriedOverFrom:previousInfo.key});
+    });
     weeklyReportModel.plans=[];
     weeklyReportModel.hours=[0,0,0,0,0,0,0];
     weeklyReportModel.issues="";
