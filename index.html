@@ -461,7 +461,7 @@ html.session-restoring #app{visibility:hidden!important}
 html.session-restoring #hpdqBootScreen{display:flex}
 .hpdq-boot-card{width:min(440px,calc(100vw - 36px));padding:34px 28px 30px;border:1px solid #dce6f6;border-radius:24px;background:rgba(255,255,255,.92);box-shadow:0 24px 70px rgba(26,65,126,.13);text-align:center}
 .hpdq-boot-brand{display:flex;justify-content:center;align-items:center;gap:10px;margin-bottom:24px}
-.hpdq-boot-logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,#1f5fe5,#17418d);color:#fff;display:grid;place-items:center;font-weight:900;letter-spacing:-1px;box-shadow:0 7px 18px rgba(37,99,235,.25)}
+.hpdq-boot-logo{width:48px;height:48px;object-fit:contain;display:block;flex:0 0 48px;border-radius:0;background:transparent;box-shadow:none}
 .hpdq-boot-brand b{display:block;font-size:16px;letter-spacing:.4px}.hpdq-boot-brand small{display:block;margin-top:3px;color:#7284a3;font-size:10px;letter-spacing:1.4px}
 .hpdq-boot-ring{width:174px;height:174px;margin:0 auto 22px;position:relative}
 .hpdq-boot-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
@@ -804,7 +804,7 @@ html,body{scroll-behavior:auto!important}
 </head><body>
 <div id="hpdqBootScreen" aria-live="polite" aria-label="Đang khởi tạo HPDQ Training">
   <div class="hpdq-boot-card">
-    <div class="hpdq-boot-brand"><div class="hpdq-boot-logo">HP</div><div><b>HPDQ TRAINING</b><small>TRAINING MANAGEMENT SYSTEM</small></div></div>
+    <div class="hpdq-boot-brand"><img class="hpdq-boot-logo" src="./Logoxanh.png" alt="Logo Hòa Phát"></div>
     <div class="hpdq-boot-ring">
       <svg viewBox="0 0 120 120" role="img" aria-label="Tiến độ khởi động"><defs><linearGradient id="hpdqBootGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2864ed"/><stop offset="100%" stop-color="#e6ad2e"/></linearGradient></defs><circle class="hpdq-boot-track" cx="60" cy="60" r="50"/><circle id="hpdqBootArc" class="hpdq-boot-progress" cx="60" cy="60" r="50"/></svg>
       <div class="hpdq-boot-center"><span id="hpdqBootPercent">0%</span><small>Loading...</small></div>
