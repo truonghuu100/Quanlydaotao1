@@ -189,7 +189,7 @@ function weeklyRenderPage(){
   const taskCards=tasks.length?tasks.map((t,i)=>weeklyRenderTask(t,i,canEdit)).join(""):'<div class="weekly-empty">Chưa có công việc trong tuần. Có thể thêm công việc phát sinh bên dưới.</div>';
   const addTask=canEdit?'<div class="weekly-add-task"><input id="weeklyNewTaskTitle" class="weekly-inline-input" placeholder="Nhập công việc phát sinh"/><input id="weeklyNewTaskDate" class="weekly-inline-input" type="date"/><select id="weeklyNewTaskPriority" class="weekly-inline-input"><option>Trung bình</option><option>Cao</option><option>Thấp</option></select><button class="btn primary" onclick="weeklyAddTask()">Thêm</button></div>':"";
   const taskContent='<div class="weekly-card"><div class="weekly-cardhead"><b>01. Kết quả công việc trong tuần</b><span class="weekly-muted">'+tasks.length+' đầu việc</span></div>'+addTask+taskCards+'</div>';
-  const hoursContent='<div class="weekly-card"><div class="weekly-cardhead"><b>02. Giờ làm việc theo ngày</b><span class="weekly-muted">Tổng: '+totalHours+' giờ</span></div><div class="weekly-cardbody">'+weeklyRenderHours(canEdit)+'<div class="weekly-muted" style="margin-top:9px">Giờ làm việc là số liệu báo cáo, không thay thế dữ liệu chấm công.</div></div></div>';
+  const hoursContent='<div class="weekly-card"><div class="weekly-cardhead"><b>02. Giờ làm việc theo ngày</b><span class="weekly-muted" id="weeklyHoursTotal">Tổng: '+totalHours+' giờ</span></div><div class="weekly-cardbody">'+weeklyRenderHours(canEdit)+'<div class="weekly-muted" style="margin-top:9px">Giờ làm việc là số liệu báo cáo, không thay thế dữ liệu chấm công.</div></div></div>';
   const plansContent='<div class="weekly-card"><div class="weekly-cardhead"><b>03. Kế hoạch tuần tiếp theo</b><span class="weekly-muted">'+weeklyReportModel.plans.length+' đầu việc</span></div><div class="weekly-cardbody">'+weeklyRenderPlans(canEdit)+'</div></div>';
   const attachments=weeklyReportModel.files||[];
   const attachmentRows=attachments.length?attachments.map(f=>'<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #edf1f6"><a href="'+weeklyEsc(f.url||("#"))+'" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#245cf2;text-decoration:none;overflow-wrap:anywhere">📎 '+weeklyEsc(f.name||f.title||"Tệp đính kèm")+'</a><span class="weekly-muted">'+Math.max(1,Math.round(Number(f.size||0)/1024))+' KB</span></div>').join(""):'<div class="weekly-muted">Chưa có file minh chứng.</div>';
@@ -217,6 +217,7 @@ function weeklyUpdateTask(id,field,value){
   t[field]=field==="progress"?Number(value):value;
   if(field==="status"&&value==="Hoàn thành")t.progress=100;
   if(field==="status"&&value!=="Hoàn thành"&&Number(t.progress)===100)t.progress=90;
+  if(field==="status"){weeklyRenderPage();return;}
   const pct=document.getElementById("weekly-pct-"+id);if(pct)pct.textContent=(Number(t.progress)||0)+"%";
 }
 function weeklyRemoveTask(id){
@@ -232,7 +233,7 @@ function weeklyAddTask(){
 }
 function weeklyUpdateHours(index,value){
   weeklyReportModel.hours[index]=Math.max(0,Math.min(24,Number(value)||0));
-  const label=document.querySelector(".weekly-card:nth-child(2) .weekly-cardhead .weekly-muted");
+  const label=document.getElementById("weeklyHoursTotal");
   if(label)label.textContent="Tổng: "+weeklyReportModel.hours.reduce((a,b)=>a+(Number(b)||0),0)+" giờ";
 }
 function weeklyUpdatePlan(index,field,value){
