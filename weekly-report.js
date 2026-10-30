@@ -183,7 +183,7 @@ function weeklyRenderPage(){
   document.getElementById("weeklyWeekLabel").textContent="Tuần "+info.key.replace(/^\\d{4}-W/,"")+" · "+weeklyFmtDate(info.start)+" – "+weeklyFmtDate(info.end);
   const tabs=canReview?'<div class="weekly-tabs"><button class="btn '+(weeklyActiveTab==="mine"?"primary":"light")+'" onclick="weeklySetTab(&quot;mine&quot;)">Báo cáo của tôi</button><button class="btn '+(weeklyActiveTab==="review"?"primary":"light")+'" onclick="weeklySetTab(&quot;review&quot;)">Tiếp nhận báo cáo</button></div>':"";
   if(weeklyActiveTab==="review"&&canReview){
-    root.innerHTML=tabs+'<div class="weekly-card"><div class="weekly-cardhead"><b>Danh sách báo cáo cần tiếp nhận</b><span class="weekly-muted">'+(weeklyReportModel.reports||[]).length+' báo cáo</span></div><div id="weeklyReviewRoot"></div></div>';
+    root.innerHTML=tabs+'<div class="weekly-card"><div class="weekly-cardhead"><b>Danh sách báo cáo cần tiếp nhận</b><div style="display:flex;align-items:center;gap:8px"><span class="weekly-muted">'+(weeklyReportModel.reports||[]).length+' báo cáo</span><button class="btn light" onclick="weeklyExportReviewCsv()">Xuất Excel</button></div></div><div id="weeklyReviewRoot"></div></div>';
     weeklyRenderReview();return;
   }
   const taskCards=tasks.length?tasks.map((t,i)=>weeklyRenderTask(t,i,canEdit)).join(""):'<div class="weekly-empty">Chưa có công việc trong tuần. Có thể thêm công việc phát sinh bên dưới.</div>';
@@ -303,6 +303,21 @@ async function weeklyUploadSelectedFiles(){
     finishUploadOverlay("success","ĐÃ TẢI FILE MINH CHỨNG","File đã được lưu vào báo cáo tuần.",files.length,files.length,{reportId});
     await weeklyLoadData();
   }catch(e){finishUploadOverlay("failure","CHƯA TẢI ĐƯỢC FILE",e.message||String(e),0,files.length,null);toast("Lỗi tải file: "+(e.message||e));}
+}
+
+
+function weeklyExportReviewCsv(){
+  const rows=[["Tuần báo cáo","Mã nhân viên","Họ tên","Đơn vị","Trạng thái","Tổng đầu việc","Hoàn thành","Trễ hạn","Vướng mắc"]];
+  (weeklyReportModel.reports||[]).forEach(r=>{
+    const tasks=weeklyParseJson(r.TASKS_JSON,[]);
+    rows.push([r.WEEK_KEY||"",r.USERNAME||"",r.HO_TEN||"",r.DON_VI_ID||"",r.TRANG_THAI||"",tasks.length,tasks.filter(t=>t.status==="Hoàn thành").length,tasks.filter(t=>t.status==="Trễ hạn").length,r.VUNG_MAC||""]);
+  });
+  (weeklyReportModel.users||[]).filter(u=>!(weeklyReportModel.reports||[]).some(r=>String(r.USERNAME||"")===String(u.USERNAME||""))).forEach(u=>rows.push([weeklyReportModel.week?.key||"",u.USERNAME||"",u.HO_TEN||"",u.DON_VI_ID||"","Chưa gửi",0,0,0,""]));
+  const csv="\\uFEFF"+rows.map(row=>row.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(",")).join("\\r\\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="Bao_cao_cong_viec_tuan_"+(weeklyReportModel.week?.key||"")+".csv";
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
 }
 
 async function weeklyReviewAction(reportId,action){
