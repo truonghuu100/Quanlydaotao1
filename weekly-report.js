@@ -153,10 +153,17 @@ function weeklyRenderReview(){
   const reports=weeklyReportModel.reports||[];
   if(!reports.length){host.innerHTML='<div class="weekly-empty">Chưa có báo cáo nào được gửi trong tuần này.</div>';return;}
   host.innerHTML=reports.map(r=>{
-    const tasks=weeklyParseJson(r.TASKS_JSON,[]),done=tasks.filter(t=>t.status==="Hoàn thành").length,late=tasks.filter(t=>t.status==="Trễ hạn").length;
+    const tasks=weeklyParseJson(r.TASKS_JSON,[]);
+    const done=tasks.filter(t=>t.status==="Hoàn thành").length;
+    const late=tasks.filter(t=>t.status==="Trễ hạn").length;
     const status=String(r.TRANG_THAI||"Bản nháp"),id=weeklyEsc(r.REPORT_ID||"");
-    const actions=status==="Đã gửi"?'<button class="btn light" onclick="weeklyReviewAction(&quot;'+id+'&quot;,&quot;receive&quot;)">Tiếp nhận</button><button class="btn danger" onclick="weeklyReviewAction(&quot;'+id+'&quot;,&quot;changes&quot;)">Yêu cầu bổ sung</button>':status==="Đã tiếp nhận"?'<button class="btn primary" onclick="weeklyReviewAction(&quot;'+id+'&quot;,&quot;confirm&quot;)">Xác nhận</button><button class="btn danger" onclick="weeklyReviewAction(&quot;'+id+'&quot;,&quot;changes&quot;)">Yêu cầu bổ sung</button>':status==="Yêu cầu bổ sung"?'<button class="btn light" onclick="weeklyReviewAction(&quot;'+id+'&quot;,&quot;receive&quot;)">Tiếp nhận lại</button>':"";
-    return '<div class="weekly-review-row"><div class="weekly-task-top"><div><b style="font-size:12px;color:#17365d">'+weeklyEsc(r.HO_TEN||r.USERNAME||"")+'</b><div class="weekly-task-meta">'+weeklyEsc(r.DON_VI_ID||"")+' · '+weeklyEsc(r.USERNAME||"")+'</div></div><span class="weekly-status '+weeklyStatusClass(status)+'">'+weeklyEsc(status)+'</span></div><div class="weekly-muted">'+tasks.length+' đầu việc · '+done+' hoàn thành · '+late+' trễ hạn</div><input class="weekly-review-comment" id="weeklyReviewComment_'+id+'" placeholder="Nhận xét / nội dung yêu cầu bổ sung…"/><div class="weekly-review-actions">'+actions+'</div></div>';
+    let actions="";
+    if(status==="Đã xác nhận"&&isAdminUser())actions='<button class="btn light" onclick="weeklyReviewAction(&quot;'+id+'&quot;,&quot;reopen&quot;)">Mở lại</button>';
+    else if(status==="Đã gửi")actions='<button class="btn light" onclick="weeklyReviewAction(&quot;'+id+'&quot;,&quot;receive&quot;)">Tiếp nhận</button><button class="btn danger" onclick="weeklyReviewAction(&quot;'+id+'&quot;,&quot;changes&quot;)">Yêu cầu bổ sung</button>';
+    else if(status==="Đã tiếp nhận")actions='<button class="btn primary" onclick="weeklyReviewAction(&quot;'+id+'&quot;,&quot;confirm&quot;)">Xác nhận</button><button class="btn danger" onclick="weeklyReviewAction(&quot;'+id+'&quot;,&quot;changes&quot;)">Yêu cầu bổ sung</button>';
+    else if(status==="Yêu cầu bổ sung")actions='<button class="btn light" onclick="weeklyReviewAction(&quot;'+id+'&quot;,&quot;receive&quot;)">Tiếp nhận lại</button>';
+    const details=tasks.map(t=>'<div style="padding:7px 0;border-top:1px solid #edf1f6"><b style="font-size:11px">'+weeklyEsc(t.title||"")+'</b><div class="weekly-muted">'+weeklyEsc(t.status||"")+' · '+(Number(t.progress)||0)+'%</div><div style="font-size:10px;color:#64748b">'+weeklyEsc(t.result||t.reason||"Chưa có ghi chú")+'</div></div>').join("");
+    return '<div class="weekly-review-row"><div class="weekly-task-top"><div><b style="font-size:12px;color:#17365d">'+weeklyEsc(r.HO_TEN||r.USERNAME||"")+'</b><div class="weekly-task-meta">'+weeklyEsc(r.DON_VI_ID||"")+' · '+weeklyEsc(r.USERNAME||"")+'</div></div><span class="weekly-status '+weeklyStatusClass(status)+'">'+weeklyEsc(status)+'</span></div><div class="weekly-muted">'+tasks.length+' đầu việc · '+done+' hoàn thành · '+late+' trễ hạn</div><details><summary style="font-size:10px;color:#245cf2;cursor:pointer;margin:7px 0">Xem chi tiết công việc</summary>'+details+'</details><input class="weekly-review-comment" id="weeklyReviewComment_'+id+'" placeholder="Nhận xét / nội dung yêu cầu bổ sung…"/><div class="weekly-review-actions">'+actions+'</div></div>';
   }).join("");
 }
 function weeklyRenderPage(){
