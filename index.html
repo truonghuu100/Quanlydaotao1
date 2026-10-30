@@ -2670,10 +2670,21 @@ async function openProviderContracts(providerId){
   openProviderContractsSection();
 }
 
+function getContractManageableProviders(selectedId=''){
+ const username=String(currentUser?.username||currentUser?.USERNAME||'').trim().toLowerCase();
+ const admin=isAdminUser();
+ const rows=(trainingProviders||[]).filter(p=>p.active!==false&&(admin||(Array.isArray(p.managers)&&p.managers.some(m=>String(m).trim().toLowerCase()===username))));
+ if(selectedId&&!rows.some(p=>String(p.id)===String(selectedId))){
+   const existing=(trainingProviders||[]).find(p=>String(p.id)===String(selectedId));
+   if(existing&&admin)rows.push(existing);
+ }
+ return rows;
+}
 async function editTrainingContract(providerId,id){
  // Always reload the management-company master list before rendering the contract form.
  await loadContractManagerUnits();
  const c=trainingContracts.find(x=>x.id===id)||{id:'',providerId,number:'',name:'',date:'',from:'',to:'',value:'',type:'Hợp đồng Nguyên tắc',owner:[],status:'Còn hiệu lực',file:'',attachments:'[]',note:''};
+ const manageableProviders=getContractManageableProviders(providerId);const initialProviderId=String(c.providerId||providerId||manageableProviders[0]?.id||'');
  const owners=Array.isArray(c.owner)?c.owner:parseContractOwners(c.owner);
  const activeUsers=users.filter(u=>u.status==='Hoạt động');
  const ownerRows=activeUsers.map(u=>`<label class="hd-owner-row" data-search="${xhtml((u.name||'')+' '+(u.username||'')).toLowerCase()}" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-bottom:1px solid #edf2f9;cursor:pointer"><input class="hd-owner-check" type="checkbox" value="${xhtml(u.username)}" ${owners.includes(String(u.username))?'checked':''} onchange="updateContractOwnerChips()" style="width:18px;height:18px;accent-color:#1264f5;flex:0 0 auto"><span style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:#e7f0ff;color:#1764e8;font-weight:800;flex:0 0 auto">${xhtml(String(u.name||u.username||'?').split(/\\s+/).map(x=>x[0]||'').slice(-2).join('').toUpperCase())}</span><span style="flex:1;min-width:0"><strong style="display:block;font-size:12px;color:#142e55;font-weight:650">${xhtml(u.name)} — ${xhtml(u.username)}</strong><small style="color:#8292ac">${xhtml(u.username)}</small></span><small style="color:#8493aa;white-space:nowrap">${xhtml(u.department||u.phongBan||'')}</small></label>`).join('');
@@ -2700,7 +2711,7 @@ async function editTrainingContract(providerId,id){
   <section class="hd-panel"><div class="hd-panel-title"><span class="num" style="background:#f59e0b">3</span> Thông tin chi tiết</div><div class="hd-panel-body"><div class="hd-grid">
    <div class="field full"><label>Môn đào tạo (có thể thêm nhiều môn)</label><div style="display:flex;gap:8px"><input id="hd_subject_input" placeholder="Nhập tên môn đào tạo rồi nhấn Enter hoặc Thêm" onkeydown="if(event.key==='Enter'){event.preventDefault();addContractSubject()}"><button type="button" class="btn light" onclick="addContractSubject()">＋ Thêm môn</button></div><div id="hd_subject_chips" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;min-height:8px"></div><small style="display:block;color:#8292ac;margin-top:6px">Ví dụ: Cơ khí, Điện công nghiệp, Hàn, Vận hành thiết bị…</small></div>
    <div class="field"><label>Chuyên môn</label><input value="${xhtml(c.specialty||'')}" disabled placeholder="Theo thông tin hợp đồng"></div>
-   <div class="field"><label>Đơn vị đào tạo</label><input value="${xhtml((trainingProviders||[]).find(p=>String(p.id)===String(providerId))?.name||'')}" disabled></div>
+   <div class="field"><label>Đơn vị đào tạo <span style="color:#ef4444">*</span></label><select id="hd_provider_id" onchange="updateContractProviderSelection()"><option value="">Chọn đơn vị đào tạo</option>${manageableProviders.map(p=>`<option value="${xhtml(p.id)}" ${String(p.id)===initialProviderId?'selected':''}>${xhtml(p.name)}</option>`).join('')}</select><small style="display:block;color:#8292ac;margin-top:5px">${isAdminUser()?'Chọn đơn vị đào tạo áp dụng cho hợp đồng.':'Chỉ hiển thị các đơn vị được giao quản lý.'}</small></div>
    <div class="field full"><label>Mô tả nội dung đào tạo</label><textarea id="hd_note" rows="3" maxlength="500" placeholder="Nhập ghi chú hoặc mô tả nội dung hợp đồng">${xhtml(c.note)}</textarea></div>
   </div></div></section>
  </div><div>
@@ -2758,6 +2769,7 @@ function addContractAttachmentRow(name=''){
  const del=document.createElement('button');del.type='button';del.className='btn light';del.textContent='Xóa';del.onclick=()=>row.remove();row.append(title,fileWrap,del);wrap.append(row);
 }
 async function saveTrainingContractDo(providerId,id){
+  providerId=String(document.getElementById('hd_provider_id')?.value||providerId||'').trim();if(!providerId){toast('Vui lòng chọn đơn vị đào tạo');return;}const selectedProvider=(trainingProviders||[]).find(p=>String(p.id)===providerId);if(!selectedProvider){toast('Đơn vị đào tạo không tồn tại hoặc chưa được tải');return;}
   const from=document.getElementById('hd_from').value,to=document.getElementById('hd_to').value;
   if(from&&to&&from>to){toast('Hiệu lực từ không được sau hiệu lực đến');return;}
   const pendingContractAttachments=[...document.querySelectorAll('#hd_attachment_rows > div')].map(row=>({title:row.querySelector('input[type=text]')?.value.trim()||'',file:row.querySelector('input[type=file]')?.files?.[0]||null})).filter(item=>item.file);
