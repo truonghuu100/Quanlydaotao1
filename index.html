@@ -2051,7 +2051,7 @@ async function saveStep(id,n){
   const result=document.getElementById('sr')?.value.trim()||'';
   if(!actualDate){toast('Vui lòng nhập ngày cập nhật kết quả');return}
   if(status==='Hoàn thành'&&!result){toast('Vui lòng nhập kết quả thực tế trước khi hoàn thành bước');return}
-  const btn=document.querySelector('button[onclick="saveStep(\\''+id+'\\','+n+')"]');
+  const expectedButtonAction="saveStep('"+id+"',"+n+")"; const btn=[...document.querySelectorAll('button[onclick]')].find(el=>el.getAttribute('onclick')===expectedButtonAction);
   if(btn){btn.disabled=true;btn.textContent='Đang lưu…';}
   try{
     const r=await gsCall('updateStep',{congViecId:id,buocId:'B'+String(n).padStart(2,'0'),trangThai:status,ngayKetQua:actualDate,ketQua:result,actor:currentUser?.username||'system'});
