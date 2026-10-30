@@ -1673,6 +1673,25 @@ async function deleteUserAccount(username){
  try{const r=await gsCall('deleteUser',{username});if(!r||!r.ok)throw new Error(r?.error||'Không xóa được tài khoản');await refreshFromServerV2();closeModal();toast('Đã xóa tài khoản '+username+' ✓');}
  catch(e){toast('Lỗi xóa tài khoản: '+(e.message||e));}
 }
+async function loadTrainingFieldCategories(){
+ const r=await gsCall('getTrainingFieldCategories',{});
+ if(!r||!r.ok||!Array.isArray(r.data))throw new Error(r?.error||'Không đọc được danh mục lĩnh vực đào tạo');
+ trainingFieldCategories=r.data.map(x=>({FIELD_ID:String(x.FIELD_ID||''),TEN_LINH_VUC:String(x.TEN_LINH_VUC||''),TRANG_THAI:String(x.TRANG_THAI||'Hoạt động')})).filter(x=>x.FIELD_ID&&x.TEN_LINH_VUC);
+ return trainingFieldCategories;
+}
+function openTrainingFieldCategories(){
+ if(!isAdminUser()){toast('Chỉ Admin được quản lý danh mục lĩnh vực đào tạo');return;}
+ const rows=trainingFieldCategories.map((x,i)=>`<tr><td>${i+1}</td><td><input id="tf_name_${i}" value="${xhtml(x.TEN_LINH_VUC)}" style="width:100%;padding:8px;border:1px solid #d6e0e9;border-radius:7px"></td><td><select id="tf_active_${i}"><option value="true" ${x.TRANG_THAI==='Ngừng sử dụng'?'':'selected'}>Hoạt động</option><option value="false" ${x.TRANG_THAI==='Ngừng sử dụng'?'selected':''}>Ngừng sử dụng</option></select></td></tr>`).join('');
+ modal('Quản lý lĩnh vực đào tạo',`<div class="note"><b>Admin quản lý danh mục dùng chung.</b><br>Chỉ các lĩnh vực ở trạng thái Hoạt động mới xuất hiện trong danh sách chọn khi triển khai lớp. Lĩnh vực đã sử dụng được giữ nguyên trong dữ liệu lịch sử.</div><div class="tablewrap"><table class="table"><thead><tr><th style="width:55px">STT</th><th>Tên lĩnh vực đào tạo</th><th style="width:180px">Trạng thái</th></tr></thead><tbody>${rows}</tbody></table></div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px"><button class="btn light" onclick="addTrainingFieldCategory()">＋ Thêm lĩnh vực</button><button class="btn primary" onclick="saveTrainingFieldCategories()">Lưu danh mục</button></div>`);
+}
+function addTrainingFieldCategory(){if(!isAdminUser())return;trainingFieldCategories.push({FIELD_ID:'FIELD_NEW_'+Date.now(),TEN_LINH_VUC:'',TRANG_THAI:'Hoạt động'});openTrainingFieldCategories();}
+async function saveTrainingFieldCategories(){
+ if(!isAdminUser()){toast('Chỉ Admin được quản lý danh mục');return;}
+ const payload=[];
+ for(let i=0;i<trainingFieldCategories.length;i++){const name=document.getElementById('tf_name_'+i)?.value.trim()||'';const active=document.getElementById('tf_active_'+i)?.value!=='false';if(!name){toast('Vui lòng nhập tên cho tất cả lĩnh vực đào tạo');return;}payload.push({id:trainingFieldCategories[i].FIELD_ID,name,active});}
+ if(new Set(payload.map(x=>x.name.toLocaleLowerCase())).size!==payload.length){toast('Tên lĩnh vực đào tạo không được trùng nhau');return;}
+ try{for(const x of payload){const r=await gsCall('saveTrainingFieldCategory',x);if(!r||!r.ok)throw new Error(r?.error||'Không lưu được lĩnh vực '+x.name);}await loadTrainingFieldCategories();openTrainingFieldCategories();toast('Đã lưu danh mục lĩnh vực đào tạo ✓');}catch(e){toast('Lỗi lưu danh mục: '+(e.message||e));}
+}
 function openUnits(){if(!isAdminUser()){toast('Chỉ Admin được quản lý danh mục đơn vị');return}let rows=unitMaster.map((u,i)=>`<tr><td>${u.id}</td><td><input id="un_${i}" value="${u.name}" style="width:100%;padding:8px;border:1px solid #d6e0e9;border-radius:7px"></td><td><span class="badge ${u.active?'ok':'red'}">${u.active?'Đang dùng':'Ẩn'}</span></td><td><button class="btn light" onclick="toggleUnit('${u.id}')">${u.active?'Ẩn':'Hiện'}</button></td></tr>`).join('');modal('Quản lý danh mục đơn vị',`<div class="note"><b>Admin là người duy nhất quản lý tên đơn vị.</b><br>User khi khai báo khóa chỉ được chọn từ danh sách này, không tự nhập tên đơn vị.</div><div class="tablewrap"><table class="table"><thead><tr><th>Mã</th><th>Tên đơn vị</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>${rows}</tbody></table></div><div style="display:flex;justify-content:space-between;gap:10px;margin-top:14px"><button class="btn light" onclick="addUnit()">＋ Thêm đơn vị</button><button class="btn primary" onclick="saveUnits()">Lưu danh mục</button></div>`)}
 function toggleUnit(id){let u=unitMaster.find(x=>x.id===id);if(u){let before=clone(u);u.active=!u.active;log('Sửa','Danh mục đơn vị',id,'Admin '+(u.active?'hiện':'ẩn')+' đơn vị',before,clone(u));persistState();openUnits()}}
 function addUnit(){let id='DV'+String(unitMaster.length+1).padStart(2,'0');let u={id:id,name:'Đơn vị mới',active:true};unitMaster.push(u);log('Thêm','Danh mục đơn vị',id,'Admin tạo đơn vị mới',null,clone(u));persistState();openUnits()}
