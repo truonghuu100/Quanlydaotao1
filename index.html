@@ -905,6 +905,7 @@ html,body{scroll-behavior:auto!important}
 var trainingNeeds=[];
 var NEED_METHODS=['Mở lớp đào tạo tập trung','Hội thảo, trao đổi, chia sẻ kinh nghiệm'];
 var NEED_FIELDS=['An toàn lao động theo luật định','An toàn lao động khác','Cơ khí','Điện','Công nghệ','Nghiệp vụ khác'];
+var trainingFieldCategories=NEED_FIELDS.map((name,i)=>({FIELD_ID:'FIELD_'+(i+1),TEN_LINH_VUC:name,TRANG_THAI:'Hoạt động'}));
 let users=[{username:'admin',name:'Quản trị hệ thống',unit:'P.NS',role:'Admin',password:'123456',status:'Hoạt động',all:true,manageProviders:true},{username:'daotao',name:'Nhân viên đào tạo',unit:'P.NS',role:'Nhân viên đào tạo',password:'daotao123',status:'Hoạt động',all:false,manageProviders:false},{username:'manager',name:'Quản lý đơn vị',unit:'NM Cơ điện 1',role:'Quản lý đơn vị',password:'manager123',status:'Hoạt động',all:false,manageProviders:true}];
 let unitMaster=[{id:'DV01',name:'NM Cơ điện 1',active:true},{id:'DV02',name:'NM Cơ điện 2',active:true},{id:'DV03',name:'NM Luyện gang',active:true},{id:'DV04',name:'NM Luyện thép',active:true},{id:'DV05',name:'NM Nguyên liệu',active:true},{id:'DV06',name:'NM Luyện cốc',active:true},{id:'DV07',name:'P.ATMT',active:true},{id:'DV08',name:'Phòng Nhân sự',active:true}];
 let contractManagerUnits=[];
