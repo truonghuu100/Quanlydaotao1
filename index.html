@@ -1081,8 +1081,8 @@ function goTrainingCalendar(){
 }
 function openTrainingCalendar(){goTrainingCalendar()}
 function shiftTrainingCalendar(delta){trainingCalendarCursor=new Date(trainingCalendarCursor.getFullYear(),trainingCalendarCursor.getMonth()+delta,1);renderTrainingCalendar()}
-function calendarProviderName(a){const p=(trainingProviders||[]).find(p=>String(p.id)===String(a.providerId||a.trainingProviderId||a.confirm?.providerId));return p?.name||a.providerName||a.confirm?.providerName||a.confirm?.provider||'Chưa cập nhật'}
-function calendarStudentCount(a){const candidates=[a.studentCount,a.participantCount,a.learnerCount,a.confirm?.studentCount,a.confirm?.participantCount,a.confirm?.headcount,a.peopleCount];for(const n of candidates){if(n!==undefined&&n!==null&&n!=='')return n}return (a.participants||a.trainees||a.learners||[]).length||'Chưa cập nhật'}
+function calendarProviderName(a){const id=a.providerId||a.trainingProviderId||a.confirm?.providerId||a.confirm?.provider||'';const p=(trainingProviders||[]).find(p=>String(p.id)===String(id)||String(p.name)===String(id));return p?.name||a.providerName||a.confirm?.providerName||id||'Chưa cập nhật'}
+function calendarStudentCount(a){const roster=Array.isArray(a.students)?a.students.length:0;const confirmed=Number(a.confirm?.students||0);const candidates=[roster,confirmed,a.studentCount,a.participantCount,a.learnerCount,a.confirm?.studentCount,a.confirm?.participantCount,a.confirm?.headcount,a.peopleCount,(a.participants||a.trainees||a.learners||[]).length];for(const n of candidates){const value=Number(n);if(n!==undefined&&n!==null&&n!==''&&Number.isFinite(value)&&value>0)return value}return 'Chưa cập nhật'}
 function calendarEventsForMonth(){
  const events=[];
  (visibleAssignments()||[]).forEach(a=>{
