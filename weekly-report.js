@@ -1,6 +1,6 @@
 /* Weekly Work Report module — isolated first release */
 let weeklyWeekOffset=0;
-let weeklyReportModel={week:null,report:null,tasks:[],plans:[],hours:[0,0,0,0,0,0,0],issues:"",status:"Bản nháp",canReview:false,reports:[],users:[]};
+let weeklyReportModel={week:null,report:null,tasks:[],plans:[],hours:[0,0,0,0,0,0,0],issues:"",status:"Bản nháp",files:[],canReview:false,reports:[],users:[]};
 let weeklyReportLoading=false;
 let weeklyActiveTab="mine";
 
@@ -73,6 +73,7 @@ function weeklyParseReport(r,info){
     hours:Array.isArray(hours)?hours:[0,0,0,0,0,0,0],
     issues:String(r.VUNG_MAC||""),
     status:String(r.TRANG_THAI||"Bản nháp"),
+    files:weeklyParseJson(r.HOSO_DINH_KEM_JSON,[]),
     report:r
   };
 }
@@ -95,11 +96,13 @@ async function weeklyLoadData(){
     weeklyReportModel.hours=Array.isArray(parsed.hours)&&parsed.hours.length===7?parsed.hours:[0,0,0,0,0,0,0];
     weeklyReportModel.issues=parsed.issues;
     weeklyReportModel.status=parsed.status;
+    weeklyReportModel.files=Array.isArray(parsed.files)?parsed.files:[];
   }else{
     weeklyReportModel.tasks=weeklySourceTasks(info);
     weeklyReportModel.plans=[];
     weeklyReportModel.hours=[0,0,0,0,0,0,0];
     weeklyReportModel.issues="";
+    weeklyReportModel.files=[];
     weeklyReportModel.status="Bản nháp";
   }
   weeklyReportLoading=false;
@@ -170,10 +173,13 @@ function weeklyRenderPage(){
   const taskContent='<div class="weekly-card"><div class="weekly-cardhead"><b>01. Kết quả công việc trong tuần</b><span class="weekly-muted">'+tasks.length+' đầu việc</span></div>'+addTask+taskCards+'</div>';
   const hoursContent='<div class="weekly-card"><div class="weekly-cardhead"><b>02. Giờ làm việc theo ngày</b><span class="weekly-muted">Tổng: '+totalHours+' giờ</span></div><div class="weekly-cardbody">'+weeklyRenderHours(canEdit)+'<div class="weekly-muted" style="margin-top:9px">Giờ làm việc là số liệu báo cáo, không thay thế dữ liệu chấm công.</div></div></div>';
   const plansContent='<div class="weekly-card"><div class="weekly-cardhead"><b>03. Kế hoạch tuần tiếp theo</b><span class="weekly-muted">'+weeklyReportModel.plans.length+' đầu việc</span></div><div class="weekly-cardbody">'+weeklyRenderPlans(canEdit)+'</div></div>';
+  const attachments=weeklyReportModel.files||[];
+  const attachmentRows=attachments.length?attachments.map(f=>'<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #edf1f6"><a href="'+weeklyEsc(f.url||("#"))+'" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#245cf2;text-decoration:none;overflow-wrap:anywhere">📎 '+weeklyEsc(f.name||f.title||"Tệp đính kèm")+'</a><span class="weekly-muted">'+Math.max(1,Math.round(Number(f.size||0)/1024))+' KB</span></div>').join(""):'<div class="weekly-muted">Chưa có file minh chứng.</div>';
+  const attachmentContent='<div class="weekly-card"><div class="weekly-cardhead"><b>05. File minh chứng</b><span class="weekly-muted">Tùy chọn · Tối đa 100 MB/file</span></div><div class="weekly-cardbody">'+attachmentRows+(canEdit?'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px"><input id="weeklyReportFiles" type="file" multiple style="font-size:11px;max-width:100%"/><button class="btn light" onclick="weeklyUploadSelectedFiles()">Tải file lên</button></div>':"")+'</div></div>';
   const issuesContent='<div class="weekly-card weekly-issues"><div class="weekly-cardhead"><b>04. Vướng mắc và đề xuất</b><span class="weekly-muted">Không bắt buộc</span></div><div class="weekly-cardbody"><textarea id="weeklyIssues" '+(canEdit?'oninput="weeklyReportModel.issues=this.value"':'disabled')+' placeholder="Ghi rõ khó khăn, nguyên nhân, nội dung cần hỗ trợ hoặc đề xuất…">'+weeklyEsc(weeklyReportModel.issues)+'</textarea></div></div>';
   const reviewComment=weeklyReportModel.report?.REVIEW_COMMENT?'<div class="weekly-card"><div class="weekly-cardbody"><b style="color:#a36a00">Ý kiến quản lý</b><p style="font-size:11px;color:#64748b;margin:7px 0 0">'+weeklyEsc(weeklyReportModel.report.REVIEW_COMMENT)+'</p></div></div>':"";
   const footer='<div class="weekly-report-footer"><div><span class="weekly-status '+weeklyStatusClass(weeklyReportModel.status)+'">'+weeklyEsc(weeklyReportModel.status)+'</span><div class="weekly-muted" style="margin-top:6px">Lưu gần nhất: '+(weeklyReportModel.report?.UPDATED_AT?new Date(weeklyReportModel.report.UPDATED_AT).toLocaleString("vi-VN"):"Chưa lưu")+'</div></div><div style="display:flex;gap:8px;flex-wrap:wrap">'+(canEdit?'<button class="btn light" onclick="weeklySave(false)">Lưu nháp</button><button class="btn primary" onclick="weeklySave(true)">Gửi báo cáo</button>':'<span class="weekly-muted">Báo cáo đã gửi và đang chờ xử lý.</span>')+'</div></div>';
-  root.innerHTML=tabs+'<div class="weekly-shell"><div class="weekly-kpis"><div class="weekly-kpi"><small>Tổng đầu việc</small><strong>'+tasks.length+'</strong><span>Công việc trong kỳ báo cáo</span></div><div class="weekly-kpi"><small>Hoàn thành</small><strong style="color:#07865b">'+done+'</strong><span>Đầu việc đã hoàn thành</span></div><div class="weekly-kpi"><small>Đang thực hiện</small><strong style="color:#245cf2">'+active+'</strong><span>Đầu việc đang xử lý</span></div><div class="weekly-kpi"><small>Trễ hạn</small><strong style="color:#c33d3d">'+late+'</strong><span>Cần nêu nguyên nhân</span></div></div><div class="weekly-columns"><div class="weekly-shell">'+taskContent+hoursContent+'</div><div class="weekly-side-stack">'+plansContent+issuesContent+reviewComment+'<div class="weekly-card"><div class="weekly-cardbody">'+footer+'</div></div></div></div></div>';
+  root.innerHTML=tabs+'<div class="weekly-shell"><div class="weekly-kpis"><div class="weekly-kpi"><small>Tổng đầu việc</small><strong>'+tasks.length+'</strong><span>Công việc trong kỳ báo cáo</span></div><div class="weekly-kpi"><small>Hoàn thành</small><strong style="color:#07865b">'+done+'</strong><span>Đầu việc đã hoàn thành</span></div><div class="weekly-kpi"><small>Đang thực hiện</small><strong style="color:#245cf2">'+active+'</strong><span>Đầu việc đang xử lý</span></div><div class="weekly-kpi"><small>Trễ hạn</small><strong style="color:#c33d3d">'+late+'</strong><span>Cần nêu nguyên nhân</span></div></div><div class="weekly-columns"><div class="weekly-shell">'+taskContent+hoursContent+'</div><div class="weekly-side-stack">'+plansContent+issuesContent+attachmentContent+reviewComment+'<div class="weekly-card"><div class="weekly-cardbody">'+footer+'</div></div></div></div></div>';
 }
 async function renderWeeklyReport(){
   if(weeklyReportLoading)return;
@@ -244,6 +250,42 @@ async function weeklySave(submit){
     weeklyRenderPage();
   }catch(e){toast("Lỗi lưu báo cáo: "+(e.message||e));}
 }
+
+async function weeklyUploadSelectedFiles(){
+  const input=document.getElementById("weeklyReportFiles"),files=Array.from(input?.files||[]);
+  if(!files.length){toast("Chọn ít nhất một file minh chứng.");return;}
+  for(const f of files)if(!f.size||f.size>100*1024*1024){toast("File "+f.name+" rỗng hoặc vượt giới hạn 100 MB.");return;}
+  try{
+    if(!weeklyReportModel.report?.REPORT_ID){
+      const saved=await gsCall("saveWeeklyReportDraft",weeklyPayload());
+      if(!saved||!saved.ok)throw new Error(saved?.error||"Không lưu được bản nháp trước khi tải file.");
+      weeklyReportModel.report=saved.report;
+    }
+    const reportId=weeklyReportModel.report.REPORT_ID;
+    showUploadOverlay();let done=0;
+    for(const file of files){
+      const session=await gsCall("createWeeklyReportUploadSession",{reportId,fileName:file.name,mimeType:file.type||"application/octet-stream",size:file.size});
+      if(!session||!session.ok||!session.uploadKey)throw new Error(session?.error||"Không tạo được phiên tải file "+file.name);
+      let start=0,driveFileId="";
+      while(start<file.size){
+        const end=Math.min(start+4*1024*1024,file.size),blob=file.slice(start,end);
+        const base64=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(",")[1]||"");reader.onerror=()=>reject(new Error("Không đọc được file "+file.name));reader.readAsDataURL(blob);});
+        const part=await gsCall("uploadWeeklyReportFileChunk",{reportId,uploadKey:session.uploadKey,start,total:file.size,base64});
+        if(!part||!part.ok)throw new Error(part?.error||"Tải file không thành công: "+file.name);
+        start=end;
+        if(part.done){driveFileId=part.driveFileId||"";break;}
+        updateUploadOverlay(((done+start/file.size)/files.length)*100,"Đang tải: "+file.name,done,files.length);
+      }
+      if(!driveFileId)throw new Error("Chưa nhận được xác nhận hoàn tất file "+file.name);
+      const fin=await gsCall("finalizeWeeklyReportUpload",{reportId,uploadKey:session.uploadKey,driveFileId});
+      if(!fin||!fin.ok||!fin.file)throw new Error(fin?.error||"Chưa xác nhận được file "+file.name);
+      done++;updateUploadOverlay(done/files.length*100,"Đã tải: "+file.name,done,files.length);
+    }
+    finishUploadOverlay("success","ĐÃ TẢI FILE MINH CHỨNG","File đã được lưu vào báo cáo tuần.",files.length,files.length,{reportId});
+    await weeklyLoadData();
+  }catch(e){finishUploadOverlay("failure","CHƯA TẢI ĐƯỢC FILE",e.message||String(e),0,files.length,null);toast("Lỗi tải file: "+(e.message||e));}
+}
+
 async function weeklyReviewAction(reportId,action){
   const input=document.getElementById("weeklyReviewComment_"+reportId);
   const comment=input?.value.trim()||"";
