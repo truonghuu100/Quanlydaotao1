@@ -151,8 +151,10 @@ function weeklyRenderReview(){
   const host=document.getElementById("weeklyReviewRoot");
   if(!host)return;
   const reports=weeklyReportModel.reports||[];
-  if(!reports.length){host.innerHTML='<div class="weekly-empty">Chưa có báo cáo nào được gửi trong tuần này.</div>';return;}
-  host.innerHTML=reports.map(r=>{
+  const received=new Set(reports.map(r=>String(r.USERNAME||"").toLowerCase()));
+  const missing=(weeklyReportModel.users||[]).filter(u=>String(u.TRANG_THAI||"Hoạt động")==="Hoạt động"&&String(u.VAI_TRO||"").toUpperCase()!=="ADMIN"&&!received.has(String(u.USERNAME||"").toLowerCase()));
+  if(!reports.length&&!missing.length){host.innerHTML='<div class="weekly-empty">Chưa có dữ liệu báo cáo trong phạm vi quản lý.</div>';return;}
+  const reportRows=reports.map(r=>{
     const tasks=weeklyParseJson(r.TASKS_JSON,[]);
     const done=tasks.filter(t=>t.status==="Hoàn thành").length;
     const late=tasks.filter(t=>t.status==="Trễ hạn").length;
@@ -165,6 +167,8 @@ function weeklyRenderReview(){
     const details=tasks.map(t=>'<div style="padding:7px 0;border-top:1px solid #edf1f6"><b style="font-size:11px">'+weeklyEsc(t.title||"")+'</b><div class="weekly-muted">'+weeklyEsc(t.status||"")+' · '+(Number(t.progress)||0)+'%</div><div style="font-size:10px;color:#64748b">'+weeklyEsc(t.result||t.reason||"Chưa có ghi chú")+'</div></div>').join("");
     return '<div class="weekly-review-row"><div class="weekly-task-top"><div><b style="font-size:12px;color:#17365d">'+weeklyEsc(r.HO_TEN||r.USERNAME||"")+'</b><div class="weekly-task-meta">'+weeklyEsc(r.DON_VI_ID||"")+' · '+weeklyEsc(r.USERNAME||"")+'</div></div><span class="weekly-status '+weeklyStatusClass(status)+'">'+weeklyEsc(status)+'</span></div><div class="weekly-muted">'+tasks.length+' đầu việc · '+done+' hoàn thành · '+late+' trễ hạn</div><details><summary style="font-size:10px;color:#245cf2;cursor:pointer;margin:7px 0">Xem chi tiết công việc</summary>'+details+'</details><input class="weekly-review-comment" id="weeklyReviewComment_'+id+'" placeholder="Nhận xét / nội dung yêu cầu bổ sung…"/><div class="weekly-review-actions">'+actions+'</div></div>';
   }).join("");
+  const missingRows=missing.map(u=>'<div class="weekly-review-row"><div class="weekly-task-top"><div><b style="font-size:12px;color:#17365d">'+weeklyEsc(u.HO_TEN||u.USERNAME||"")+'</b><div class="weekly-task-meta">'+weeklyEsc(u.DON_VI_ID||"")+' · '+weeklyEsc(u.USERNAME||"")+'</div></div><span class="weekly-status late">Chưa gửi</span></div></div>').join("");
+  host.innerHTML='<div style="padding:12px 15px;background:#f7f9fd;border-bottom:1px solid #e8edf5;font-size:11px;color:#64748b">Đã gửi: <b>'+reports.length+'</b> · Chưa gửi: <b>'+missing.length+'</b> · Tổng nhân sự trong phạm vi: <b>'+(reports.length+missing.length)+'</b></div>'+reportRows+(missingRows?'<div style="padding:12px 15px 5px;font-size:11px;font-weight:800;color:#647695">NHÂN SỰ CHƯA GỬI BÁO CÁO</div>'+missingRows:"");
 }
 function weeklyRenderPage(){
   const root=document.getElementById("weeklyReportRoot"),info=weeklyReportModel.week;
