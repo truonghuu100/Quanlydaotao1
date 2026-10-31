@@ -844,6 +844,25 @@ html,body{scroll-behavior:auto!important}
 .weekly-side-stack{display:grid;gap:14px}
 .weekly-review-row{padding:13px 15px;border-bottom:1px solid #e8edf5;display:grid;gap:8px}
 .weekly-review-row:last-child{border-bottom:0}
+
+.weekly-summary-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;padding:14px 15px;background:#f7f9fd;border-bottom:1px solid #e8edf5}
+.weekly-summary-kpis>div{background:#fff;border:1px solid #e1e8f2;border-radius:10px;padding:10px;display:grid;gap:5px}
+.weekly-summary-kpis small{font-size:10px;color:#71809b}.weekly-summary-kpis b{font-size:20px;color:#17365d}
+.weekly-summary-tools{display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:12px 15px;border-bottom:1px solid #e8edf5}
+.weekly-summary-tools input,.weekly-summary-tools select{min-width:180px;max-width:340px;border:1px solid #d8e2f0;border-radius:8px;padding:9px 10px;font:inherit;font-size:11px;color:#19385e;background:#fff}
+.weekly-summary-table-wrap{overflow:auto;max-width:100%}
+.weekly-summary-table{width:100%;border-collapse:separate;border-spacing:0;min-width:1050px}
+.weekly-summary-table th{position:sticky;top:0;background:#f7f9fd;color:#526987;font-size:10px;text-align:left;padding:11px 9px;border-bottom:1px solid #e1e8f2;white-space:nowrap}
+.weekly-summary-table td{padding:10px 9px;border-bottom:1px solid #edf1f6;font-size:11px;color:#344b68;vertical-align:top}
+.weekly-summary-table tbody tr:hover{background:#fbfcff}
+.weekly-summary-table td:nth-child(1),.weekly-summary-table td:nth-child(n+5):nth-child(-n+8){text-align:center;font-variant-numeric:tabular-nums}
+.weekly-summary-table details summary{color:#245cf2;cursor:pointer;font-weight:700;white-space:nowrap}
+.weekly-summary-detail-body{min-width:260px;max-width:480px;padding:10px;margin-top:8px;background:#f8faff;border:1px solid #e5ebf5;border-radius:8px;white-space:normal}
+.weekly-summary-detail-body>b{display:block;margin:8px 0 5px;color:#17365d}
+.weekly-summary-item{padding:7px 0;border-top:1px solid #e8edf5;display:grid;gap:3px}
+.weekly-summary-item b{font-size:11px;color:#253e5f}.weekly-summary-item span,.weekly-summary-item p{font-size:10px;color:#71809b;margin:0}
+@media(max-width:900px){.weekly-summary-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 .weekly-review-actions{display:flex;gap:7px;flex-wrap:wrap}
 .weekly-review-actions .btn{padding:8px 10px}
 .weekly-report-footer{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
