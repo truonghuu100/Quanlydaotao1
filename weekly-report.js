@@ -205,7 +205,8 @@ function weeklyRenderPage(){
   const onTime=due?Math.round(done/due*100):0;
   const canReview=weeklyCanReview()&&weeklyReportModel.canReview;
   document.getElementById("weeklyWeekLabel").textContent="Tuần "+info.key.replace(/^\\d{4}-W/,"")+" · "+weeklyFmtDate(info.start)+" – "+weeklyFmtDate(info.end);
-  const tabs=canReview?'<div class="weekly-tabs"><button class="btn '+(weeklyActiveTab==="mine"?"primary":"light")+'" onclick="weeklySetTab(&quot;mine&quot;)">Báo cáo của tôi</button><button class="btn '+(weeklyActiveTab==="review"?"primary":"light")+'" onclick="weeklySetTab(&quot;review&quot;)">Tiếp nhận báo cáo</button></div>':"";
+  const tabs=canReview?'<div class="weekly-tabs"><button class="btn '+(weeklyActiveTab==="mine"?"primary":"light")+'" onclick="weeklySetTab(&quot;mine&quot;)">Báo cáo của tôi</button><button class="btn '+(weeklyActiveTab==="review"?"primary":"light")+'" onclick="weeklySetTab(&quot;review&quot;)">Tiếp nhận báo cáo</button><button class="btn '+(weeklyActiveTab==="summary"?"primary":"light")+'" onclick="weeklySetTab(&quot;summary&quot;)">Tổng hợp báo cáo</button></div>':"";
+  if(weeklyActiveTab==="summary"&&canReview){root.innerHTML=tabs+'<div class="weekly-card"><div id="weeklySummaryRoot"></div></div>';weeklyRenderSummary();return;}
   if(weeklyActiveTab==="review"&&canReview){
     root.innerHTML=tabs+'<div class="weekly-card"><div class="weekly-cardhead"><b>Danh sách báo cáo cần tiếp nhận</b><div style="display:flex;align-items:center;gap:8px"><span class="weekly-muted">'+(weeklyReportModel.reports||[]).length+' báo cáo</span><button class="btn light" onclick="weeklyExportReviewCsv()">Xuất Excel</button></div></div><div id="weeklyReviewRoot"></div></div>';
     weeklyRenderReview();return;
@@ -232,7 +233,7 @@ function weeklyChangeWeek(delta){
 }
 function weeklySetTab(tab){
   weeklyActiveTab=tab;
-  if(tab==="review")weeklyLoadData().catch(e=>toast("Không tải được danh sách báo cáo: "+(e.message||e)));
+  if(tab==="review"||tab==="summary")weeklyLoadData().catch(e=>toast("Không tải được dữ liệu báo cáo: "+(e.message||e)));
   else weeklyRenderPage();
 }
 function weeklyUpdateTask(id,field,value){
