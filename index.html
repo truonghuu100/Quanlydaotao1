@@ -3069,10 +3069,25 @@ function openTrainingNeedEditor(id=''){
    <div class="field"><label>Thời gian bắt đầu (tháng/năm)</label><input id="neMonth" inputmode="numeric" maxlength="7" placeholder="11/2026" value="${xhtml(n.THOI_GIAN_BAT_DAU||'')}"><small class="need-hint">Nhập số theo dạng tháng/năm, ví dụ 11/2026.</small></div>
    <div class="need-two-col need-plan-fields"><div class="field"><label>Thời lượng dự kiến</label><textarea id="neHours" rows="2" placeholder="Ví dụ: 16 giờ, 2 ngày, 3 buổi">${xhtml(n.THOI_LUONG_GIO||'')}</textarea></div><div class="field"><label>Địa điểm dự kiến</label><textarea id="neLocation" rows="2" placeholder="Nhập địa điểm dự kiến">${xhtml(n.DIA_DIEM_DU_KIEN||'')}</textarea></div></div>
    <div class="field"><label>Ghi chú</label><textarea id="neNote" placeholder="Nhập ghi chú...">${xhtml(n.GHI_CHU||'')}</textarea></div>
-   <div class="field"><label>File đính kèm <em>*</em> ${id?'('+files.length+' file đã tải lên)':''}</label><input id="neFiles" type="file" multiple required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip" onchange="renderNeedPickedFiles()"><div id="nePickedFiles" class="need-picked-files" style="display:grid;gap:6px;margin-top:8px"></div><small class="need-hint">Bắt buộc có ít nhất 1 file đính kèm để tạo nhu cầu, tránh ghi nhận nhu cầu không có hồ sơ. Cho phép nhiều file, tối đa 100 MB mỗi file. Lưu trên Google Drive.</small>${files.length?`<div class="need-existing-files">${files.map(f=>`<div>📎 ${xhtml(f.name||f.title||'File đính kèm')}</div>`).join('')}</div>`:''}</div>
+   <div class="field"><label>File đính kèm <em>*</em> ${id?'('+files.length+' file đã tải lên)':''}</label><input id="neFiles" type="file" multiple required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip" onchange="renderNeedPickedFiles()"><div id="nePickedFiles" class="need-picked-files" style="display:grid;gap:6px;margin-top:8px"></div><small class="need-hint">Bắt buộc có ít nhất 1 file đính kèm để tạo nhu cầu, tránh ghi nhận nhu cầu không có hồ sơ. Cho phép nhiều file, tối đa 100 MB mỗi file. Lưu trên Google Drive.</small>${files.length?`<div class="need-existing-files" id="neExistingFiles">${files.map(f=>`<div data-drive-file-id="${xhtml(f.driveFileId||'')}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border:1px solid #dbe5f2;border-radius:8px;background:#fff;min-width:0"><span style="font-size:11px;overflow-wrap:anywhere;min-width:0;flex:1">📎 ${xhtml(f.name||f.title||'File đính kèm')}</span><button type="button" title="Xóa file đã tải lên" aria-label="Xóa file ${xhtml(f.name||f.title||'đính kèm')}" onclick="removeTrainingNeedAttachment('${xhtml(id)}','${xhtml(f.driveFileId||'')}')" style="flex:0 0 28px;width:28px;height:28px;border:1px solid #f0b8b8;border-radius:7px;background:#fff1f1;color:#c62828;font-size:19px;line-height:1;cursor:pointer">×</button></div>`).join('')}</div>`:''}</div>
   </div></section>
  </div><div class="need-editor-footer"><span><em>*</em> Trường bắt buộc</span><div><button class="btn light" onclick="closeModal()">Hủy</button> <button class="btn primary" onclick="saveTrainingNeed('${xhtml(id)}')">Lưu nhu cầu</button></div></div>`);
  updateNeedUnitCount();
+}
+async function removeTrainingNeedAttachment(needId,fileId){
+ if(!needId||!fileId){toast('Không xác định được mã file cần xóa');return}
+ if(!confirm('Đại ca có chắc chắn muốn xóa file đính kèm này khỏi nhu cầu đào tạo? File sẽ bị xóa khỏi hồ sơ trên Google Drive.'))return;
+ try{
+  const r=await gsCall('deleteTrainingNeedAttachment',{needId,fileId});
+  if(!r?.ok)throw new Error(r?.error||'Không xóa được file');
+  const need=trainingNeeds.find(x=>String(x.NHU_CAU_ID)===String(needId));
+  if(need){const current=needEvidence(need).filter(f=>String(f.driveFileId||'')!==String(fileId));need.FILE_BANG_CHUNG=current;need.FILE_BANG_CHUNG_JSON=JSON.stringify(current);}
+  const host=document.getElementById('neExistingFiles');
+  if(host){const row=host.querySelector('[data-drive-file-id="'+CSS.escape(fileId)+'"]');if(row)row.remove();if(!host.children.length)host.remove();}
+  const label=document.querySelector('#mbody label[for="neFiles"]')||[...document.querySelectorAll('#mbody label')].find(x=>x.textContent.includes('File đính kèm'));
+  if(label&&need)label.innerHTML='File đính kèm <em>*</em> ('+needEvidence(need).length+' file đã tải lên)';
+  toast('Đã xóa file đính kèm');
+ }catch(e){toast('Lỗi xóa file: '+(e.message||e))}
 }
 function renderNeedPickedFiles(){
  const input=document.getElementById('neFiles'),host=document.getElementById('nePickedFiles');if(!input||!host)return;
