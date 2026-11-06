@@ -1321,7 +1321,7 @@ function setDashboardActivityPeriod(period,button){
  renderDashboardActivity();
 }
 function activityISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-function activityDateLabel(iso){const m=String(iso||'').match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:(iso||'—');}
+function activityDateLabel(iso){const p=String(iso||'').slice(0,10).split('-');return p.length===3&&p[0].length===4?p[2]+'/'+p[1]+'/'+p[0]:(iso||'—');}
 function renderDashboardActivity(){
  const host=document.getElementById('dashboardActivityList');if(!host)return;
  const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
