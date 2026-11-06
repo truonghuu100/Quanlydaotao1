@@ -1423,7 +1423,7 @@ function renderClassroomHistory(){
  const roomFilter=document.getElementById('roomHistoryFilter')?.value||'',statusFilter=document.getElementById('roomHistoryStatus')?.value||'';
  const all=classroomCache.flatMap(r=>(r.bookings||[]).map(b=>({...b,_room:roomName(r),_roomId:roomId(r)}))).sort((a,b)=>roomDateValue(a.NGAY_BAT_DAU).localeCompare(roomDateValue(b.NGAY_BAT_DAU)));
  const rows=all.filter(b=>(!roomFilter||b._roomId===roomFilter)&&(!statusFilter||String(b.TRANG_THAI||'Đã đăng ký')===statusFilter));
- const body=rows.map(b=>{const id=xhtml(b.PHIEU_DAT_PHONG_ID||b.id||'');const action=String(b.TRANG_THAI||'')!=='Đã hủy'&&(isAdminUser()||canEditClassroom())?'<button class="btn light" data-booking-id="'+id+'" onclick="cancelClassroomBookingUI(this.dataset.bookingId)">Hủy đăng ký</button>':'—';return '<tr><td><b>'+xhtml(b._room)+'</b></td><td>'+xhtml(b.TEN_LOP||b.CONGVIEC_ID||'—')+'</td><td>'+roomFormatDate(b.NGAY_BAT_DAU)+'</td><td>'+roomFormatDate(b.NGAY_KET_THUC)+'</td><td>'+xhtml(b.TRANG_THAI||'Đã đăng ký')+'</td><td>'+action+'</td></tr>';}).join('');
+ const body=rows.map(b=>{const id=xhtml(b.PHIEU_DAT_PHONG_ID||b.id||'');const actions=[];if(String(b.TRANG_THAI||'')!=='Đã hủy'&&(isAdminUser()||canEditClassroom()))actions.push('<button class="btn light" data-booking-id="'+id+'" onclick="cancelClassroomBookingUI(this.dataset.bookingId)">Hủy đăng ký</button>');if(isAdminUser())actions.push('<button class="btn danger" data-booking-id="'+id+'" onclick="deleteClassroomBookingUI(this.dataset.bookingId)">Xóa</button>');return '<tr><td><b>'+xhtml(b._room)+'</b></td><td>'+xhtml(b.TEN_LOP||b.CONGVIEC_ID||'—')+'</td><td>'+roomFormatDate(b.NGAY_BAT_DAU)+'</td><td>'+roomFormatDate(b.NGAY_KET_THUC)+'</td><td>'+xhtml(b.TRANG_THAI||'Đã đăng ký')+'</td><td style="white-space:nowrap">'+(actions.join(' ')||'—')+'</td></tr>';}).join('');
  const table=document.getElementById('classroomBookingsTable');if(table)table.innerHTML=body||'<tr><td colspan="6">Không có lịch sử phù hợp.</td></tr>';
 }
 function searchAvailableClassrooms(){
@@ -1440,6 +1440,18 @@ function roomSetTab(tab,button){
  root.querySelectorAll('.room-tab').forEach(b=>{const active=b===button||b.dataset.roomTab===tab;b.classList.toggle('active',active);b.setAttribute('aria-selected',active?'true':'false');});
  root.querySelectorAll('.room-tab-panel').forEach(panel=>{const active=panel.id==='roomPanel-'+tab;panel.classList.toggle('active',active);panel.hidden=!active;});
  if(tab==='history'&&classroomCache.length===0)loadClassrooms();
+}
+async function deleteClassroomBookingUI(bookingId){
+ if(!isAdminUser()){toast('Chỉ Admin mới được xóa lịch sử sử dụng phòng.');return;}
+ if(!bookingId){toast('Không xác định được mã lịch sử.');return;}
+ if(!confirm('Xóa vĩnh viễn bản ghi lịch sử sử dụng phòng này? Thao tác này không thể hoàn tác.'))return;
+ try{
+  const r=await gsCall('deleteClassroomBooking',{bookingId});
+  if(!r||!r.ok)throw new Error(r?.error?.message||r?.error||'Không xóa được lịch sử sử dụng phòng.');
+  await refreshClassroomData();
+  await refreshFromServerV2();
+  toast('Đã xóa bản ghi lịch sử sử dụng phòng.');
+ }catch(e){toast('Không thể xóa lịch sử sử dụng phòng: '+(e.message||e));}
 }
 async function cancelClassroomBookingUI(bookingId){
  if(!bookingId){toast('Không xác định được mã đăng ký phòng.');return;}
