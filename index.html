@@ -2461,7 +2461,7 @@ async function setLecturerActiveState(id,status){
  try{const r=await gsCall('setLecturerStatus',{id,status});if(!r||!r.ok)throw new Error(r?.error||'Không cập nhật được trạng thái giảng viên');await refreshFromServerV2();openLecturerMaster();toast(status==='Hoạt động'?'Đã khôi phục giảng viên':'Đã ẩn giảng viên; hồ sơ vẫn được lưu');}
  catch(e){toast('Không thể cập nhật trạng thái: '+(e.message||e))}
 }
-function deleteLecturerAdmin(id){
+async function deleteLecturerAdmin(id){
  if(!isAdminUser()){toast('Chỉ Admin được xóa giảng viên');return}
  const g=lecturers.find(x=>String(x.id)===String(id));if(!g)return;
  const label=[g.code,g.name].filter(Boolean).join(' — ')||id;
