@@ -934,7 +934,23 @@ html,body{scroll-behavior:auto!important}
   <div class="card"><div class="cardhead"><b>Danh sách phòng học</b><input id="roomSearch" placeholder="Tìm tên phòng / địa điểm / tài sản" oninput="renderClassrooms()" style="max-width:300px"></div><div class="tablewrap"><table class="table"><thead><tr><th>STT</th><th>Tên phòng</th><th>Địa điểm</th><th>Sức chứa tối đa</th><th>Tình trạng phòng</th><th>Tài sản liên quan</th><th>Thao tác</th></tr></thead><tbody id="classroomTable"><tr><td colspan="7">Bấm làm mới để tải danh sách phòng.</td></tr></tbody></table></div></div>
  </section>
  <section class="room-tab-panel" id="roomPanel-history" role="tabpanel" hidden>
-  <div class="card"><div class="cardhead"><b>Lịch sử sử dụng phòng học</b><span class="muted">Các khoảng thời gian đã đăng ký theo lớp</span></div><div class="tablewrap"><table class="table"><thead><tr><th>Phòng</th><th>Lớp / công việc</th><th>Từ ngày</th><th>Đến ngày</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="classroomBookingsTable"><tr><td colspan="6">Chưa tải dữ liệu.</td></tr></tbody></table></div></div>
+  <div class="card" style="margin-bottom:14px">
+   <div class="cardhead"><b>Tìm phòng trống</b><span class="muted">Chọn khoảng thời gian và phòng cần kiểm tra</span></div>
+   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;padding:14px">
+    <div class="field"><label>Từ ngày</label><input id="roomAvailFrom" type="date"></div>
+    <div class="field"><label>Đến ngày</label><input id="roomAvailTo" type="date"></div>
+    <div class="field"><label>Phòng cần tìm</label><select id="roomAvailRoom"><option value="">Tất cả phòng</option></select></div>
+    <div class="field" style="align-self:end"><button class="btn primary" type="button" onclick="searchAvailableClassrooms()">Tìm phòng trống</button></div>
+   </div>
+   <div id="roomAvailabilityResult" style="padding:0 14px 14px;color:#526780;font-size:12px">Chọn ngày để kiểm tra phòng còn trống.</div>
+  </div>
+  <div class="card"><div class="cardhead"><b>Lịch sử sử dụng phòng học</b><span class="muted">Các khoảng thời gian đã đăng ký theo lớp</span></div>
+   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid #e5ebf3">
+    <label for="roomHistoryFilter">Lọc theo phòng</label><select id="roomHistoryFilter" onchange="renderClassroomHistory()" style="min-width:220px"><option value="">Tất cả phòng</option></select>
+    <label for="roomHistoryStatus">Trạng thái</label><select id="roomHistoryStatus" onchange="renderClassroomHistory()"><option value="">Tất cả</option><option>Đã đăng ký</option><option>Đã hủy</option></select>
+   </div>
+   <div class="tablewrap"><table class="table"><thead><tr><th>Phòng</th><th>Lớp / công việc</th><th>Từ ngày</th><th>Đến ngày</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="classroomBookingsTable"><tr><td colspan="6">Chưa tải dữ liệu.</td></tr></tbody></table></div>
+  </div>
  </section>
 </div>
 <div id="admin" class="page admin-page"><div class="title"><div><h1>Quản trị hệ thống</h1><p>Quản trị người dùng, phân quyền, danh mục và kiểm soát vận hành hệ thống.</p></div></div>
@@ -1393,9 +1409,31 @@ function renderClassrooms(){
  const canEdit=canEditClassroom()||canAddClassroom();
  const body=rows.map((r,i)=>`<tr><td>${i+1}</td><td><b>${xhtml(roomName(r))}</b></td><td>${xhtml(r.DIA_DIEM||'—')}</td><td>${Number(r.SUC_CHUA_TOI_DA||0).toLocaleString('vi-VN')}</td><td><span class="badge ${String(r.TINH_TRANG_PHONG||'Hoạt động')==='Hoạt động'?'ok':'warn'}">${xhtml(r.TINH_TRANG_PHONG||'Hoạt động')}</span></td><td>${(r.assets||[]).map(a=>xhtml(a.name)+' × '+Number(a.quantity||1)).join('<br>')||'—'}</td><td style="white-space:nowrap">${canEdit?`<button class="btn light" onclick="openClassroomEditor('${xhtml(roomId(r))}')">Sửa</button> `:''}${isAdminUser()?`<button class="btn danger" onclick="deleteClassroomUI('${xhtml(roomId(r))}')">Xóa</button>`:''}</td></tr>`).join('');
  document.getElementById('classroomTable').innerHTML=body||'<tr><td colspan="7">Chưa có phòng học phù hợp.</td></tr>';
- const allBookings=classroomCache.flatMap(r=>r.bookings.map(b=>({...b,_room:roomName(r)}))).sort((a,b)=>String(a.NGAY_BAT_DAU).localeCompare(String(b.NGAY_BAT_DAU)));
- document.getElementById('classroomBookingsTable').innerHTML=allBookings.map(b=>'<tr><td><b>'+xhtml(b._room)+'</b></td><td>'+xhtml(b.TEN_LOP||b.CONGVIEC_ID||'—')+'</td><td>'+xhtml(b.NGAY_BAT_DAU||'—')+'</td><td>'+xhtml(b.NGAY_KET_THUC||'—')+'</td><td>'+xhtml(b.TRANG_THAI||'Đã đăng ký')+'</td><td>'+(String(b.TRANG_THAI||'')!=='Đã hủy'&&(isAdminUser()||canEditClassroom())?'<button class="btn light" onclick="cancelClassroomBookingUI(\''+xhtml(b.PHIEU_DAT_PHONG_ID||b.id||'')+'\')">Hủy đăng ký</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="6">Chưa có lịch sử sử dụng phòng.</td></tr>';
+ populateClassroomFilters();
+ renderClassroomHistory();
  const add=document.querySelector('#classrooms .title .btn.primary');if(add)add.style.display=canAddClassroom()?'':'none';
+}
+function roomFormatDate(value){if(!value)return '—';const v=String(value).slice(0,10);const m=v.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:v;}
+function roomDateValue(value){return String(value||'').slice(0,10);}
+function populateClassroomFilters(){
+ const options=classroomCache.map(r=>({id:roomId(r),name:roomName(r)})).filter(x=>x.id);
+ for(const id of ['roomAvailRoom','roomHistoryFilter']){const el=document.getElementById(id);if(!el)continue;const keep=el.value;el.innerHTML='<option value="">Tất cả phòng</option>'+options.map(x=>'<option value="'+xhtml(x.id)+'">'+xhtml(x.name)+'</option>').join('');if(options.some(x=>x.id===keep))el.value=keep;}
+}
+function renderClassroomHistory(){
+ const roomFilter=document.getElementById('roomHistoryFilter')?.value||'',statusFilter=document.getElementById('roomHistoryStatus')?.value||'';
+ const all=classroomCache.flatMap(r=>(r.bookings||[]).map(b=>({...b,_room:roomName(r),_roomId:roomId(r)}))).sort((a,b)=>roomDateValue(a.NGAY_BAT_DAU).localeCompare(roomDateValue(b.NGAY_BAT_DAU)));
+ const rows=all.filter(b=>(!roomFilter||b._roomId===roomFilter)&&(!statusFilter||String(b.TRANG_THAI||'Đã đăng ký')===statusFilter));
+ const body=rows.map(b=>'<tr><td><b>'+xhtml(b._room)+'</b></td><td>'+xhtml(b.TEN_LOP||b.CONGVIEC_ID||'—')+'</td><td>'+roomFormatDate(b.NGAY_BAT_DAU)+'</td><td>'+roomFormatDate(b.NGAY_KET_THUC)+'</td><td>'+xhtml(b.TRANG_THAI||'Đã đăng ký')+'</td><td>'+(String(b.TRANG_THAI||'')!=='Đã hủy'&&(isAdminUser()||canEditClassroom())?'<button class="btn light" onclick="cancelClassroomBookingUI(\\''+xhtml(b.PHIEU_DAT_PHONG_ID||b.id||'')+'\\')">Hủy đăng ký</button>':'—')+'</td></tr>').join('');
+ const table=document.getElementById('classroomBookingsTable');if(table)table.innerHTML=body||'<tr><td colspan="6">Không có lịch sử phù hợp.</td></tr>';
+}
+function searchAvailableClassrooms(){
+ const from=document.getElementById('roomAvailFrom')?.value||'',to=document.getElementById('roomAvailTo')?.value||'',selected=document.getElementById('roomAvailRoom')?.value||'',out=document.getElementById('roomAvailabilityResult');
+ if(!from||!to){if(out)out.textContent='Vui lòng chọn Từ ngày và Đến ngày.';return;}
+ if(to<from){if(out)out.textContent='Ngày kết thúc phải bằng hoặc sau ngày bắt đầu.';return;}
+ const active=classroomCache.flatMap(r=>(r.bookings||[]).filter(b=>String(b.TRANG_THAI||'Đã đăng ký')!=='Đã hủy').map(b=>({...b,_roomId:roomId(r)})));
+ const candidates=classroomCache.filter(r=>(!selected||roomId(r)===selected)&&String(r.TINH_TRANG_PHONG||'Hoạt động')==='Hoạt động');
+ const available=candidates.filter(r=>!active.some(b=>b._roomId===roomId(r)&&roomDateValue(b.NGAY_BAT_DAU)<=to&&roomDateValue(b.NGAY_KET_THUC)>=from));
+ if(out)out.innerHTML='<b>'+available.length+' phòng còn trống</b> trong khoảng '+roomFormatDate(from)+' – '+roomFormatDate(to)+(available.length?'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px">'+available.map(r=>'<span class="badge ok" style="padding:7px 10px">'+xhtml(roomName(r))+' · '+Number(r.SUC_CHUA_TOI_DA||0)+' chỗ</span>').join('')+'</div>':'<div style="margin-top:7px">Không tìm thấy phòng trống phù hợp.</div>');
 }
 function roomSetTab(tab,button){
  const root=document.getElementById('classrooms');if(!root)return;
