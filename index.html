@@ -487,6 +487,24 @@ html.session-restoring #hpdqBootScreen{display:flex}
 .room-tab.active{background:linear-gradient(135deg,#176be8,#315df4);color:#fff;box-shadow:0 5px 14px rgba(38,99,235,.22)}
 .room-tab-panel{display:none;animation:adminPanelIn .18s ease-out}
 .room-tab-panel.active{display:block}
+
+/* Dashboard tabs and training activity overview */
+.dashboard-tabs{display:flex;gap:7px;align-items:center;padding:6px;background:#fff;border:1px solid var(--line);border-radius:11px;margin:0 0 16px;width:max-content;max-width:100%}
+.dashboard-tab{border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);padding:10px 16px;font-weight:800;font-size:12px;cursor:pointer}
+.dashboard-tab.active{background:var(--primary,#2463eb);background:#2865e9;color:#fff;box-shadow:0 4px 12px rgba(40,101,233,.18)}
+.dashboard-tab-panel{display:none}.dashboard-tab-panel.active{display:block}
+.activity-intro{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:6px 0 14px}.activity-intro h2{font-size:18px;margin:0}.activity-intro p{font-size:12px;color:var(--muted);margin:5px 0 0}
+.activity-periods{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
+.activity-period{border:1px solid var(--line);background:#fff;color:#425a78;border-radius:8px;padding:9px 15px;font-size:12px;font-weight:700;cursor:pointer}
+.activity-period.active{background:#eaf1ff;border-color:#8fb1ff;color:#164fb6}
+.activity-periods select{min-width:190px}
+.activity-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0}
+.activity-kpi{background:#fff;border:1px solid var(--line);border-radius:11px;padding:16px;box-shadow:0 2px 6px rgba(24,54,92,.04)}
+.activity-kpi small{display:block;font-size:10px;font-weight:800;letter-spacing:.45px;color:#7185a2}.activity-kpi strong{display:block;font-size:27px;margin:8px 0 2px;color:#10284b}.activity-kpi span{font-size:10px;color:var(--muted)}
+.activity-row{display:grid;grid-template-columns:120px minmax(180px,1.6fr) minmax(130px,1fr) minmax(120px,1fr) 110px;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid #edf1f7}
+.activity-row:last-child{border-bottom:0}.activity-time{font-size:12px;font-weight:800;color:#345477}.activity-course{font-size:13px;font-weight:800}.activity-sub{font-size:11px;color:var(--muted);margin-top:4px}.activity-meta{font-size:11px;color:#526985;line-height:1.5}.activity-status{display:inline-block;padding:5px 9px;border-radius:20px;font-size:10px;font-weight:800;background:#e9f2ff;color:#2361d5}.activity-status.done{background:#e6f8f0;color:#07865c}.activity-people{text-align:right;font-size:12px;font-weight:800}.activity-people small{display:block;color:var(--muted);font-weight:400;margin-top:3px}
+@media(max-width:1000px){.activity-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.activity-row{grid-template-columns:100px 1.5fr 1fr 100px}.activity-row .activity-place{display:none}}
+@media(max-width:650px){.activity-intro{align-items:flex-start;flex-direction:column}.activity-row{grid-template-columns:1fr 1.5fr;gap:7px}.activity-row .activity-meta,.activity-row .activity-place{display:none}.activity-people{text-align:left}.dashboard-tabs{width:100%}.dashboard-tab{flex:1;padding:9px 7px}}
 </style><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 // ===== Module chi phí đào tạo =====
@@ -897,7 +915,30 @@ html,body{scroll-behavior:auto!important}
 <div id="login" class="login"><div class="login-brand"><div class="login-brand-welcome">CHÀO MỪNG BẠN ĐẾN VỚI</div><div class="login-brand-copy"><h2>HỆ THỐNG QUẢN LÝ CÔNG VIỆC ĐÀO TẠO</h2></div><div class="login-brand-training">TRAINING &amp; DEVELOPMENT SYSTEM</div><div class="login-brand-footer">Đội Nhân sự - Đào tạo - Phòng Nhân sự - Công ty Cổ phần Thép Hòa Phát Dung Quất</div></div><div class="login-panel"><div class="loginbox"><img class="loginbox-brand-logo" src="./Logoxanh.png" alt="Logo Hòa Phát"><h1>Đăng nhập</h1><div class="field"><label for="lu">Tên đăng nhập</label><input id="lu" autocomplete="username" value="" placeholder="Nhập tên đăng nhập"></div><div class="field"><label for="lp">Mật khẩu</label><input id="lp" type="password" autocomplete="current-password" value="" placeholder="Nhập mật khẩu" onkeydown="if(event.key==='Enter')doLogin()"></div><button id="loginSubmitBtn" class="btn primary" type="button" onclick="doLogin()">Đăng nhập</button><div id="loginGoogleStatus" class="demo">Đang kết nối hệ thống…</div></div><div class="login-copyright">Copyright © Đặng Hữu Trường - Phòng Nhân sự</div></div></div>
 <div id="app" class="app hidden"><aside class="side"><div class="brand"><div class="logo">HP</div><div><b>HPDQ TRAINING</b><small>TRAINING MANAGEMENT SYSTEM</small></div></div><div class="section">Điều hành</div><div class="nav" id="nav"></div><div class="section">Quản trị</div><div class="nav"><button id="adminNav" data-page="admin" onclick="go('admin')"><span class="nav-icon">☼</span><span>Quản trị hệ thống</span></button></div><div class="section">Truy cập nhanh</div><div class="quick-links"><a href="https://eoffice.hoaphat.com.vn/" target="_blank" rel="noopener noreferrer"><span>▣</span><span>Eoffice</span><i>↗</i></a><a href="https://elearning.hoaphatdungquat.vn/" target="_blank" rel="noopener noreferrer"><span>▤</span><span>E-learning</span><i>↗</i></a><a href="http://outlook.cloud.microsoft/" target="_blank" rel="noopener noreferrer"><span>✉</span><span>Outlook</span><i>↗</i></a><a href="https://hr.hoaphatdungquat.vn/" target="_blank" rel="noopener noreferrer"><span>▥</span><span>Tinviet</span><i>↗</i></a><a href="http://acs.hoaphatdungquat.vn/" target="_blank" rel="noopener noreferrer"><span>▦</span><span>ACS</span><i>↗</i></a></div></aside><main class="main"><header class="top"><b id="crumb">Dashboard</b><div class="userchip"><button class="btn light app-global-refresh" id="appGlobalRefresh" onclick="refreshCurrentMenu()" title="Tải dữ liệu mới nhất của chức năng đang mở">↻ <span>Làm mới</span></button><button class="btn light notification-bell" id="notificationBell" onclick="toggleNotificationCenter()">🔔 <span id="notificationUnreadCount">0</span></button><span id="userName">Admin</span><div class="avatar" id="avatar" title="Ảnh đại diện" onclick="openMyProfile()">AD</div><button class="profile-menu-btn" onclick="openMyProfile()">Tài khoản</button><button class="btn light" onclick="logout()">Đăng xuất</button></div></header><section class="content">
 <div id="dashboard" class="page active dashboard-page">
- <div class="title"><div><h1>TỔNG HỢP KẾT QUẢ</h1></div><div class="dash-title-actions"><span class="dash-updated">Cập nhật <b id="dashUpdatedAt">—</b></span><button class="btn light" onclick="renderDashboard()">↻ Làm mới</button><button class="btn primary" onclick="exportDashboardReport()">↓ Xuất báo cáo</button></div></div>
+ <div class="title"><div><h1 id="dashboardMainTitle">HOẠT ĐỘNG ĐÀO TẠO</h1></div><div class="dash-title-actions"><span class="dash-updated">Cập nhật <b id="dashUpdatedAt">—</b></span><button class="btn light" onclick="renderDashboard()">↻ Làm mới</button><button class="btn primary" onclick="exportDashboardReport()">↓ Xuất báo cáo</button></div></div>
+ <div class="dashboard-tabs" role="tablist" aria-label="Nội dung Dashboard">
+  <button type="button" class="dashboard-tab active" id="dashboardActivityTab" onclick="switchDashboardTab('activity')">▤ Hoạt động đào tạo</button>
+  <button type="button" class="dashboard-tab" id="dashboardSummaryTab" onclick="switchDashboardTab('summary')">▦ Tổng hợp kết quả</button>
+ </div>
+ <section id="dashboardActivityPanel" class="dashboard-tab-panel active">
+  <div class="activity-intro"><div><h2>HOẠT ĐỘNG ĐÀO TẠO</h2><p>Theo dõi các khóa đào tạo đang tổ chức và kế hoạch triển khai sắp tới.</p></div><span id="activityUpdatedAt" class="muted">Dữ liệu cập nhật theo lịch đào tạo</span></div>
+  <div class="activity-periods">
+   <button class="activity-period active" data-period="today" onclick="setDashboardActivityPeriod('today',this)">Hôm nay</button>
+   <button class="activity-period" data-period="tomorrow" onclick="setDashboardActivityPeriod('tomorrow',this)">Ngày mai</button>
+   <button class="activity-period" data-period="week" onclick="setDashboardActivityPeriod('week',this)">Tuần này</button>
+   <button class="activity-period" data-period="month" onclick="setDashboardActivityPeriod('month',this)">Tháng tới</button>
+   <select id="dashboardActivityUnit" onchange="renderDashboardActivity()"><option value="all">Tất cả đơn vị</option></select>
+  </div>
+  <div class="activity-kpis">
+   <div class="activity-kpi"><small>TỔNG LƯỢT / NỘI DUNG ĐÀO TẠO</small><strong id="activityTotal">0</strong><span>Trong khoảng thời gian chọn</span></div>
+   <div class="activity-kpi"><small>ĐANG DIỄN RA HÔM NAY</small><strong id="activityOngoing">0</strong><span>Khóa có lịch trong hôm nay</span></div>
+   <div class="activity-kpi"><small>SẮP TRIỂN KHAI</small><strong id="activityUpcoming">0</strong><span>Trong khoảng thời gian chọn</span></div>
+   <div class="activity-kpi"><small>HỌC VIÊN DỰ KIẾN</small><strong id="activityLearners">—</strong><span>Theo dữ liệu lớp được giao</span></div>
+  </div>
+  <div class="card activity-list-card"><div class="cardhead"><b id="activityListTitle">Lịch triển khai đào tạo · Hôm nay</b><span id="activityDateRange" class="muted"></span></div><div id="dashboardActivityList"><div class="empty-state">Đang tổng hợp lịch đào tạo…</div></div></div>
+  <div class="dash-footnote">Thông tin được tổng hợp từ lịch đào tạo/lớp đã khai báo trong hệ thống. Các nội dung chưa có ngày triển khai sẽ không xuất hiện trong danh sách này.</div>
+ </section>
+ <section id="dashboardSummaryPanel" class="dashboard-tab-panel">
  <div class="dash-filters"><select id="dashPeriod" onchange="renderDashboard()"><option value="30">30 ngày gần đây</option><option value="90">90 ngày gần đây</option><option value="365">365 ngày gần đây</option><option value="all">Toàn bộ thời gian</option></select><select id="dashUserFilter" onchange="renderDashboard()"><option value="all">Tất cả user</option></select><select id="dashStatusFilter" onchange="renderDashboard()"><option value="all">Tất cả trạng thái</option><option value="active">Đang thực hiện</option><option value="late">Chậm tiến độ</option><option value="done">Hoàn thành</option><option value="pending">Chưa bắt đầu</option></select></div>
  <div class="dash-kpis"><div class="dash-kpi"><div class="dash-kpi-top"><small>TỔNG LỚP</small><span class="dash-icon bluebg">▣</span></div><strong id="kpiClasses">0</strong><small class="dash-kpi-note">Đầu việc triển khai theo lớp</small></div><div class="dash-kpi"><div class="dash-kpi-top"><small>ĐANG THỰC HIỆN</small><span class="dash-icon cyanbg">◷</span></div><strong id="kpiActive">0</strong><small class="dash-kpi-note">Lớp chưa hoàn thành</small></div><div class="dash-kpi"><div class="dash-kpi-top"><small>HOÀN THÀNH</small><span class="dash-icon greenbg">✓</span></div><strong id="kpiDone">0</strong><small class="dash-kpi-note">Đã hoàn tất các bước</small></div><div class="dash-kpi"><div class="dash-kpi-top"><small>CÔNG VIỆC CẦN XỬ LÝ</small><span class="dash-icon amberbg">△</span></div><strong id="kpiTasks" class="ambertext">0</strong><small class="dash-kpi-note">Còn việc cần theo dõi</small></div><div class="dash-kpi"><div class="dash-kpi-top"><small>CHẬM TIẾN ĐỘ</small><span class="dash-icon redbg">↗</span></div><strong id="kpiLate" class="redtext">0</strong><small class="dash-kpi-note" id="kpiLateNote">Cần rà soát hạn</small></div></div>
  <div class="card dash-timeline-card"><div class="cardhead"><b>Tiến độ các lớp: kế hoạch và thực tế</b><div class="dash-legend"><span><i class="legend-plan"></i>Kế hoạch</span><span><i class="legend-early"></i>Thực tế · sớm</span><span><i class="legend-warn"></i>Chậm 1–3 ngày</span><span><i class="legend-late"></i>Chậm trên 3 ngày</span></div></div><div class="dash-timeline" id="dashTimeline"></div><div class="dash-footnote">Tiến độ thực tế dựa trên các bước đã hoàn thành và ngày cập nhật kết quả. Mức sớm/chậm được tính theo kế hoạch; lớp chưa có dữ liệu thực tế sẽ hiển thị theo kế hoạch.</div></div>
@@ -905,6 +946,7 @@ html,body{scroll-behavior:auto!important}
  <div class="card dash-ranking"><div class="cardhead"><b>Xếp hạng user theo hiệu suất</b><div class="dash-legend"><span><i class="legend-early"></i>Xong</span><span><i class="legend-plan"></i>Đang làm</span><span><i class="legend-late"></i>Trễ hạn</span><span><i class="legend-empty"></i>Chưa tới</span></div></div><div class="tablewrap"><table class="table"><thead><tr><th>Hạng</th><th>User</th><th>Khối lượng việc được giao</th><th>Hoàn thành</th><th>Đúng hạn</th><th>Tốc độ TB</th><th>Điểm</th><th>Xếp loại</th></tr></thead><tbody id="dashRanking"></tbody></table></div><div class="dash-footnote">Điểm hiệu suất là chỉ số tham khảo từ dữ liệu giao việc, tiến độ và hạn hoàn thành; không thay thế đánh giá KPI chính thức.</div></div>
  <div class="dash-bottom"><div class="card"><div class="cardhead"><b>Giao việc gần đây</b><button class="dash-link" onclick="go('assign')">Xem tất cả →</button></div><div id="dashTasks"></div></div><div class="card"><div class="cardhead"><b>Cần xử lý ngay</b><span id="dashActionCount" class="dash-count">0 việc</span></div><div id="dashActionItems"></div></div></div>
  <div class="hidden" id="dashResults"></div>
+ </section>
 </div>
 <div id="mywork" class="page"><div class="title"><div><h1>Công việc của tôi</h1><p>Nhân viên chỉ khai báo kết quả thực tế.</p></div></div><div class="card"><div class="cardhead"><b>Lớp thuê ngoài được giao</b></div><div id="myTasks"></div></div></div>
 <div id="weeklyReport" class="page weekly-report-page">
@@ -1168,7 +1210,7 @@ function openProviderLecturersSection(){providerMenuOpen=true;navBuild();openLec
 function goSection(target,navId){go('dashboard');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===navId));setTimeout(()=>{const el=document.getElementById(target);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},60)}
 function resetPagePresentation(page){if(!page)return;['display','visibility','opacity','transform','top','margin-top','position'].forEach(k=>page.style.removeProperty(k));page.querySelectorAll('.admin-tab-panel').forEach(panel=>{['display','visibility','opacity','transform','top','margin-top','position'].forEach(k=>panel.style.removeProperty(k))})}
 function go(id){if(!canOpenPage(id)){toast('Bạn không có quyền truy cập chức năng này');return}window.scrollTo({top:0,left:0,behavior:'auto'});const mainScroll=document.querySelector('.main');if(mainScroll)mainScroll.scrollTop=0;const contentScroll=document.querySelector('.content');if(contentScroll)contentScroll.scrollTop=0;document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');resetPagePresentation(p)});const dynamicProviderPage=document.getElementById('providerFullPage');if(dynamicProviderPage){dynamicProviderPage.classList.remove('active');dynamicProviderPage.style.setProperty('display','none','important')}const page=document.getElementById(id);if(!page)return;page.classList.add('active');page.style.setProperty('display','block','important');page.style.setProperty('visibility','visible');page.style.setProperty('opacity','1');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));document.getElementById('crumb').textContent=page.querySelector('h1')?.textContent||'Quản trị hệ thống';renderAll();document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));resetPageViewport(page);if(id==='admin'){requestAnimationFrame(()=>requestAnimationFrame(()=>{window.scrollTo({top:0,left:0,behavior:'auto'});document.documentElement.scrollTop=0;document.body.scrollTop=0;const main=document.querySelector('.main');if(main)main.scrollTop=0;const content=document.querySelector('.content');if(content)content.scrollTop=0;const page=document.getElementById('admin');if(page)page.scrollTop=0;}));const adminPage=document.getElementById('admin');if(adminPage){adminPage.querySelectorAll('.admin-tab-panel').forEach(panel=>{['display','visibility','opacity','transform','top','margin-top','position'].forEach(k=>panel.style.removeProperty(k))});const activePanel=adminPage.querySelector('.admin-tab-panel.active');if(activePanel){activePanel.style.setProperty('display','block','important');activePanel.style.setProperty('visibility','visible','important');activePanel.style.setProperty('opacity','1','important')}}}if(id==='trainingNeeds'){const body=document.getElementById('trainingNeedsTable');if(body)body.innerHTML='<tr><td colspan="9" style="text-align:center;color:var(--muted)">Đang tải dữ liệu nhu cầu đào tạo…</td></tr>';loadTrainingNeeds().catch(e=>{const target=document.getElementById('trainingNeedsTable');if(target)target.innerHTML='<tr><td colspan="9" style="color:#b91c1c">Không tải được dữ liệu: '+xhtml(e.message||e)+' — vui lòng thử lại.</td></tr>';toast('Không tải được nhu cầu đào tạo: '+(e.message||e));})}}
-function renderAll(){navBuild();renderDashboard();renderMy();if(document.getElementById('weeklyReport')?.classList.contains('active'))renderWeeklyReport();renderAssignments();renderUsers();renderProviderTracking();if(document.getElementById('classroomTable')&&document.getElementById('classrooms')?.classList.contains('active'))loadClassrooms();if(document.getElementById('trainingNeedsTable'))renderTrainingNeeds();const cb=document.getElementById('tcCategoriesBtn');if(cb)cb.style.display=isAdminUser()?'':'none';refreshDocumentDownloadControls();}
+function renderAll(){navBuild();renderDashboard();renderDashboardActivity();renderMy();if(document.getElementById('weeklyReport')?.classList.contains('active'))renderWeeklyReport();renderAssignments();renderUsers();renderProviderTracking();if(document.getElementById('classroomTable')&&document.getElementById('classrooms')?.classList.contains('active'))loadClassrooms();if(document.getElementById('trainingNeedsTable'))renderTrainingNeeds();const cb=document.getElementById('tcCategoriesBtn');if(cb)cb.style.display=isAdminUser()?'':'none';refreshDocumentDownloadControls();}
 function visibleAssignments(){return isAdminUser()?assignments:assignments.filter(a=>hasWorkForUser(a,currentUser?.username))}
 let trainingCalendarCursor=new Date(new Date().getFullYear(),new Date().getMonth(),1);
 function calendarDateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -1248,6 +1290,53 @@ function renderTrainingCalendar(){
   const title=document.getElementById('tcMonthTitle');if(title)title.textContent='Lịch đào tạo';
   const summary=document.getElementById('tcMonthSummary');if(summary)summary.textContent='Chưa tải được lịch';
  }
+}
+let dashboardActivityPeriod='today';
+function switchDashboardTab(tab){
+ const activity=tab==='activity';
+ document.getElementById('dashboardActivityPanel')?.classList.toggle('active',activity);
+ document.getElementById('dashboardSummaryPanel')?.classList.toggle('active',!activity);
+ document.getElementById('dashboardActivityTab')?.classList.toggle('active',activity);
+ document.getElementById('dashboardSummaryTab')?.classList.toggle('active',!activity);
+ const title=document.getElementById('dashboardMainTitle');if(title)title.textContent=activity?'HOẠT ĐỘNG ĐÀO TẠO':'TỔNG HỢP KẾT QUẢ';
+ if(activity)renderDashboardActivity();
+}
+function setDashboardActivityPeriod(period,button){
+ dashboardActivityPeriod=period;
+ document.querySelectorAll('.activity-period').forEach(b=>b.classList.toggle('active',b===button));
+ renderDashboardActivity();
+}
+function activityISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function activityDateLabel(iso){const m=String(iso||'').match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:(iso||'—');}
+function renderDashboardActivity(){
+ const host=document.getElementById('dashboardActivityList');if(!host)return;
+ const today=new Date();today.setHours(0,0,0,0);
+ const start=new Date(today),end=new Date(today);let label='Hôm nay';
+ if(dashboardActivityPeriod==='tomorrow'){start.setDate(start.getDate()+1);end.setTime(start.getTime());label='Ngày mai';}
+ else if(dashboardActivityPeriod==='week'){const day=(today.getDay()+6)%7;start.setDate(today.getDate()-day);end.setTime(start.getTime());end.setDate(end.getDate()+6);label='Tuần này';}
+ else if(dashboardActivityPeriod==='month'){start.setMonth(start.getMonth()+1,1);end.setTime(start.getTime());end.setMonth(end.getMonth()+1,0);label='Tháng tới';}
+ const from=activityISO(start),to=activityISO(end);
+ const unitFilter=document.getElementById('dashboardActivityUnit')?.value||'all';
+ let events=[];try{
+  const original=trainingCalendarCursor;
+  trainingCalendarCursor=new Date(start.getFullYear(),start.getMonth(),1);
+  events=calendarEventsForMonth();
+  trainingCalendarCursor=original;
+ }catch(e){console.warn('Không tổng hợp được lịch hoạt động đào tạo',e);}
+ const unique=new Map();
+ events.filter(e=>e.date>=from&&e.date<=to).forEach(e=>{const a=e.course||{},unit=(a.unit||a.department||a.donVi||a.DON_VI||'Chưa cập nhật đơn vị');const key=[e.date,e.jobId,e.subject].join('|');if(!unique.has(key))unique.set(key,{...e,unit});});
+ let rows=[...unique.values()].filter(e=>unitFilter==='all'||e.unit===unitFilter).sort((a,b)=>(a.date+a.title).localeCompare(b.date+b.title));
+ const unitSel=document.getElementById('dashboardActivityUnit');if(unitSel){const keep=unitSel.value||'all';const units=[...new Set([...unique.values()].map(e=>e.unit).filter(Boolean))].sort();unitSel.innerHTML='<option value="all">Tất cả đơn vị</option>'+units.map(u=>'<option value="'+xhtml(u)+'">'+xhtml(u)+'</option>').join('');unitSel.value=units.includes(keep)?keep:'all';if(unitFilter!=='all'&&unitSel.value==='all')rows=[...unique.values()].sort((a,b)=>(a.date+a.title).localeCompare(b.date+b.title));}
+ const todayISO=activityISO(today),ongoing=rows.filter(e=>e.date===todayISO).length;
+ const upcoming=rows.filter(e=>e.date>=todayISO).length;
+ const totalEl=document.getElementById('activityTotal');if(totalEl)totalEl.textContent=rows.length.toLocaleString('vi-VN');
+ const ongoingEl=document.getElementById('activityOngoing');if(ongoingEl)ongoingEl.textContent=ongoing.toLocaleString('vi-VN');
+ const upcomingEl=document.getElementById('activityUpcoming');if(upcomingEl)upcomingEl.textContent=upcoming.toLocaleString('vi-VN');
+ const learners=document.getElementById('activityLearners');if(learners)learners.textContent='—';
+ const title=document.getElementById('activityListTitle');if(title)title.textContent='Lịch triển khai đào tạo · '+label;
+ const range=document.getElementById('activityDateRange');if(range)range.textContent=activityDateLabel(from)+(from===to?'':' – '+activityDateLabel(to));
+ if(!rows.length){host.innerHTML='<div class="empty-state" style="padding:32px;text-align:center;color:var(--muted)">Không có lịch đào tạo trong khoảng thời gian đã chọn.</div>';return;}
+ host.innerHTML=rows.map(e=>{const a=e.course||{},status=progress(a)>=100?'Hoàn thành':e.date<todayISO?'Đã qua lịch':e.date===todayISO?'Theo lịch hôm nay':'Đã lên lịch';const cls=status==='Hoàn thành'?' done':'';const time=(e.hours?String(e.hours)+' giờ':'Theo lịch');const participants=a.confirm?.participants||a.confirm?.studentCount||a.participants||'';return '<div class="activity-row"><div class="activity-time">'+activityDateLabel(e.date)+'<div class="activity-sub">'+xhtml(time)+'</div></div><div><div class="activity-course">'+xhtml(e.subject||e.title||'Nội dung đào tạo')+'</div><div class="activity-sub">'+xhtml(e.title||'Lớp đào tạo')+'</div></div><div class="activity-meta">Đơn vị: '+xhtml(e.unit)+'</div><div class="activity-meta activity-place">Địa điểm: '+xhtml(e.location||'Chưa cập nhật')+'</div><div class="activity-people"><span class="activity-status'+cls+'">'+status+'</span><small>'+(participants?xhtml(participants)+' học viên':'Học viên: —')+'</small></div></div>';}).join('');
 }
 function renderDashboard(){
  const allVisible=visibleAssignments();
