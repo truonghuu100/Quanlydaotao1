@@ -2075,7 +2075,7 @@ async function hpRestoreSession(){
     document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');
     document.getElementById('userName').textContent=currentUser.name+' · '+currentUser.username;
     document.getElementById('avatar').textContent=currentUser.username.slice(0,2).toUpperCase();applyCurrentUserAvatar();
-    renderAll();go(currentUser.role==='Admin'?'dashboard':'mywork');hpStartIdleMonitor();
+    renderAll();switchDashboardTab('activity');go('dashboard');hpStartIdleMonitor();
     return true;
   }catch(e){
     if(sessionToken===restoreToken){sessionToken='';currentUser=null;hpClearSavedSession();}
@@ -2302,7 +2302,7 @@ async function doLogin(){
     document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');
     document.getElementById('userName').textContent=currentUser.name+' · '+currentUser.username;
     document.getElementById('avatar').textContent=currentUser.username.slice(0,2).toUpperCase();
-    renderAll();go(currentUser.role==='Admin'?'dashboard':'mywork');hpStartIdleMonitor();
+    renderAll();switchDashboardTab('activity');go('dashboard');hpStartIdleMonitor();
   }catch(e){const msg=e&&e.message?e.message:String(e);setLoginStatus('Hệ thống: lỗi — '+msg,false);toast('Lỗi đăng nhập: '+msg);}
 }
 async function logout(){try{if(currentUser)await serverAudit('LOGOUT','Hệ thống','Đăng xuất khỏi hệ thống',null,null);if(sessionToken)await gsCall('invalidateSession',{__token:sessionToken});}catch(e){}hpStopIdleMonitor();hpClearSavedSession();sessionToken='';currentUser=null;hpLastActivity=0;document.getElementById('app').classList.add('hidden');document.getElementById('login').classList.remove('hidden');setLoginStatus('Hệ thống: đã kết nối',true)}
