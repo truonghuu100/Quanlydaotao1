@@ -1423,7 +1423,7 @@ function renderClassroomHistory(){
  const roomFilter=document.getElementById('roomHistoryFilter')?.value||'',statusFilter=document.getElementById('roomHistoryStatus')?.value||'';
  const all=classroomCache.flatMap(r=>(r.bookings||[]).map(b=>({...b,_room:roomName(r),_roomId:roomId(r)}))).sort((a,b)=>roomDateValue(a.NGAY_BAT_DAU).localeCompare(roomDateValue(b.NGAY_BAT_DAU)));
  const rows=all.filter(b=>(!roomFilter||b._roomId===roomFilter)&&(!statusFilter||String(b.TRANG_THAI||'Đã đăng ký')===statusFilter));
- const body=rows.map(b=>'<tr><td><b>'+xhtml(b._room)+'</b></td><td>'+xhtml(b.TEN_LOP||b.CONGVIEC_ID||'—')+'</td><td>'+roomFormatDate(b.NGAY_BAT_DAU)+'</td><td>'+roomFormatDate(b.NGAY_KET_THUC)+'</td><td>'+xhtml(b.TRANG_THAI||'Đã đăng ký')+'</td><td>'+(String(b.TRANG_THAI||'')!=='Đã hủy'&&(isAdminUser()||canEditClassroom())?'<button class="btn light" onclick="cancelClassroomBookingUI(\\''+xhtml(b.PHIEU_DAT_PHONG_ID||b.id||'')+'\\')">Hủy đăng ký</button>':'—')+'</td></tr>').join('');
+ const body=rows.map(b=>{const id=xhtml(b.PHIEU_DAT_PHONG_ID||b.id||'');const action=String(b.TRANG_THAI||'')!=='Đã hủy'&&(isAdminUser()||canEditClassroom())?'<button class="btn light" data-booking-id="'+id+'" onclick="cancelClassroomBookingUI(this.dataset.bookingId)">Hủy đăng ký</button>':'—';return '<tr><td><b>'+xhtml(b._room)+'</b></td><td>'+xhtml(b.TEN_LOP||b.CONGVIEC_ID||'—')+'</td><td>'+roomFormatDate(b.NGAY_BAT_DAU)+'</td><td>'+roomFormatDate(b.NGAY_KET_THUC)+'</td><td>'+xhtml(b.TRANG_THAI||'Đã đăng ký')+'</td><td>'+action+'</td></tr>';}).join('');
  const table=document.getElementById('classroomBookingsTable');if(table)table.innerHTML=body||'<tr><td colspan="6">Không có lịch sử phù hợp.</td></tr>';
 }
 function searchAvailableClassrooms(){
