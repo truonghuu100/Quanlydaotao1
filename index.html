@@ -488,23 +488,32 @@ html.session-restoring #hpdqBootScreen{display:flex}
 .room-tab-panel{display:none;animation:adminPanelIn .18s ease-out}
 .room-tab-panel.active{display:block}
 
-/* Dashboard tabs and training activity overview */
+/* Dashboard tabs and executive training activity view */
 .dashboard-tabs{display:flex;gap:7px;align-items:center;padding:6px;background:#fff;border:1px solid var(--line);border-radius:11px;margin:0 0 16px;width:max-content;max-width:100%}
 .dashboard-tab{border:1px solid transparent;border-radius:8px;background:transparent;color:var(--muted);padding:10px 16px;font-weight:800;font-size:12px;cursor:pointer}
-.dashboard-tab.active{background:var(--primary,#2463eb);background:#2865e9;color:#fff;box-shadow:0 4px 12px rgba(40,101,233,.18)}
+.dashboard-tab.active{background:#2865e9;color:#fff;box-shadow:0 4px 12px rgba(40,101,233,.18)}
 .dashboard-tab-panel{display:none}.dashboard-tab-panel.active{display:block}
 .activity-intro{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:6px 0 14px}.activity-intro h2{font-size:18px;margin:0}.activity-intro p{font-size:12px;color:var(--muted);margin:5px 0 0}
-.activity-periods{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}
-.activity-period{border:1px solid var(--line);background:#fff;color:#425a78;border-radius:8px;padding:9px 15px;font-size:12px;font-weight:700;cursor:pointer}
-.activity-period.active{background:#eaf1ff;border-color:#8fb1ff;color:#164fb6}
-.activity-periods select{min-width:190px}
-.activity-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0}
-.activity-kpi{background:#fff;border:1px solid var(--line);border-radius:11px;padding:16px;box-shadow:0 2px 6px rgba(24,54,92,.04)}
-.activity-kpi small{display:block;font-size:10px;font-weight:800;letter-spacing:.45px;color:#7185a2}.activity-kpi strong{display:block;font-size:27px;margin:8px 0 2px;color:#10284b}.activity-kpi span{font-size:10px;color:var(--muted)}
-.activity-row{display:grid;grid-template-columns:120px minmax(180px,1.6fr) minmax(130px,1fr) minmax(120px,1fr) 110px;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid #edf1f7}
-.activity-row:last-child{border-bottom:0}.activity-time{font-size:12px;font-weight:800;color:#345477}.activity-course{font-size:13px;font-weight:800}.activity-sub{font-size:11px;color:var(--muted);margin-top:4px}.activity-meta{font-size:11px;color:#526985;line-height:1.5}.activity-status{display:inline-block;padding:5px 9px;border-radius:20px;font-size:10px;font-weight:800;background:#e9f2ff;color:#2361d5}.activity-status.done{background:#e6f8f0;color:#07865c}.activity-people{text-align:right;font-size:12px;font-weight:800}.activity-people small{display:block;color:var(--muted);font-weight:400;margin-top:3px}
-@media(max-width:1000px){.activity-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.activity-row{grid-template-columns:100px 1.5fr 1fr 100px}.activity-row .activity-place{display:none}}
-@media(max-width:650px){.activity-intro{align-items:flex-start;flex-direction:column}.activity-row{grid-template-columns:1fr 1.5fr;gap:7px}.activity-row .activity-meta,.activity-row .activity-place{display:none}.activity-people{text-align:left}.dashboard-tabs{width:100%}.dashboard-tab{flex:1;padding:9px 7px}}
+.activity-hero{background:linear-gradient(112deg,#2455df 0%,#173b9a 72%,#203b83 100%);color:#fff;border-radius:16px;padding:20px 22px;margin:14px 0 16px;box-shadow:0 8px 20px rgba(27,68,160,.14)}
+.activity-hero-top{font-size:11px;font-weight:850;letter-spacing:.7px;color:#a8f0d0}.activity-hero-main{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:7px}.activity-hero-title{font-size:21px;font-weight:850;line-height:1.25}.activity-hero-pct{font-size:30px;font-weight:900;white-space:nowrap}.activity-hero-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;color:#e7efff;font-size:12px}.activity-hero-progress{height:6px;border-radius:20px;background:rgba(255,255,255,.24);overflow:hidden;margin-top:13px}.activity-hero-progress span{display:block;height:100%;background:#38d6a0;border-radius:20px}.activity-hero-note{font-size:10px;color:#d8e4ff;margin-top:5px}
+.activity-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:14px 0}
+.activity-kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 16px;box-shadow:0 2px 6px rgba(24,54,92,.04);border-left:3px solid #2865e9}
+.activity-kpi:nth-child(2){border-left-color:#07865c}.activity-kpi:nth-child(3){border-left-color:#d18a12}.activity-kpi:nth-child(4){border-left-color:#dc4545}
+.activity-kpi small{display:block;font-size:10px;font-weight:800;letter-spacing:.45px;color:#7185a2}.activity-kpi strong{display:inline-block;font-size:27px;margin:4px 7px 0 0;color:#10284b}.activity-kpi span{font-size:10px;color:var(--muted)}
+.activity-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0}
+.activity-periods{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.activity-period{border:1px solid var(--line);background:#fff;color:#425a78;border-radius:9px;padding:9px 14px;font-size:12px;font-weight:750;cursor:pointer}
+.activity-period.active{background:#eaf1ff;border-color:#2865e9;color:#1656d4}
+.activity-toolbar select,.activity-toolbar input{height:36px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#425a78;padding:0 11px;font-size:12px;min-width:145px}
+.activity-toolbar input{margin-left:auto;min-width:210px}
+.activity-list-card{overflow:hidden}.activity-row{display:grid;grid-template-columns:125px minmax(190px,1.4fr) minmax(170px,1.1fr) minmax(110px,.7fr) 95px;gap:12px;align-items:center;padding:14px 16px;border-bottom:1px solid #e8edf5;background:#fff}
+.activity-row:last-child{border-bottom:0}.activity-row.is-today{background:#f0f8f5;border-left:3px solid #07865c;padding-left:13px}
+.activity-time{font-size:13px;font-weight:850;color:#69788f}.activity-course{font-size:13px;font-weight:850;color:#183354}.activity-sub{font-size:11px;color:var(--muted);margin-top:4px}.activity-meta{font-size:11px;color:#294765;line-height:1.5}.activity-meta .activity-sub{margin-top:3px}
+.activity-status{display:inline-block;padding:5px 9px;border-radius:20px;font-size:10px;font-weight:800;background:#e9f2ff;color:#2361d5;white-space:nowrap}.activity-status.done{background:#eef2f7;color:#65758d}.activity-status.live{background:#d9f3e9;color:#07865c}.activity-people{text-align:right;font-size:17px;font-weight:900;color:#173454}.activity-people small{display:block;color:var(--muted);font-size:10px;font-weight:400;margin-top:2px}
+.activity-calendar-day{padding:12px 16px;background:#f3f6fb;border-bottom:1px solid #e5ebf4;font-size:12px;font-weight:850;color:#36516f}
+.activity-hero-empty{font-size:13px;color:#e7efff}.activity-foot{color:#8292a9;font-size:10px;margin-top:12px}
+@media(max-width:1050px){.activity-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.activity-row{grid-template-columns:100px minmax(170px,1.3fr) minmax(140px,1fr) 90px}.activity-row .activity-place{display:none}}
+@media(max-width:700px){.activity-intro{align-items:flex-start;flex-direction:column}.activity-hero-main{align-items:flex-start;flex-direction:column}.activity-hero-pct{font-size:24px}.activity-toolbar input{margin-left:0;width:100%}.activity-row{grid-template-columns:1fr 1.5fr;gap:7px}.activity-row .activity-meta,.activity-row .activity-place{display:none}.activity-people{text-align:left}.dashboard-tabs{width:100%}.dashboard-tab{flex:1;padding:9px 7px}}
 </style><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 // ===== Module chi phí đào tạo =====
@@ -921,22 +930,27 @@ html,body{scroll-behavior:auto!important}
   <button type="button" class="dashboard-tab" id="dashboardSummaryTab" onclick="switchDashboardTab('summary')">▦ Tổng hợp kết quả</button>
  </div>
  <section id="dashboardActivityPanel" class="dashboard-tab-panel active">
-  <div class="activity-intro"><div><h2>HOẠT ĐỘNG ĐÀO TẠO</h2><p>Theo dõi các khóa đào tạo đang tổ chức và kế hoạch triển khai sắp tới.</p></div><span id="activityUpdatedAt" class="muted">Dữ liệu cập nhật theo lịch đào tạo</span></div>
-  <div class="activity-periods">
-   <button class="activity-period active" data-period="today" onclick="setDashboardActivityPeriod('today',this)">Hôm nay</button>
-   <button class="activity-period" data-period="tomorrow" onclick="setDashboardActivityPeriod('tomorrow',this)">Ngày mai</button>
-   <button class="activity-period" data-period="week" onclick="setDashboardActivityPeriod('week',this)">Tuần này</button>
-   <button class="activity-period" data-period="month" onclick="setDashboardActivityPeriod('month',this)">Tháng tới</button>
-   <select id="dashboardActivityUnit" onchange="renderDashboardActivity()"><option value="all">Tất cả đơn vị</option></select>
-  </div>
+  <div class="activity-intro"><div><h2>HOẠT ĐỘNG ĐÀO TẠO</h2><p>Hôm nay đang triển khai gì? Những ngày tới có khóa nào?</p></div><span id="activityUpdatedAt" class="muted">Dữ liệu theo lịch đào tạo đã xác nhận</span></div>
+  <div id="activityHero" class="activity-hero" style="display:none"></div>
   <div class="activity-kpis">
-   <div class="activity-kpi"><small>TỔNG LƯỢT / NỘI DUNG ĐÀO TẠO</small><strong id="activityTotal">0</strong><span>Trong khoảng thời gian chọn</span></div>
-   <div class="activity-kpi"><small>ĐANG DIỄN RA HÔM NAY</small><strong id="activityOngoing">0</strong><span>Khóa có lịch trong hôm nay</span></div>
-   <div class="activity-kpi"><small>SẮP TRIỂN KHAI</small><strong id="activityUpcoming">0</strong><span>Trong khoảng thời gian chọn</span></div>
-   <div class="activity-kpi"><small>HỌC VIÊN DỰ KIẾN</small><strong id="activityLearners">—</strong><span>Theo dữ liệu lớp được giao</span></div>
+   <div class="activity-kpi"><small>TỔNG LỚP HỌC</small><strong id="activityTotal">0</strong><span>Trong thời gian chọn</span></div>
+   <div class="activity-kpi"><small>ĐANG CÓ LỊCH HÔM NAY</small><strong id="activityOngoing">0</strong><span>Lớp có lịch trong ngày</span></div>
+   <div class="activity-kpi"><small>SẮP TRIỂN KHAI</small><strong id="activityUpcoming">0</strong><span>Chưa đến ngày tổ chức</span></div>
+   <div class="activity-kpi"><small>LƯỢT HỌC DỰ KIẾN</small><strong id="activityLearners">—</strong><span>Theo số lượng đã xác nhận</span></div>
+  </div>
+  <div class="activity-toolbar">
+   <div class="activity-periods">
+    <button class="activity-period active" data-period="today" onclick="setDashboardActivityPeriod('today',this)">Hôm nay</button>
+    <button class="activity-period" data-period="tomorrow" onclick="setDashboardActivityPeriod('tomorrow',this)">Ngày mai</button>
+    <button class="activity-period" data-period="week" onclick="setDashboardActivityPeriod('week',this)">Tuần này</button>
+    <button class="activity-period" data-period="month" onclick="setDashboardActivityPeriod('month',this)">Tháng tới</button>
+   </div>
+   <select id="dashboardActivityUnit" onchange="renderDashboardActivity()"><option value="all">Tất cả đơn vị</option></select>
+   <select id="dashboardActivityView" onchange="renderDashboardActivity()"><option value="list">Dạng danh sách</option><option value="calendar">Dạng lịch theo ngày</option></select>
+   <input id="dashboardActivitySearch" type="search" placeholder="Tìm lớp, giảng viên, phòng..." oninput="renderDashboardActivity()" />
   </div>
   <div class="card activity-list-card"><div class="cardhead"><b id="activityListTitle">Lịch triển khai đào tạo · Hôm nay</b><span id="activityDateRange" class="muted"></span></div><div id="dashboardActivityList"><div class="empty-state">Đang tổng hợp lịch đào tạo…</div></div></div>
-  <div class="dash-footnote">Thông tin được tổng hợp từ lịch đào tạo/lớp đã khai báo trong hệ thống. Các nội dung chưa có ngày triển khai sẽ không xuất hiện trong danh sách này.</div>
+  <div class="dash-footnote">Dữ liệu lấy từ lịch môn/chuyên đề và thông tin xác nhận lớp. Hệ thống không tự suy đoán giờ học hoặc số lượng học viên khi chưa được cập nhật.</div>
  </section>
  <section id="dashboardSummaryPanel" class="dashboard-tab-panel">
  <div class="dash-filters"><select id="dashPeriod" onchange="renderDashboard()"><option value="30">30 ngày gần đây</option><option value="90">90 ngày gần đây</option><option value="365">365 ngày gần đây</option><option value="all">Toàn bộ thời gian</option></select><select id="dashUserFilter" onchange="renderDashboard()"><option value="all">Tất cả user</option></select><select id="dashStatusFilter" onchange="renderDashboard()"><option value="all">Tất cả trạng thái</option><option value="active">Đang thực hiện</option><option value="late">Chậm tiến độ</option><option value="done">Hoàn thành</option><option value="pending">Chưa bắt đầu</option></select></div>
@@ -1310,34 +1324,79 @@ function activityISO(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padSta
 function activityDateLabel(iso){const m=String(iso||'').match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:(iso||'—');}
 function renderDashboardActivity(){
  const host=document.getElementById('dashboardActivityList');if(!host)return;
- const today=new Date();today.setHours(0,0,0,0);
+ const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
  const start=new Date(today),end=new Date(today);let label='Hôm nay';
  if(dashboardActivityPeriod==='tomorrow'){start.setDate(start.getDate()+1);end.setTime(start.getTime());label='Ngày mai';}
  else if(dashboardActivityPeriod==='week'){const day=(today.getDay()+6)%7;start.setDate(today.getDate()-day);end.setTime(start.getTime());end.setDate(end.getDate()+6);label='Tuần này';}
  else if(dashboardActivityPeriod==='month'){start.setMonth(start.getMonth()+1,1);end.setTime(start.getTime());end.setMonth(end.getMonth()+1,0);label='Tháng tới';}
- const from=activityISO(start),to=activityISO(end);
- const unitFilter=document.getElementById('dashboardActivityUnit')?.value||'all';
- let events=[];try{
+ const from=activityISO(start),to=activityISO(end),todayISO=activityISO(today);
+ const selectedUnit=document.getElementById('dashboardActivityUnit')?.value||'all';
+ const keyword=(document.getElementById('dashboardActivitySearch')?.value||'').trim().toLocaleLowerCase('vi-VN');
+ const view=document.getElementById('dashboardActivityView')?.value||'list';
+ let events=[];
+ try{
   const original=trainingCalendarCursor;
   trainingCalendarCursor=new Date(start.getFullYear(),start.getMonth(),1);
   events=calendarEventsForMonth();
   trainingCalendarCursor=original;
  }catch(e){console.warn('Không tổng hợp được lịch hoạt động đào tạo',e);}
+ const unitName=id=>(unitMaster||[]).find(u=>String(u.id)===String(id))?.name||'';
  const unique=new Map();
- events.filter(e=>e.date>=from&&e.date<=to).forEach(e=>{const a=e.course||{},unit=(a.unit||a.department||a.donVi||a.DON_VI||'Chưa cập nhật đơn vị');const key=[e.date,e.jobId,e.subject].join('|');if(!unique.has(key))unique.set(key,{...e,unit});});
- let rows=[...unique.values()].filter(e=>unitFilter==='all'||e.unit===unitFilter).sort((a,b)=>(a.date+a.title).localeCompare(b.date+b.title));
- const unitSel=document.getElementById('dashboardActivityUnit');if(unitSel){const keep=unitSel.value||'all';const units=[...new Set([...unique.values()].map(e=>e.unit).filter(Boolean))].sort();unitSel.innerHTML='<option value="all">Tất cả đơn vị</option>'+units.map(u=>'<option value="'+xhtml(u)+'">'+xhtml(u)+'</option>').join('');unitSel.value=units.includes(keep)?keep:'all';if(unitFilter!=='all'&&unitSel.value==='all')rows=[...unique.values()].sort((a,b)=>(a.date+a.title).localeCompare(b.date+b.title));}
- const todayISO=activityISO(today),ongoing=rows.filter(e=>e.date===todayISO).length;
- const upcoming=rows.filter(e=>e.date>=todayISO).length;
- const totalEl=document.getElementById('activityTotal');if(totalEl)totalEl.textContent=rows.length.toLocaleString('vi-VN');
- const ongoingEl=document.getElementById('activityOngoing');if(ongoingEl)ongoingEl.textContent=ongoing.toLocaleString('vi-VN');
- const upcomingEl=document.getElementById('activityUpcoming');if(upcomingEl)upcomingEl.textContent=upcoming.toLocaleString('vi-VN');
- const learners=document.getElementById('activityLearners');if(learners)learners.textContent='—';
- const title=document.getElementById('activityListTitle');if(title)title.textContent='Lịch triển khai đào tạo · '+label;
- const range=document.getElementById('activityDateRange');if(range)range.textContent=activityDateLabel(from)+(from===to?'':' – '+activityDateLabel(to));
- if(!rows.length){host.innerHTML='<div class="empty-state" style="padding:32px;text-align:center;color:var(--muted)">Không có lịch đào tạo trong khoảng thời gian đã chọn.</div>';return;}
- host.innerHTML=rows.map(e=>{const a=e.course||{},status=progress(a)>=100?'Hoàn thành':e.date<todayISO?'Đã qua lịch':e.date===todayISO?'Theo lịch hôm nay':'Đã lên lịch';const cls=status==='Hoàn thành'?' done':'';const time=(e.hours?String(e.hours)+' giờ':'Theo lịch');const participants=a.confirm?.participants||a.confirm?.studentCount||a.participants||'';return '<div class="activity-row"><div class="activity-time">'+activityDateLabel(e.date)+'<div class="activity-sub">'+xhtml(time)+'</div></div><div><div class="activity-course">'+xhtml(e.subject||e.title||'Nội dung đào tạo')+'</div><div class="activity-sub">'+xhtml(e.title||'Lớp đào tạo')+'</div></div><div class="activity-meta">Đơn vị: '+xhtml(e.unit)+'</div><div class="activity-meta activity-place">Địa điểm: '+xhtml(e.location||'Chưa cập nhật')+'</div><div class="activity-people"><span class="activity-status'+cls+'">'+status+'</span><small>'+(participants?xhtml(participants)+' học viên':'Học viên: —')+'</small></div></div>';}).join('');
+ events.filter(e=>e.date>=from&&e.date<=to).forEach(e=>{
+  const a=e.course||{},alloc=normalizeAlloc(a),unitNames=alloc.map(x=>unitName(x.unitId)).filter(Boolean);
+  const unitText=unitNames.length?unitNames.join(', '):(a.unitName||a.unit||'Chưa cập nhật đơn vị');
+  const key=[e.date,e.jobId,e.subject].join('|');
+  if(!unique.has(key))unique.set(key,{...e,unitNames,unitText,studentCount:e.students,course:a});
+ });
+ let rows=[...unique.values()];
+ if(selectedUnit!=='all')rows=rows.filter(e=>e.unitNames.some(n=>n===selectedUnit)||e.unitText===selectedUnit);
+ if(keyword)rows=rows.filter(e=>[e.title,e.subject,e.lecturer,e.location,e.unitText,e.provider].join(' ').toLocaleLowerCase('vi-VN').includes(keyword));
+ rows.sort((a,b)=>(a.date+a.title+a.subject).localeCompare(b.date+b.title+b.subject));
+ const allForPeriod=[...unique.values()];
+ const distinctJobs=new Map();rows.forEach(e=>{if(!distinctJobs.has(String(e.jobId)))distinctJobs.set(String(e.jobId),e)});
+ const totalLearners=[...new Map(rows.map(e=>[String(e.jobId),e.studentCount])).values()].reduce((n,v)=>n+(Number(v)>0?Number(v):0),0);
+ const todayRows=rows.filter(e=>e.date===todayISO);
+ const futureRows=rows.filter(e=>e.date>todayISO);
+ const setText=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=value;};
+ setText('activityTotal',String(distinctJobs.size));
+ setText('activityOngoing',String(todayRows.length));
+ setText('activityUpcoming',String(futureRows.length));
+ setText('activityLearners',totalLearners?totalLearners.toLocaleString('vi-VN'):'—');
+ const unitSel=document.getElementById('dashboardActivityUnit');
+ if(unitSel){
+  const keep=unitSel.value||'all',units=[...new Set(allForPeriod.flatMap(e=>e.unitNames||[]))].sort((a,b)=>a.localeCompare(b,'vi'));
+  unitSel.innerHTML='<option value="all">Tất cả đơn vị</option>'+units.map(u=>'<option value="'+xhtml(u)+'">'+xhtml(u)+'</option>').join('');
+  unitSel.value=units.includes(keep)?keep:'all';
+ }
+ setText('activityListTitle','Lịch triển khai đào tạo · '+label);
+ setText('activityDateRange',activityDateLabel(from)+(from===to?'':' – '+activityDateLabel(to)));
+ setText('activityUpdatedAt','Cập nhật '+new Date().toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}));
+ const hero=document.getElementById('activityHero');
+ const featured=todayRows.find(e=>String(e.course?.status||'').toLowerCase().includes('đang'))||todayRows[0]||rows[0];
+ if(hero){
+  if(featured){
+   const a=featured.course||{},pct=Math.max(0,Math.min(100,progress(a)));
+   const todayFlag=featured.date===todayISO;
+   const lecturer=featured.lecturer&&featured.lecturer!=='Chưa cập nhật'&&featured.lecturer!=='Chưa phân công'?featured.lecturer:'Chưa cập nhật giảng viên';
+   const students=Number(featured.studentCount)>0?Number(featured.studentCount).toLocaleString('vi-VN')+' học viên':'Chưa cập nhật học viên';
+   hero.style.display='block';
+   hero.innerHTML='<div class="activity-hero-top">● '+(todayFlag?'CÓ LỊCH ĐÀO TẠO HÔM NAY':'KHÓA ĐÀO TẠO SẮP TỚI')+'</div><div class="activity-hero-main"><div class="activity-hero-title">'+xhtml(featured.subject||featured.title||'Nội dung đào tạo')+'</div><div class="activity-hero-pct">'+pct+'%</div></div><div class="activity-hero-meta"><span>◷ '+activityDateLabel(featured.date)+(featured.hours?' · '+xhtml(String(featured.hours))+' giờ':'')+'</span><span>⌖ '+xhtml(featured.location||'Chưa cập nhật địa điểm')+'</span><span>♙ '+xhtml(lecturer)+'</span><span>♧ '+xhtml(students)+'</span></div><div class="activity-hero-progress"><span style="width:'+pct+'%"></span></div><div class="activity-hero-note">Tiến độ hoàn thành các bước triển khai lớp học: '+pct+'%</div>';
+  }else{hero.style.display='block';hero.innerHTML='<div class="activity-hero-empty">Chưa có khóa đào tạo trong khoảng thời gian đã chọn.</div>';}
+ }
+ if(!rows.length){host.innerHTML='<div class="empty-state" style="padding:34px;text-align:center;color:var(--muted)">Không có khóa đào tạo phù hợp với thời gian hoặc điều kiện tìm kiếm.</div>';return;}
+ const rowHtml=e=>{
+  const a=e.course||{},pct=progress(a),status=pct>=100?'Đã hoàn thành':e.date<todayISO?'Đã qua lịch':e.date===todayISO?'Có lịch hôm nay':'Sắp triển khai';
+  const statusClass=pct>=100?' done':e.date===todayISO?' live':'';
+  const units=e.unitText||'Chưa cập nhật đơn vị',count=Number(e.studentCount)>0?Number(e.studentCount).toLocaleString('vi-VN'):'—';
+  const duration=e.hours?String(e.hours)+' giờ':'Thời lượng chưa cập nhật';
+  return '<div class="activity-row'+(e.date===todayISO?' is-today':'')+'"><div class="activity-time">'+activityDateLabel(e.date)+'<div class="activity-sub">'+xhtml(duration)+'</div></div><div><div class="activity-course">'+xhtml(e.subject||e.title||'Nội dung đào tạo')+'</div><div class="activity-sub">'+xhtml(e.title||'Lớp đào tạo')+'</div><div class="activity-sub">'+xhtml(units)+'</div></div><div class="activity-meta activity-place">⌖ '+xhtml(e.location||'Chưa cập nhật địa điểm')+'<div class="activity-sub">♙ '+xhtml(e.lecturer||'Chưa cập nhật giảng viên')+'</div></div><div><span class="activity-status'+statusClass+'">'+status+'</span><div class="activity-sub">'+(pct>0?'Tiến độ lớp: '+pct+'%':'')+'</div></div><div class="activity-people">'+count+'<small>học viên dự kiến</small></div></div>';
+ };
+ if(view==='calendar'){
+  const groups=new Map();rows.forEach(e=>{if(!groups.has(e.date))groups.set(e.date,[]);groups.get(e.date).push(e)});
+  host.innerHTML=[...groups.entries()].map(([date,list])=>'<div class="activity-calendar-day">'+activityDateLabel(date)+' · '+list.length+' lượt lịch</div>'+list.map(rowHtml).join('')).join('');
+ }else host.innerHTML=rows.map(rowHtml).join('');
 }
+
 function renderDashboard(){
  const allVisible=visibleAssignments();
  const allTasks=(ordinaryTasks||[]).filter(t=>isAdminUser()||t.assignee===currentUser?.username||t.createdBy===currentUser?.username);
