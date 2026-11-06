@@ -1413,7 +1413,7 @@ function renderClassrooms(){
  renderClassroomHistory();
  const add=document.querySelector('#classrooms .title .btn.primary');if(add)add.style.display=canAddClassroom()?'':'none';
 }
-function roomFormatDate(value){if(!value)return '—';const v=String(value).slice(0,10);const m=v.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:v;}
+function roomFormatDate(value){if(!value)return '—';const v=String(value).slice(0,10);const m=v.match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?m[3]+'/'+m[2]+'/'+m[1]:v;}
 function roomDateValue(value){return String(value||'').slice(0,10);}
 function populateClassroomFilters(){
  const options=classroomCache.map(r=>({id:roomId(r),name:roomName(r)})).filter(x=>x.id);
