@@ -1649,7 +1649,7 @@ function renderClassroomHistoryWeek(rows){
  const monday=new Date(today);monday.setDate(today.getDate()-((today.getDay()+6)%7)+classroomHistoryWeekOffset*7);
  const days=Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return d;});
  const names=['T2','T3','T4','T5','T6','T7','CN'];
- let html='<div class="room-history-week-head"><button class="btn light" onclick="shiftClassroomHistoryWeek(-1)">‹</button><strong>'+roomFormatDate(days[0])+' – '+roomFormatDate(days[6])+(classroomHistoryWeekOffset===0?' · Tuần này':'')+'</strong><button class="btn light" onclick="shiftClassroomHistoryWeek(1)">›</button><button class="btn light" onclick="classroomHistoryWeekOffset=0;renderClassroomHistory()">Hôm nay</button></div><div class="room-history-week-wrap"><div class="room-history-week-grid"><div class="week-heading">Phòng</div>';
+ let html='<div class="room-history-week-head"><button class="btn light" onclick="shiftClassroomHistoryWeek(-1)">‹</button><strong>'+roomWeekDateLabel(days[0])+'/'+days[0].getFullYear()+' – '+roomWeekDateLabel(days[6])+'/'+days[6].getFullYear()+(classroomHistoryWeekOffset===0?' · Tuần này':'')+'</strong><button class="btn light" onclick="shiftClassroomHistoryWeek(1)">›</button><button class="btn light" onclick="classroomHistoryWeekOffset=0;renderClassroomHistory()">Hôm nay</button></div><div class="room-history-week-wrap"><div class="room-history-week-grid"><div class="week-heading">Phòng</div>';
  days.forEach((d,i)=>html+='<div class="week-heading'+(d.getTime()===today.getTime()?' today':'')+'">'+names[i]+' '+roomWeekDateLabel(d)+'</div>');
  const filter=document.getElementById('roomHistoryFilter')?.value||'';
  const selectedRooms=classroomCache.filter(r=>!filter||roomId(r)===filter);
