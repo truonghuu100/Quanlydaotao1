@@ -990,22 +990,32 @@ html,body{scroll-behavior:auto!important}
   <div class="card"><div class="cardhead"><b>Danh sách phòng học</b><input id="roomSearch" placeholder="Tìm tên phòng / địa điểm / tài sản" oninput="renderClassrooms()" style="max-width:300px"></div><div class="tablewrap"><table class="table"><thead><tr><th>STT</th><th>Tên phòng</th><th>Địa điểm</th><th>Sức chứa tối đa</th><th>Tình trạng phòng</th><th>Tài sản liên quan</th><th>Thao tác</th></tr></thead><tbody id="classroomTable"><tr><td colspan="7">Bấm làm mới để tải danh sách phòng.</td></tr></tbody></table></div></div>
  </section>
  <section class="room-tab-panel" id="roomPanel-history" role="tabpanel" hidden>
-  <div class="card" style="margin-bottom:14px">
-   <div class="cardhead"><b>Tìm phòng trống</b><span class="muted">Chọn khoảng thời gian và phòng cần kiểm tra</span></div>
-   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;padding:14px">
-    <div class="field"><label>Từ ngày</label><input id="roomAvailFrom" type="date"></div>
-    <div class="field"><label>Đến ngày</label><input id="roomAvailTo" type="date"></div>
-    <div class="field"><label>Phòng cần tìm</label><select id="roomAvailRoom"><option value="">Tất cả phòng</option></select></div>
-    <div class="field" style="align-self:end"><button class="btn primary" type="button" onclick="searchAvailableClassrooms()">Tìm phòng trống</button></div>
-   </div>
-   <div id="roomAvailabilityResult" style="padding:0 14px 14px;color:#526780;font-size:12px">Chọn ngày để kiểm tra phòng còn trống.</div>
+  <div class="room-history-kpis" id="roomHistoryKpis">
+   <div class="room-history-kpi" style="--room-kpi:#2456e6"><small>Tổng số phòng</small><strong id="roomHistKpiTotal">0</strong><span>phòng</span></div>
+   <div class="room-history-kpi" style="--room-kpi:#12805c"><small>Đang sử dụng</small><strong id="roomHistKpiLive">0</strong><span>hôm nay</span></div>
+   <div class="room-history-kpi" style="--room-kpi:#c27803"><small>Phòng trống hôm nay</small><strong id="roomHistKpiFree">0</strong><span>phòng sẵn sàng</span></div>
+   <div class="room-history-kpi" style="--room-kpi:#d23b3b"><small>Lượt đăng ký tuần này</small><strong id="roomHistKpiWeek">0</strong><span>lịch</span></div>
   </div>
-  <div class="card"><div class="cardhead"><b>Lịch sử sử dụng phòng học</b><span class="muted">Các khoảng thời gian đã đăng ký theo lớp</span></div>
-   <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid #e5ebf3">
-    <label for="roomHistoryFilter">Lọc theo phòng</label><select id="roomHistoryFilter" onchange="renderClassroomHistory()" style="min-width:220px"><option value="">Tất cả phòng</option></select>
-    <label for="roomHistoryStatus">Trạng thái</label><select id="roomHistoryStatus" onchange="renderClassroomHistory()"><option value="">Tất cả</option><option>Đã đăng ký</option><option>Đã hủy</option></select>
+  <div class="card room-history-search-card">
+   <div class="cardhead"><b>Tìm phòng trống</b><span class="muted">Chọn khoảng thời gian và phòng cần kiểm tra</span></div>
+   <div class="room-history-search-grid">
+    <div class="field"><label for="roomAvailFrom">Từ ngày</label><input id="roomAvailFrom" type="date"></div>
+    <div class="field"><label for="roomAvailTo">Đến ngày</label><input id="roomAvailTo" type="date"></div>
+    <div class="field"><label for="roomAvailRoom">Phòng cần tìm</label><select id="roomAvailRoom"><option value="">Tất cả phòng</option></select></div>
+    <div class="field room-history-search-action"><button class="btn primary" type="button" onclick="searchAvailableClassrooms()">Tìm phòng trống</button></div>
    </div>
-   <div class="tablewrap"><table class="table"><thead><tr><th>Phòng</th><th>Lớp / công việc</th><th>Từ ngày</th><th>Đến ngày</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="classroomBookingsTable"><tr><td colspan="6">Chưa tải dữ liệu.</td></tr></tbody></table></div>
+   <div id="roomAvailabilityResult" class="room-history-search-result">Chọn ngày để kiểm tra phòng còn trống.</div>
+  </div>
+  <div class="card room-history-list-card">
+   <div class="cardhead"><b>Lịch sử sử dụng phòng học</b><span class="muted">Các khoảng thời gian đã đăng ký theo lớp</span></div>
+   <div class="room-history-toolbar">
+    <select id="roomHistoryFilter" aria-label="Lọc theo phòng" onchange="renderClassroomHistory()"><option value="">Tất cả phòng</option></select>
+    <select id="roomHistoryStatus" aria-label="Lọc theo trạng thái" onchange="renderClassroomHistory()"><option value="">Tất cả trạng thái</option><option value="up">Sắp diễn ra</option><option value="live">Đang sử dụng</option><option value="done">Đã kết thúc</option><option value="cancelled">Đã hủy</option></select>
+    <input id="roomHistorySearch" type="text" placeholder="Tìm lớp hoặc phòng…" aria-label="Tìm lớp hoặc phòng" oninput="filterClassroomHistoryLive(this)">
+    <div class="room-history-view-switch"><button type="button" id="roomHistoryListBtn" class="active" onclick="setClassroomHistoryView('list')">Danh sách</button><button type="button" id="roomHistoryWeekBtn" onclick="setClassroomHistoryView('week')">Lịch tuần</button></div>
+   </div>
+   <div id="classroomBookingsList"><div class="tablewrap"><table class="table room-history-table"><thead><tr><th>Phòng</th><th>Lớp / công việc</th><th>Từ ngày</th><th>Đến ngày</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="classroomBookingsTable"><tr><td colspan="6">Chưa tải dữ liệu.</td></tr></tbody></table></div></div>
+   <div id="classroomBookingsWeek" hidden></div>
   </div>
  </section>
 </div>
@@ -3127,7 +3137,56 @@ async function editTrainingContract(providerId,id){
  const body=`<div class="hd-editor" style="margin:-2px;color:#142e55">
  <style>
  .hd-editor .hd-head{display:flex;align-items:center;gap:14px;padding:0 0 16px;border-bottom:1px solid #e6edf7;margin-bottom:14px}.hd-editor .hd-icon{width:52px;height:52px;display:grid;place-items:center;border-radius:14px;background:#eaf2ff;color:#1264f5;font-size:26px}.hd-editor .hd-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,1fr);gap:16px}.hd-editor .hd-panel{border:1px solid #dce8f7;border-radius:12px;overflow:hidden;background:#fff;margin-bottom:14px}.hd-editor .hd-panel-title{display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(100deg,#f1f7ff,#fbfdff);border-bottom:1px solid #e4edf9;font-weight:750;font-size:14px}.hd-editor .hd-panel-title .num{display:inline-grid;place-items:center;width:27px;height:27px;border-radius:50%;background:#1264f5;color:#fff}.hd-editor .hd-panel-body{padding:14px}.hd-editor .hd-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px 16px}.hd-editor .field{min-width:0;margin:0}.hd-editor .field label{display:block;font-size:11px;font-weight:750;color:#60728e;margin-bottom:6px}.hd-editor input:not([type=checkbox]):not([type=file]),.hd-editor select,.hd-editor textarea{box-sizing:border-box;width:100%;min-width:0;border:1px solid #d3e0f1;border-radius:9px;padding:10px 12px;background:#fff;color:#142e55;font-size:13px;outline-color:#1264f5}.hd-editor .field.full{grid-column:1/-1}.hd-editor .hd-owner-list{border:1px solid #dce7f5;border-radius:10px;overflow:hidden}.hd-editor .hd-owner-row:last-child{border-bottom:0}.hd-editor .hd-owner-row:hover{background:#f5f9ff}.hd-editor .hd-owner-check{width:18px;height:18px;accent-color:#1264f5;flex:0 0 auto}.hd-editor .hd-chip{display:inline-flex;align-items:center;gap:6px;background:#e8f2ff;color:#2357a6;border-radius:8px;padding:6px 9px;font-size:11px;margin:3px}.hd-editor .hd-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #e5edf8;padding:12px 0 0;margin-top:4px}.hd-editor .hd-files{display:grid;gap:8px}.hd-editor .hd-file-card{display:flex;align-items:center;gap:9px;border:1px solid #dce7f5;border-radius:10px;padding:9px;background:#fff}.hd-editor .hd-file-card .file-icon{font-size:20px}.hd-editor .hd-file-card .file-info{flex:1;min-width:0}.hd-editor .hd-file-card .file-info strong{display:block;font-size:12px;overflow-wrap:anywhere}.hd-editor .hd-file-card .file-info small{display:block;color:#8292ac;font-size:10px;margin-top:3px}@media(max-width:850px){.hd-editor .hd-layout{grid-template-columns:1fr}.hd-editor .hd-grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){.hd-editor .hd-grid{grid-template-columns:1fr}.hd-editor .hd-footer{flex-wrap:wrap}}
- </style>
+ /* Classroom history visual refresh */
+.room-history-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.room-history-kpi{position:relative;overflow:hidden;min-width:0;padding:13px 16px 12px 18px;background:#fff;border:1px solid #e1e8f1;border-radius:13px;box-shadow:0 2px 8px rgba(19,44,77,.025)}
+.room-history-kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--room-kpi)}
+.room-history-kpi small{display:block;color:#718096;font-size:9px;font-weight:900;letter-spacing:.07em;text-transform:uppercase}
+.room-history-kpi strong{display:inline-block;margin-top:3px;color:var(--room-kpi);font-size:25px;line-height:1.2;font-weight:900}
+.room-history-kpi span{margin-left:6px;color:#718096;font-size:10px}
+.room-history-search-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:10px;align-items:end;padding:13px 14px}
+.room-history-search-grid .field label{display:block;margin-bottom:5px;color:#64748b;font-size:10px;font-weight:700}
+.room-history-search-grid input,.room-history-search-grid select{width:100%;min-width:0;min-height:37px;padding:8px 10px;border:1px solid #dce5f0;border-radius:9px;background:#fff;color:#1e3554;font-size:11px}
+.room-history-search-action .btn{height:37px;white-space:nowrap}
+.room-history-search-result{padding:0 14px 12px;color:#718096;font-size:10px}
+.room-history-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 13px;border-bottom:1px solid #e5ebf3;background:#f8fafd}
+.room-history-toolbar select,.room-history-toolbar input{height:34px;min-width:125px;padding:6px 10px;border:1px solid #dce5f0;border-radius:8px;background:#fff;color:#344b68;font-size:10px}
+.room-history-toolbar input{width:210px;min-width:180px}
+.room-history-view-switch{display:inline-flex;margin-left:auto;padding:2px;border:1px solid #dce5f0;border-radius:9px;background:#fff}
+.room-history-view-switch button{border:0;border-radius:7px;padding:6px 11px;background:transparent;color:#65758b;font-size:10px;font-weight:800;cursor:pointer}
+.room-history-view-switch button.active{background:#e9efff;color:#2456e6}
+.room-history-table{min-width:760px}
+.room-history-table th{padding:9px 11px;font-size:8px}
+.room-history-table td{padding:10px 11px;font-size:10px}
+.room-history-table td b{font-size:10px;color:#1c3555}
+.room-history-table td small{display:block;margin-top:3px;color:#718096;font-size:9px}
+.room-history-table .room-history-actions{display:flex;gap:5px;align-items:center}
+.room-history-table .btn{padding:5px 8px;font-size:9px;border-radius:7px}
+.room-history-status{display:inline-block;padding:3px 9px;border-radius:20px;font-size:9px;font-weight:800;white-space:nowrap}
+.room-history-status.up{background:#e8efff;color:#2456e6}
+.room-history-status.live{background:#dff3ec;color:#12805c}
+.room-history-status.done{background:#f1f4f8;color:#66758a;border:1px solid #e1e7ef}
+.room-history-status.cancelled{background:#fde8e8;color:#c53232}
+.room-history-week-head{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:1px solid #e5ebf3}
+.room-history-week-head strong{flex:1;text-align:center;color:#344b68;font-size:10px}
+.room-history-week-head .btn{padding:5px 9px;font-size:10px}
+.room-history-week-wrap{overflow:auto}
+.room-history-week-grid{display:grid;grid-template-columns:155px repeat(7,minmax(100px,1fr));min-width:860px}
+.room-history-week-grid>div{min-height:65px;padding:7px;border-right:1px solid #e6ecf3;border-bottom:1px solid #e6ecf3}
+.room-history-week-grid .week-heading{min-height:0;background:#f6f8fc;color:#687990;text-align:center;font-size:9px;font-weight:900}
+.room-history-week-grid .week-heading.today{background:#eaf0ff;color:#2456e6}
+.room-history-week-grid .week-room{display:flex;flex-direction:column;justify-content:center;color:#243c5b;font-size:10px;font-weight:800}
+.room-history-week-grid .week-room small{margin-top:3px;color:#8190a4;font-size:8px;font-weight:500}
+.room-history-week-grid .week-day.today{background:#f7f9ff}
+.room-history-event{display:block;width:100%;margin:0 0 5px;padding:5px 6px;border:0;border-radius:6px;background:#2456e6;color:#fff;text-align:left;font-size:8px;line-height:1.35;overflow:hidden}
+.room-history-event.live{background:#12805c}
+.room-history-event.done{background:#8a97aa}
+.room-history-event.cancelled{background:#b94b4b}
+.room-history-event b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:8px}
+.room-history-event small{display:block;margin-top:2px;color:rgba(255,255,255,.88);font-size:7px}
+@media(max-width:900px){.room-history-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.room-history-search-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.room-history-kpis{gap:8px}.room-history-kpi{padding:11px 10px 10px 13px}.room-history-kpi strong{font-size:22px}.room-history-search-grid{grid-template-columns:1fr}.room-history-toolbar input{width:100%;min-width:100%}.room-history-view-switch{margin-left:0}.room-history-toolbar{align-items:stretch}.room-history-toolbar select{flex:1;min-width:0}}
+</style>
  <div class="hd-head"><div class="hd-icon">▤</div><div style="flex:1"><div style="font-size:20px;font-weight:850;color:#102958">${id?'Sửa':'Tạo mới'} hợp đồng đào tạo</div><div style="color:#8091ad;font-size:12px;margin-top:4px">Cập nhật thông tin hợp đồng đào tạo và hồ sơ liên quan</div></div></div>
  <div class="hd-layout"><div>
   <section class="hd-panel"><div class="hd-panel-title"><span class="num">1</span> Thông tin chung</div><div class="hd-panel-body"><div class="hd-grid">
