@@ -2821,11 +2821,11 @@ async function saveLecturerDo(id){
  if(avatarFile&&(!/^image\/(png|jpeg|webp)$/.test(avatarFile.type)||!avatarFile.size||avatarFile.size>10*1024*1024)){toast('Ảnh đại diện phải là JPG, PNG hoặc WEBP và không quá 10 MB.');return}
  for(const x of pending){if(!x.title){toast('Vui lòng nhập tên cho file '+x.file.name);return}if(!x.file.size||x.file.size>100*1024*1024){toast('File “'+x.file.name+'” rỗng hoặc vượt quá 100 MB.');return}}
  const btn=document.getElementById('gv_save_btn');if(btn){btn.disabled=true;btn.textContent='Đang lưu…'}
- modal('Đang lưu hồ sơ giảng viên',`<div style="text-align:center;padding:28px 18px"><div style="font-size:30px;margin-bottom:12px">⏳</div><b>Vui lòng chờ trong giây lát...</b><p>Đang lưu thông tin giảng viên${pending.length?' và tải hồ sơ đính kèm':''}. Vui lòng không đóng cửa sổ.</p></div>`);
+ modal('Đang lưu hồ sơ giảng viên',`<div style="text-align:center;padding:28px 18px"><div style="font-size:30px;margin-bottom:12px">⏳</div><b>Vui lòng chờ trong giây lát...</b><p>Đang lưu thông tin giảng viên${avatarFile?' và ảnh đại diện':''}${pending.length?' và tải hồ sơ đính kèm':''}. Vui lòng không đóng cửa sổ.</p></div>`);
  try{
+  if(avatarFile)b.avatarUrl=await compressLecturerAvatar(avatarFile);
   const r=await gsCall('saveLecturer',b);if(!r||!r.ok)throw new Error(r?.error||'Không lưu được giảng viên');
   const savedId=r.data?.GIANG_VIEN_ID||id;if(!savedId)throw new Error('Đã lưu thông tin nhưng chưa nhận được mã giảng viên để đính kèm hồ sơ.');
-  if(avatarFile)b.avatarUrl=await compressLecturerAvatar(avatarFile);
   for(const x of pending)await uploadLecturerAttachment(x.file,x.title,savedId);
   await refreshFromServerV2();openLecturerMaster();toast('Đã lưu giảng viên'+((pending.length||avatarFile)?' và hồ sơ/ảnh đại diện':'')+' ✓');
  }catch(e){modal('Chưa hoàn tất',`<div style="padding:24px"><b>Không thể lưu đầy đủ hồ sơ giảng viên</b><p>${xhtml(e.message||e)}</p><p>Thông tin giảng viên có thể đã được lưu; hãy mở lại hồ sơ để kiểm tra trước khi thử lại.</p><div style="text-align:right"><button class="btn light" onclick="closeModal()">Đóng</button></div></div>`);}
