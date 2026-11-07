@@ -1577,12 +1577,90 @@ function populateClassroomFilters(){
  const options=classroomCache.map(r=>({id:roomId(r),name:roomName(r)})).filter(x=>x.id);
  for(const id of ['roomAvailRoom','roomHistoryFilter']){const el=document.getElementById(id);if(!el)continue;const keep=el.value;el.innerHTML='<option value="">Tất cả phòng</option>'+options.map(x=>'<option value="'+xhtml(x.id)+'">'+xhtml(x.name)+'</option>').join('');if(options.some(x=>x.id===keep))el.value=keep;}
 }
+let classroomHistoryView='list',classroomHistoryWeekOffset=0,classroomHistorySearch='';
+function classroomHistoryStatus(b){
+ const raw=String(b.TRANG_THAI||'Đã đăng ký').trim();
+ if(raw==='Đã hủy'||raw.toLowerCase()==='cancelled')return {key:'cancelled',label:'Đã hủy'};
+ const today=new Date();today.setHours(0,0,0,0);
+ const start=roomDateLocal(b.NGAY_BAT_DAU),end=roomDateLocal(b.NGAY_KET_THUC);
+ if(end&&end<today)return {key:'done',label:'Đã kết thúc'};
+ if(start&&start>today)return {key:'up',label:'Sắp diễn ra'};
+ return {key:'live',label:'Đang sử dụng'};
+}
+function roomDateLocal(value){
+ const v=roomDateValue(value),m=v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+ return m?new Date(Number(m[1]),Number(m[2])-1,Number(m[3])):null;
+}
+function roomBookingTime(b){
+ const start=b.GIO_BAT_DAU||b.THOI_GIAN_BAT_DAU||b.GIO_HOC||b.GIO_BAT_DAU_HOC||'';
+ const end=b.GIO_KET_THUC||b.THOI_GIAN_KET_THUC||b.GIO_KET_THUC_HOC||'';
+ if(start&&end)return String(start).slice(0,5)+' - '+String(end).slice(0,5);
+ return String(b.KHUNG_GIO||b.THOI_GIAN||b.GIO_HOC||'');
+}
+function classroomHistoryRows(){
+ return classroomCache.flatMap(r=>(r.bookings||[]).map(b=>({...b,_room:roomName(r),_roomId:roomId(r),_capacity:Number(r.SUC_CHUA_TOI_DA||0)})));
+}
 function renderClassroomHistory(){
- const roomFilter=document.getElementById('roomHistoryFilter')?.value||'',statusFilter=document.getElementById('roomHistoryStatus')?.value||'';
- const all=classroomCache.flatMap(r=>(r.bookings||[]).map(b=>({...b,_room:roomName(r),_roomId:roomId(r)}))).sort((a,b)=>roomDateValue(a.NGAY_BAT_DAU).localeCompare(roomDateValue(b.NGAY_BAT_DAU)));
- const rows=all.filter(b=>(!roomFilter||b._roomId===roomFilter)&&(!statusFilter||String(b.TRANG_THAI||'Đã đăng ký')===statusFilter));
- const body=rows.map(b=>{const id=xhtml(b.PHIEU_DAT_PHONG_ID||b.id||'');const actions=[];if(String(b.TRANG_THAI||'')!=='Đã hủy'&&(isAdminUser()||canEditClassroom()))actions.push('<button class="btn light" data-booking-id="'+id+'" onclick="cancelClassroomBookingUI(this.dataset.bookingId)">Hủy đăng ký</button>');if(isAdminUser())actions.push('<button class="btn danger" data-booking-id="'+id+'" onclick="deleteClassroomBookingUI(this.dataset.bookingId)">Xóa</button>');return '<tr><td><b>'+xhtml(b._room)+'</b></td><td>'+xhtml(b.TEN_LOP||b.CONGVIEC_ID||'—')+'</td><td>'+roomFormatDate(b.NGAY_BAT_DAU)+'</td><td>'+roomFormatDate(b.NGAY_KET_THUC)+'</td><td>'+xhtml(b.TRANG_THAI||'Đã đăng ký')+'</td><td style="white-space:nowrap">'+(actions.join(' ')||'—')+'</td></tr>';}).join('');
- const table=document.getElementById('classroomBookingsTable');if(table)table.innerHTML=body||'<tr><td colspan="6">Không có lịch sử phù hợp.</td></tr>';
+ const all=classroomHistoryRows();
+ const today=new Date();today.setHours(0,0,0,0);
+ const monday=new Date(today);monday.setDate(today.getDate()-((today.getDay()+6)%7));
+ const sunday=new Date(monday);sunday.setDate(monday.getDate()+6);
+ const activeBookings=all.filter(b=>classroomHistoryStatus(b).key!=='cancelled');
+ const liveRoomIds=new Set(activeBookings.filter(b=>classroomHistoryStatus(b).key==='live').map(b=>b._roomId));
+ const freeRooms=classroomCache.filter(r=>String(r.TINH_TRANG_PHONG||'Hoạt động')==='Hoạt động'&&!liveRoomIds.has(roomId(r))).length;
+ const weekCount=activeBookings.filter(b=>{const a=roomDateLocal(b.NGAY_BAT_DAU),z=roomDateLocal(b.NGAY_KET_THUC);return a&&z&&a<=sunday&&z>=monday;}).length;
+ const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=String(v);};
+ set('roomHistKpiTotal',classroomCache.length);set('roomHistKpiLive',liveRoomIds.size);set('roomHistKpiFree',freeRooms);set('roomHistKpiWeek',weekCount);
+ const roomFilter=document.getElementById('roomHistoryFilter')?.value||'';
+ const statusFilter=document.getElementById('roomHistoryStatus')?.value||'';
+ const search=classroomHistorySearch.trim().toLowerCase();
+ const rows=all.filter(b=>{
+  const status=classroomHistoryStatus(b).key;
+  return (!roomFilter||b._roomId===roomFilter)&&(!statusFilter||status===statusFilter)&&(!search||(String(b.TEN_LOP||b.CONGVIEC_ID||'')+' '+b._room).toLowerCase().includes(search));
+ }).sort((a,b)=>roomDateValue(b.NGAY_BAT_DAU).localeCompare(roomDateValue(a.NGAY_BAT_DAU)));
+ const body=rows.map(b=>{
+  const status=classroomHistoryStatus(b),id=xhtml(b.PHIEU_DAT_PHONG_ID||b.id||''),time=roomBookingTime(b);
+  const actions=[];
+  if(status.key!=='cancelled'&&(isAdminUser()||canEditClassroom()))actions.push('<button class="btn light" data-booking-id="'+id+'" onclick="cancelClassroomBookingUI(this.dataset.bookingId)">Hủy lịch</button>');
+  if(isAdminUser())actions.push('<button class="btn danger" data-booking-id="'+id+'" onclick="deleteClassroomBookingUI(this.dataset.bookingId)">Xóa</button>');
+  return '<tr><td><b>'+xhtml(b._room)+'</b><small>'+xhtml(b.DIA_DIEM||'')+'</small></td><td><b>'+xhtml(b.TEN_LOP||b.CONGVIEC_ID||'—')+'</b>'+(time?'<small>'+xhtml(time)+'</small>':'')+'</td><td>'+roomFormatDate(b.NGAY_BAT_DAU)+'</td><td>'+roomFormatDate(b.NGAY_KET_THUC)+'</td><td><span class="room-history-status '+status.key+'">'+status.label+'</span></td><td><div class="room-history-actions">'+(actions.join(' ')||'—')+'</div></td></tr>';
+ }).join('');
+ const table=document.getElementById('classroomBookingsTable');
+ if(table)table.innerHTML=body||'<tr><td colspan="6" style="padding:28px;text-align:center;color:#7b8ba0">Không có lịch sử phù hợp.</td></tr>';
+ const list=document.getElementById('classroomBookingsList'),week=document.getElementById('classroomBookingsWeek');
+ if(list)list.hidden=classroomHistoryView!=='list';
+ if(week){week.hidden=classroomHistoryView!=='week';if(classroomHistoryView==='week')week.innerHTML=renderClassroomHistoryWeek(rows);}
+ const listBtn=document.getElementById('roomHistoryListBtn'),weekBtn=document.getElementById('roomHistoryWeekBtn');
+ if(listBtn)listBtn.classList.toggle('active',classroomHistoryView==='list');
+ if(weekBtn)weekBtn.classList.toggle('active',classroomHistoryView==='week');
+}
+function filterClassroomHistoryLive(el){
+ const pos=el.selectionStart;
+ classroomHistorySearch=el.value||'';
+ renderClassroomHistory();
+ const next=document.getElementById('roomHistorySearch');
+ if(next){next.focus();try{next.setSelectionRange(pos,pos)}catch(e){}}
+}
+function setClassroomHistoryView(view){classroomHistoryView=view==='week'?'week':'list';renderClassroomHistory();}
+function shiftClassroomHistoryWeek(delta){classroomHistoryWeekOffset+=Number(delta)||0;renderClassroomHistory();}
+function roomWeekDateLabel(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');}
+function renderClassroomHistoryWeek(rows){
+ const today=new Date();today.setHours(0,0,0,0);
+ const monday=new Date(today);monday.setDate(today.getDate()-((today.getDay()+6)%7)+classroomHistoryWeekOffset*7);
+ const days=Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return d;});
+ const names=['T2','T3','T4','T5','T6','T7','CN'];
+ let html='<div class="room-history-week-head"><button class="btn light" onclick="shiftClassroomHistoryWeek(-1)">‹</button><strong>'+roomFormatDate(days[0])+' – '+roomFormatDate(days[6])+(classroomHistoryWeekOffset===0?' · Tuần này':'')+'</strong><button class="btn light" onclick="shiftClassroomHistoryWeek(1)">›</button><button class="btn light" onclick="classroomHistoryWeekOffset=0;renderClassroomHistory()">Hôm nay</button></div><div class="room-history-week-wrap"><div class="room-history-week-grid"><div class="week-heading">Phòng</div>';
+ days.forEach((d,i)=>html+='<div class="week-heading'+(d.getTime()===today.getTime()?' today':'')+'">'+names[i]+' '+roomWeekDateLabel(d)+'</div>');
+ const filter=document.getElementById('roomHistoryFilter')?.value||'';
+ const selectedRooms=classroomCache.filter(r=>!filter||roomId(r)===filter);
+ selectedRooms.forEach(r=>{
+  html+='<div class="week-room">'+xhtml(roomName(r))+'<small>'+Number(r.SUC_CHUA_TOI_DA||0)+' chỗ</small></div>';
+  days.forEach(d=>{
+   const matches=rows.filter(b=>b._roomId===roomId(r)&&roomDateLocal(b.NGAY_BAT_DAU)&&roomDateLocal(b.NGAY_KET_THUC)&&roomDateLocal(b.NGAY_BAT_DAU)<=d&&roomDateLocal(b.NGAY_KET_THUC)>=d);
+   html+='<div class="week-day'+(d.getTime()===today.getTime()?' today':'')+'">'+matches.map(b=>{const s=classroomHistoryStatus(b),time=roomBookingTime(b);return '<div class="room-history-event '+s.key+'" title="'+xhtml(b.TEN_LOP||b.CONGVIEC_ID||'')+'"><b>'+xhtml(b.TEN_LOP||b.CONGVIEC_ID||'Lịch đã đăng ký')+'</b>'+(time?'<small>'+xhtml(time)+'</small>':'')+'</div>';}).join('')+'</div>';
+  });
+ });
+ return html+'</div></div>';
 }
 function searchAvailableClassrooms(){
  const from=document.getElementById('roomAvailFrom')?.value||'',to=document.getElementById('roomAvailTo')?.value||'',selected=document.getElementById('roomAvailRoom')?.value||'',out=document.getElementById('roomAvailabilityResult');
