@@ -3343,6 +3343,15 @@ async function editTrainingContract(providerId,id){
 .need-file-remove:hover{background:#ffe3e3}
 @media(max-width:620px){.need-new-file-fields{grid-template-columns:1fr}}
 
+/* Repeatable learner details in training-need editor */
+.need-learner-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.need-add-learner{padding:6px 10px!important;border-radius:8px!important;font-size:10px!important;font-weight:800!important;white-space:nowrap}
+.need-learner-rows{display:flex;flex-direction:column;gap:9px}
+.need-learner-row{position:relative;padding:10px 38px 2px 10px;border:1px solid #dce6f5;border-radius:10px;background:#fff}
+.need-learner-row .need-two-col{margin:0}
+.need-learner-row .field{margin-bottom:8px}
+.need-learner-remove{position:absolute;right:8px;top:9px;width:25px;height:25px;border:1px solid #f1caca;border-radius:7px;background:#fff1f1;color:#c03939;font-size:17px;line-height:1;cursor:pointer}
+
 </style>
  <div class="hd-head"><div class="hd-icon">▤</div><div style="flex:1"><div style="font-size:20px;font-weight:850;color:#102958">${id?'Sửa':'Tạo mới'} hợp đồng đào tạo</div><div style="color:#8091ad;font-size:12px;margin-top:4px">Cập nhật thông tin hợp đồng đào tạo và hồ sơ liên quan</div></div></div>
  <div class="hd-layout"><div>
@@ -3548,7 +3557,7 @@ function openTrainingNeedEditor(id=''){
    <div class="field"><label>Đơn vị có nhu cầu <em>*</em></label><div class="need-unit-picker"><div class="need-selected-chips" id="neUnitChips"></div><div class="need-unit-search"><span>⌕</span><input id="neUnitSearch" placeholder="Tìm đơn vị..." oninput="filterNeedUnits()"></div><div class="need-unit-list" id="neUnitList">${unitRows||'<div class="need-unit-empty">Chưa có danh mục đơn vị.</div>'}</div><div class="need-unit-footer"><span id="neUnitCount">Đã chọn ${selected.length} đơn vị</span><div><button type="button" onclick="setAllNeedUnits(true)">Chọn tất cả</button> · <button type="button" onclick="setAllNeedUnits(false)">Bỏ chọn</button></div></div></div></div>
    <div class="need-two-col"><div class="field"><label>Đối tượng tham gia</label><input id="neTarget" value="${xhtml(n.DOI_TUONG_THAM_GIA||'')}" placeholder="Ví dụ: KTV, chuyên viên"></div><div class="field"><label>Số lượng học viên dự kiến <em>*</em></label><input id="neQty" type="number" min="0" step="1" value="${Number(n.SO_LUONG_HOC_VIEN||0)}"></div></div>
    <div class="field"><label>Vị trí công việc</label><input id="nePosition" value="${xhtml(n.VI_TRI_CONG_VIEC||'')}"></div>
-   <div class="need-optional-box"><b>Thông tin người học <small>(tùy chọn)</small></b><div class="need-two-col"><div class="field"><label>Mã nhân viên</label><input id="neEmpId" value="${xhtml(n.MA_NHAN_VIEN||'')}"></div><div class="field"><label>Họ và tên</label><input id="neEmpName" value="${xhtml(n.HO_TEN||'')}"></div></div></div>
+   <div class="need-optional-box"><div class="need-learner-heading"><b>Thông tin người học <small>(tùy chọn)</small></b><button type="button" class="btn light need-add-learner" onclick="addTrainingNeedLearnerRow()">＋ Thêm người học</button></div><div id="neLearnerRows" class="need-learner-rows"></div><small class="need-hint">Có thể khai báo nhiều người học. Mỗi người học gồm mã nhân viên và họ tên; thông tin này không bắt buộc khi chưa xác định danh sách.</small></div>
   </div></section>
   <section class="need-editor-card"><header><span>3</span><div><b>Kế hoạch và tệp đính kèm</b><small>Thời gian, địa điểm, ghi chú, file.</small></div></header><div class="need-editor-card-body">
    <div class="field"><label>Thời gian bắt đầu (tháng/năm)</label><input id="neMonth" inputmode="numeric" maxlength="7" placeholder="11/2026" value="${xhtml(n.THOI_GIAN_BAT_DAU||'')}"><small class="need-hint">Nhập số theo dạng tháng/năm, ví dụ 11/2026.</small></div>
@@ -3563,6 +3572,7 @@ function openTrainingNeedEditor(id=''){
   </div></section>
  </div><div class="need-editor-footer"><span><em>*</em> Trường bắt buộc</span><div><button class="btn light" onclick="closeModal()">Hủy</button> <button class="btn primary" onclick="saveTrainingNeed('${xhtml(id)}')">Lưu nhu cầu</button></div></div>`);
  updateNeedUnitCount();
+ initTrainingNeedLearners(n);
  addTrainingNeedFileRow();
 }
 async function removeTrainingNeedAttachment(needId,fileId){
@@ -3581,6 +3591,26 @@ async function removeTrainingNeedAttachment(needId,fileId){
  }catch(e){toast('Lỗi xóa file: '+(e.message||e))}
 }
 let trainingNeedFileRowSeq=0;
+let trainingNeedLearnerRowSeq=0;
+function parseTrainingNeedLearners(n){
+ let rows=[];
+ try{rows=JSON.parse(n?.THONG_TIN_NGUOI_HOC_JSON||n?.THONG_TIN_NGUOI_HOC||'[]');}catch(e){rows=[];}
+ if(!Array.isArray(rows))rows=[];
+ rows=rows.map(x=>({maNhanVien:String(x.maNhanVien||x.MA_NHAN_VIEN||''),hoTen:String(x.hoTen||x.HO_TEN||'')}));
+ if(!rows.length&&(n?.MA_NHAN_VIEN||n?.HO_TEN))rows=[{maNhanVien:String(n.MA_NHAN_VIEN||''),hoTen:String(n.HO_TEN||'')}];
+ return rows.length?rows:[{maNhanVien:'',hoTen:''}];
+}
+function initTrainingNeedLearners(n){const host=document.getElementById('neLearnerRows');if(!host)return;host.innerHTML='';parseTrainingNeedLearners(n).forEach(x=>addTrainingNeedLearnerRow(x));}
+function addTrainingNeedLearnerRow(data={}){
+ const host=document.getElementById('neLearnerRows');if(!host)return;
+ const id='neLearner_'+(++trainingNeedLearnerRowSeq),row=document.createElement('div');row.className='need-learner-row';row.id=id;
+ row.innerHTML='<div class="need-two-col"><div class="field"><label>Mã nhân viên</label><input class="ne-learner-id" value="'+xhtml(data.maNhanVien||'')+'" placeholder="Nhập mã nhân viên"></div><div class="field"><label>Họ và tên</label><input class="ne-learner-name" value="'+xhtml(data.hoTen||'')+'" placeholder="Nhập họ và tên"></div></div><button type="button" class="need-learner-remove" title="Xóa người học" aria-label="Xóa người học" onclick="removeTrainingNeedLearnerRow(\''+id+'\')">×</button>';
+ host.appendChild(row);
+}
+function removeTrainingNeedLearnerRow(id){const host=document.getElementById('neLearnerRows');document.getElementById(id)?.remove();if(host&&!host.querySelector('.need-learner-row'))addTrainingNeedLearnerRow();}
+function collectTrainingNeedLearners(){
+ return [...document.querySelectorAll('#neLearnerRows .need-learner-row')].map(row=>({maNhanVien:row.querySelector('.ne-learner-id')?.value.trim()||'',hoTen:row.querySelector('.ne-learner-name')?.value.trim()||''})).filter(x=>x.maNhanVien||x.hoTen);
+}
 function addTrainingNeedFileRow(){
  const host=document.getElementById('neNewFileRows');if(!host)return;
  const id='neDocRow_'+(++trainingNeedFileRowSeq);
@@ -3619,7 +3649,7 @@ async function saveTrainingNeed(id=''){
  if(window._savingTrainingNeed)return;
  let pickedFiles=[];
  try{pickedFiles=collectTrainingNeedFiles()}catch(e){toast(e.message||String(e));return}
- const units=[...document.querySelectorAll('#neUnitList input[name="neUnit"]:checked')].map(o=>o.value),methods=[...document.querySelectorAll('input[name="neMethod"]:checked')].map(o=>o.value),qty=Number(document.getElementById('neQty').value),hours=document.getElementById('neHours').value.trim(),month=document.getElementById('neMonth').value.trim(),existingNeed=trainingNeeds.find(x=>String(x.NHU_CAU_ID)===String(id)),existingEvidence=needEvidence(existingNeed||{});
+ const learners=collectTrainingNeedLearners(),units=[...document.querySelectorAll('#neUnitList input[name="neUnit"]:checked')].map(o=>o.value),methods=[...document.querySelectorAll('input[name="neMethod"]:checked')].map(o=>o.value),qty=Number(document.getElementById('neQty').value),hours=document.getElementById('neHours').value.trim(),month=document.getElementById('neMonth').value.trim(),existingNeed=trainingNeeds.find(x=>String(x.NHU_CAU_ID)===String(id)),existingEvidence=needEvidence(existingNeed||{});
  if(!pickedFiles.length&&!existingEvidence.length){toast('Bắt buộc đính kèm ít nhất 1 tài liệu. Nhấn “Thêm tài liệu” để chọn file.');return}
  if(pickedFiles.some(f=>!f.size||f.size>100*1024*1024)){toast('Mỗi file phải có dung lượng lớn hơn 0 và không vượt 100 MB');return}
  if(!units.length||!document.getElementById('neCourse').value.trim()||!Number.isInteger(qty)||qty<0||!methods.length){toast('Vui lòng kiểm tra tên khóa, đơn vị, số lượng và phương pháp đào tạo');return}
@@ -3629,7 +3659,7 @@ async function saveTrainingNeed(id=''){
  if(saveBtn){saveBtn.disabled=true;saveBtn.dataset.originalText=saveBtn.textContent;saveBtn.innerHTML='<span class="need-save-spinner" aria-hidden="true"></span> Đang lưu nhu cầu...';saveBtn.style.opacity='.8';saveBtn.style.cursor='wait'}
  showNeedSavingOverlay();
  try{
-  const r=await gsCall('saveTrainingNeed',{id,loaiNhuCau:document.getElementById('neType').value,donViIds:units,nhomNangLuc:document.getElementById('neGroup').value,tenKhoaDaoTao:document.getElementById('neCourse').value.trim(),doiTuong:document.getElementById('neTarget').value.trim(),soLuongHocVien:qty,maNhanVien:document.getElementById('neEmpId').value.trim(),hoTen:document.getElementById('neEmpName').value.trim(),viTriCongViec:document.getElementById('nePosition').value.trim(),donViDaoTao:document.getElementById('neProvider').value.trim(),phuongPhapDaoTao:methods,linhVucDaoTao:document.getElementById('neField').value,thoiGianBatDau:month,thoiLuongGio:hours,diaDiem:document.getElementById('neLocation').value.trim(),ghiChu:document.getElementById('neNote').value.trim(),hasAttachment:pickedFiles.length>0||existingEvidence.length>0});
+  const r=await gsCall('saveTrainingNeed',{id,loaiNhuCau:document.getElementById('neType').value,donViIds:units,nhomNangLuc:document.getElementById('neGroup').value,tenKhoaDaoTao:document.getElementById('neCourse').value.trim(),doiTuong:document.getElementById('neTarget').value.trim(),soLuongHocVien:qty,maNhanVien:learners[0]?.maNhanVien||'',hoTen:learners[0]?.hoTen||'',thongTinNguoiHocJson:JSON.stringify(learners),nguoiHoc:learners,viTriCongViec:document.getElementById('nePosition').value.trim(),donViDaoTao:document.getElementById('neProvider').value.trim(),phuongPhapDaoTao:methods,linhVucDaoTao:document.getElementById('neField').value,thoiGianBatDau:month,thoiLuongGio:hours,diaDiem:document.getElementById('neLocation').value.trim(),ghiChu:document.getElementById('neNote').value.trim(),hasAttachment:pickedFiles.length>0||existingEvidence.length>0});
   if(!r?.ok)throw new Error(r?.error||'Không lưu được nhu cầu');
   const needId=r.data.NHU_CAU_ID;if(pickedFiles.length)await uploadTrainingNeedFiles(needId,pickedFiles);
   closeModal();await loadTrainingNeeds();toast('Đã lưu nhu cầu đào tạo');
