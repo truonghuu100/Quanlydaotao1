@@ -3563,6 +3563,7 @@ function openTrainingNeedEditor(id=''){
   </div></section>
  </div><div class="need-editor-footer"><span><em>*</em> Trường bắt buộc</span><div><button class="btn light" onclick="closeModal()">Hủy</button> <button class="btn primary" onclick="saveTrainingNeed('${xhtml(id)}')">Lưu nhu cầu</button></div></div>`);
  updateNeedUnitCount();
+ addTrainingNeedFileRow();
 }
 async function removeTrainingNeedAttachment(needId,fileId){
  if(!needId||!fileId){toast('Không xác định được mã file cần xóa');return}
