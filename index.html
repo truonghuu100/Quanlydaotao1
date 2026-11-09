@@ -3846,12 +3846,12 @@ function implementationPlanPanel(a){
  <details style="margin-bottom:18px;border:1px solid #ffc95b;background:#fff8e8;border-radius:12px;padding:12px 14px;color:#79520b"><summary style="cursor:pointer;font-weight:650;font-size:13px">Kiểm tra hồ sơ thực tế trước khi triển khai <span style="float:right;text-decoration:underline;font-weight:500">Xem thêm</span></summary><div style="font-size:12px;line-height:1.6;margin-top:9px;color:#775b28">Chọn nhu cầu đào tạo và hợp đồng đã được kiểm tra từ hồ sơ thực tế. Nếu chưa có thông tin, bật “Bổ sung sau” tương ứng. Quy trình được xác định theo tình trạng hợp đồng: có hợp đồng áp dụng quy trình rút gọn; chưa có hợp đồng áp dụng đủ 16 bước.</div></details>
  <div style="display:grid;gap:18px">
   <section>
-   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px"><label for="implNeedIds" style="font-weight:700;color:#172f50;font-size:13px">Nhu cầu đào tạo tương ứng</label><label style="display:flex;align-items:center;gap:8px;color:#64748b;font-size:12px;white-space:nowrap;cursor:pointer"><input id="implNeedLater" type="checkbox" ${needLater?'checked':''} onchange="updateImplementationPlanState()" class="impl-switch">Bổ sung sau</label></div>
-   <select id="implNeedIds" multiple size="4" onchange="renderImplementationNeedAllocations();updateImplementationPlanState()" style="width:100%;min-height:100px;border:1px solid #d6e0ef;border-radius:12px;background:#fff;padding:8px 13px;color:#183153;font-size:13px;outline-offset:2px">${needOptions}</select><div style="font-size:11px;color:#718198;margin-top:5px">Có thể chọn nhiều nhu cầu (giữ Ctrl hoặc Cmd khi chọn). Nhập số lượng theo từng đơn vị để hệ thống trừ nhu cầu ngay khi khởi tạo lớp.</div><div id="implNeedAllocations" style="margin-top:10px"></div>
+   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px"><label for="implNeedIds" style="font-weight:700;color:#172f50;font-size:13px">Nhu cầu đào tạo tương ứng</label><label style="display:flex;align-items:center;gap:8px;color:#64748b;font-size:12px;white-space:nowrap;cursor:pointer"><input id="implNeedLater" type="checkbox" ${needLater?'checked':''} onchange="setImplementationSupplementLater('need',this.checked)" class="impl-switch">Bổ sung sau</label></div>
+   <select id="implNeedIds" multiple size="4" onchange="document.getElementById('implNeedLater').checked=false;renderImplementationNeedAllocations();updateImplementationPlanState()" style="width:100%;min-height:100px;border:1px solid #d6e0ef;border-radius:12px;background:#fff;padding:8px 13px;color:#183153;font-size:13px;outline-offset:2px">${needOptions}</select><div style="font-size:11px;color:#718198;margin-top:5px">Có thể chọn nhiều nhu cầu (giữ Ctrl hoặc Cmd khi chọn). Nhập số lượng theo từng đơn vị để hệ thống trừ nhu cầu ngay khi khởi tạo lớp.</div><div id="implNeedAllocations" style="margin-top:10px"></div>
   </section>
   <section>
-   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px"><label for="implContractId" style="font-weight:700;color:#172f50;font-size:13px">Hợp đồng tương ứng</label><label style="display:flex;align-items:center;gap:8px;color:#64748b;font-size:12px;white-space:nowrap;cursor:pointer"><input id="implContractLater" type="checkbox" ${contractLater?'checked':''} onchange="updateImplementationPlanState()" class="impl-switch">Bổ sung sau</label></div>
-   <select id="implContractId" multiple size="4" onchange="updateImplementationPlanState()" style="width:100%;min-height:100px;border:1px solid #d6e0ef;border-radius:12px;background:#fff;padding:8px 13px;color:#183153;font-size:13px">${contractOptions}</select><div style="font-size:11px;color:#718198;margin-top:5px">Có thể chọn nhiều hợp đồng (giữ Ctrl hoặc Cmd khi chọn).</div>
+   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px"><label for="implContractId" style="font-weight:700;color:#172f50;font-size:13px">Hợp đồng tương ứng</label><label style="display:flex;align-items:center;gap:8px;color:#64748b;font-size:12px;white-space:nowrap;cursor:pointer"><input id="implContractLater" type="checkbox" ${contractLater?'checked':''} onchange="setImplementationSupplementLater('contract',this.checked)" class="impl-switch">Bổ sung sau</label></div>
+   <select id="implContractId" multiple size="4" onchange="document.getElementById('implContractLater').checked=false;updateImplementationPlanState()" style="width:100%;min-height:100px;border:1px solid #d6e0ef;border-radius:12px;background:#fff;padding:8px 13px;color:#183153;font-size:13px">${contractOptions}</select><div style="font-size:11px;color:#718198;margin-top:5px">Có thể chọn nhiều hợp đồng (giữ Ctrl hoặc Cmd khi chọn).</div>
   </section>
  </div>
  ${(needLater||contractLater)?`<div style="margin-top:14px;padding:10px 12px;border-radius:10px;background:#fff8e8;border:1px solid #f6d28b;color:#805a16;font-size:12px">Hồ sơ sẽ được bổ sung sau: ${[needLater?'Nhu cầu đào tạo':'',contractLater?'Hợp đồng':''].filter(Boolean).join(' và ')}.</div>`:''}
@@ -3877,13 +3877,20 @@ function collectImplementationDemandAllocations(){
  const selected=[...(document.getElementById('implNeedIds')?.selectedOptions||[])].map(o=>String(o.value)).filter(Boolean);
  return selected.map(demandId=>({demandId,unitQuantities:[...document.querySelectorAll('.impl-need-qty[data-need-id="'+CSS.escape(demandId)+'"]')].map(input=>({unitId:input.dataset.unitId,quantity:Number(input.value||0)})).filter(x=>x.quantity>0)}));
 }
+function setImplementationSupplementLater(type,checked){
+ const select=document.getElementById(type==='need'?'implNeedIds':'implContractId');
+ if(checked&&select)[...select.options].forEach(option=>option.selected=false);
+ if(!checked){/* User may now choose an existing record. */}
+ if(type==='need')renderImplementationNeedAllocations();
+ updateImplementationPlanState();
+}
 function updateImplementationPlanState(){
  const needSelected=[...(document.getElementById('implNeedIds')?.selectedOptions||[])].some(o=>o.value);
  const needLater=!!document.getElementById('implNeedLater')?.checked;
  const contractSelected=[...(document.getElementById('implContractId')?.selectedOptions||[])].some(o=>o.value);
  const contractLater=!!document.getElementById('implContractLater')?.checked;
  const allocations=collectImplementationDemandAllocations();
- const quantitiesValid=!needSelected||allocations.length>0&&allocations.every(a=>a.unitQuantities.length>0&&a.unitQuantities.every(q=>Number.isInteger(q.quantity)&&q.quantity>0));
+ const quantitiesValid=!needSelected||needLater||(allocations.length>0&&allocations.every(a=>a.unitQuantities.length>0&&a.unitQuantities.every(q=>Number.isInteger(q.quantity)&&q.quantity>0)));
  const valid=(needSelected||needLater)&&(contractSelected||contractLater)&&!(contractSelected&&contractLater)&&quantitiesValid;
  const btn=document.getElementById('implSubmitBtn');if(btn)btn.disabled=!valid||btn.dataset.authorized!=='true';
  const badge=document.getElementById('implStatusBadge');if(badge){badge.textContent=valid?'Đủ thông tin':'Chờ xác nhận';badge.style.background=valid?'#e8f8ef':'#eaf0ff';badge.style.color=valid?'#18794e':'#315fe9';}
@@ -3921,8 +3928,11 @@ async function saveImplementationPlan(id){
  const a=assignments.find(x=>String(x.id)===String(id));if(!a)return;
  const needIds=[...(document.getElementById('implNeedIds')?.selectedOptions||[])].map(o=>o.value).filter(Boolean);
  const contractIds=[...(document.getElementById('implContractId')?.selectedOptions||[])].map(o=>o.value).filter(Boolean);
- const contractId=contractIds[0]||'';
  const needLater=!!document.getElementById('implNeedLater').checked,contractLater=!!document.getElementById('implContractLater').checked;
+ // “Bổ sung sau” means no existing record is being linked at this stage.
+ if(needLater)needIds.splice(0,needIds.length);
+ if(contractLater)contractIds.splice(0,contractIds.length);
+ const contractId=contractIds[0]||'';
  if(!needIds.length&&!needLater){toast('Chọn ít nhất một nhu cầu hoặc tích “Bổ sung nhu cầu đào tạo sau”.');return}
  if(!contractIds.length&&!contractLater){toast('Chọn ít nhất một hợp đồng hoặc tích “Bổ sung hợp đồng sau”.');return}
  if(contractIds.length&&contractLater){toast('Chỉ chọn hợp đồng hoặc tích “Bổ sung hợp đồng sau”.');return}
