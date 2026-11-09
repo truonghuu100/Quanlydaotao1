@@ -3326,6 +3326,23 @@ async function editTrainingContract(providerId,id){
 .room-history-event small{display:block;margin-top:2px;color:rgba(255,255,255,.88);font-size:7px}
 @media(max-width:900px){.room-history-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.room-history-search-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.room-history-kpis{gap:8px}.room-history-kpi{padding:11px 10px 10px 13px}.room-history-kpi strong{font-size:22px}.room-history-search-grid{grid-template-columns:1fr}.room-history-toolbar input{width:100%;min-width:100%}.room-history-view-switch{margin-left:0}.room-history-toolbar{align-items:stretch}.room-history-toolbar select{flex:1;min-width:0}}
+
+/* Multiple named attachments for training needs */
+.need-new-file-rows{display:grid;gap:9px;margin:8px 0}
+.need-new-file-row{display:grid;grid-template-columns:minmax(0,1fr) 34px;gap:8px;align-items:center;padding:10px;border:1px solid #dbe5f2;border-radius:10px;background:#fbfdff}
+.need-new-file-fields{display:grid;grid-template-columns:minmax(150px,.9fr) minmax(180px,1.1fr);gap:10px;min-width:0}
+.need-new-file-row .field{min-width:0;margin:0}
+.need-new-file-row .field label{display:block;margin-bottom:5px;color:#526782;font-size:9px;font-weight:800}
+.need-new-file-row .field input{box-sizing:border-box;width:100%;min-width:0;min-height:36px;padding:8px;border:1px solid #d5dfed;border-radius:8px;background:#fff;color:#233b59;font-size:10px}
+.need-new-file-meta{grid-column:1/-1;color:#8292a8;font-size:9px}
+.need-add-document{margin-top:3px}
+.need-file-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #dbe5f2;border-radius:8px;background:#fff;margin-top:6px}
+.need-existing-files-title{margin:12px 0 5px;color:#526782;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}
+.need-file-row-name{min-width:0;flex:1;overflow-wrap:anywhere;color:#314965;font-size:10px}
+.need-file-remove{flex:0 0 30px;width:30px;height:30px;border:1px solid #f0b8b8;border-radius:8px;background:#fff1f1;color:#c62828;font-size:19px;line-height:1;cursor:pointer}
+.need-file-remove:hover{background:#ffe3e3}
+@media(max-width:620px){.need-new-file-fields{grid-template-columns:1fr}}
+
 </style>
  <div class="hd-head"><div class="hd-icon">▤</div><div style="flex:1"><div style="font-size:20px;font-weight:850;color:#102958">${id?'Sửa':'Tạo mới'} hợp đồng đào tạo</div><div style="color:#8091ad;font-size:12px;margin-top:4px">Cập nhật thông tin hợp đồng đào tạo và hồ sơ liên quan</div></div></div>
  <div class="hd-layout"><div>
@@ -3537,7 +3554,12 @@ function openTrainingNeedEditor(id=''){
    <div class="field"><label>Thời gian bắt đầu (tháng/năm)</label><input id="neMonth" inputmode="numeric" maxlength="7" placeholder="11/2026" value="${xhtml(n.THOI_GIAN_BAT_DAU||'')}"><small class="need-hint">Nhập số theo dạng tháng/năm, ví dụ 11/2026.</small></div>
    <div class="need-two-col need-plan-fields"><div class="field"><label>Thời lượng dự kiến</label><textarea id="neHours" rows="2" placeholder="Ví dụ: 16 giờ, 2 ngày, 3 buổi">${xhtml(n.THOI_LUONG_GIO||'')}</textarea></div><div class="field"><label>Địa điểm dự kiến</label><textarea id="neLocation" rows="2" placeholder="Nhập địa điểm dự kiến">${xhtml(n.DIA_DIEM_DU_KIEN||'')}</textarea></div></div>
    <div class="field"><label>Ghi chú</label><textarea id="neNote" placeholder="Nhập ghi chú...">${xhtml(n.GHI_CHU||'')}</textarea></div>
-   <div class="field"><label>File đính kèm <em>*</em> ${id?'('+files.length+' file đã tải lên)':''}</label><input id="neFiles" type="file" multiple required accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip" onchange="renderNeedPickedFiles()"><div id="nePickedFiles" class="need-picked-files" style="display:grid;gap:6px;margin-top:8px"></div><small class="need-hint">Bắt buộc có ít nhất 1 file đính kèm để tạo nhu cầu, tránh ghi nhận nhu cầu không có hồ sơ. Cho phép nhiều file, tối đa 100 MB mỗi file. Lưu trên Google Drive.</small>${files.length?`<div class="need-existing-files" id="neExistingFiles">${files.map(f=>`<div data-drive-file-id="${xhtml(f.driveFileId||'')}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border:1px solid #dbe5f2;border-radius:8px;background:#fff;min-width:0"><span style="font-size:11px;overflow-wrap:anywhere;min-width:0;flex:1">📎 ${xhtml(f.name||f.title||'File đính kèm')}</span><button type="button" title="Xóa file đã tải lên" aria-label="Xóa file ${xhtml(f.name||f.title||'đính kèm')}" onclick="removeTrainingNeedAttachment('${xhtml(id)}','${xhtml(f.driveFileId||'')}')" style="flex:0 0 28px;width:28px;height:28px;border:1px solid #f0b8b8;border-radius:7px;background:#fff1f1;color:#c62828;font-size:19px;line-height:1;cursor:pointer">×</button></div>`).join('')}</div>`:''}</div>
+   <div class="field"><label>File đính kèm <em>*</em> ${id?'('+files.length+' file đã tải lên)':''}</label>
+    <div id="neNewFileRows" class="need-new-file-rows"></div>
+    <button type="button" class="btn light need-add-document" onclick="addTrainingNeedFileRow()">＋ Thêm tài liệu</button>
+    <small class="need-hint">Có thể đính kèm nhiều tài liệu. Với mỗi tài liệu, nhập tên hiển thị và chọn một file. Có thể xóa từng dòng nếu chọn nhầm. Tối đa 100 MB/file. Lưu trên Google Drive.</small>
+    ${files.length?`<div class="need-existing-files" id="neExistingFiles"><div class="need-existing-files-title">Tài liệu đã tải lên</div>${files.map(f=>`<div data-drive-file-id="${xhtml(f.driveFileId||'')}" class="need-file-row"><span class="need-file-row-name">📎 ${xhtml(f.name||f.title||'File đính kèm')}</span><button type="button" title="Xóa file đã tải lên" aria-label="Xóa file ${xhtml(f.name||f.title||'đính kèm')}" onclick="removeTrainingNeedAttachment('${xhtml(id)}','${xhtml(f.driveFileId||'')}')" class="need-file-remove">×</button></div>`).join('')}</div>`:''}
+   </div>
   </div></section>
  </div><div class="need-editor-footer"><span><em>*</em> Trường bắt buộc</span><div><button class="btn light" onclick="closeModal()">Hủy</button> <button class="btn primary" onclick="saveTrainingNeed('${xhtml(id)}')">Lưu nhu cầu</button></div></div>`);
  updateNeedUnitCount();
@@ -3557,12 +3579,33 @@ async function removeTrainingNeedAttachment(needId,fileId){
   toast('Đã xóa file đính kèm');
  }catch(e){toast('Lỗi xóa file: '+(e.message||e))}
 }
+let trainingNeedFileRowSeq=0;
+function addTrainingNeedFileRow(){
+ const host=document.getElementById('neNewFileRows');if(!host)return;
+ const id='neDocRow_'+(++trainingNeedFileRowSeq);
+ const row=document.createElement('div');row.className='need-new-file-row';row.id=id;
+ row.innerHTML='<div class="need-new-file-fields"><div class="field"><label>Tên tài liệu</label><input type="text" class="ne-doc-title" placeholder="Ví dụ: Công văn đề nghị đào tạo"></div><div class="field"><label>Chọn file</label><input type="file" class="ne-doc-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip" onchange="renderNeedPickedFiles()"></div></div><button type="button" class="need-file-remove" title="Xóa dòng tài liệu" aria-label="Xóa dòng tài liệu" onclick="removeTrainingNeedFileRow(\''+id+'\')">×</button><div class="need-new-file-meta"></div>';
+ host.appendChild(row);
+}
+function removeTrainingNeedFileRow(rowId){document.getElementById(rowId)?.remove();}
 function renderNeedPickedFiles(){
- const input=document.getElementById('neFiles'),host=document.getElementById('nePickedFiles');if(!input||!host)return;
- const files=[...(input.files||[])];host.innerHTML=files.map((f,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border:1px solid #dbe5f2;border-radius:8px;background:#fff;min-width:0"><span style="font-size:11px;overflow-wrap:anywhere;min-width:0;flex:1">📎 '+xhtml(f.name)+' <small style="color:#8292ac">('+Math.max(1,Math.round(f.size/1024))+' KB)</small></span><button type="button" title="Bỏ file này" aria-label="Bỏ file '+xhtml(f.name)+'" data-need-file-index="'+i+'" style="flex:0 0 28px;width:28px;height:28px;border:1px solid #f0b8b8;border-radius:7px;background:#fff1f1;color:#c62828;font-size:19px;line-height:1;cursor:pointer">×</button></div>').join('');
- host.querySelectorAll('[data-need-file-index]').forEach(btn=>btn.onclick=()=>{
-  const index=Number(btn.dataset.needFileIndex),dt=new DataTransfer();[...(input.files||[])].forEach((file,i)=>{if(i!==index)dt.items.add(file)});input.files=dt.files;renderNeedPickedFiles();
+ document.querySelectorAll('#neNewFileRows .need-new-file-row').forEach(row=>{
+  const input=row.querySelector('.ne-doc-file'),title=row.querySelector('.ne-doc-title'),meta=row.querySelector('.need-new-file-meta'),file=input?.files?.[0];
+  if(meta)meta.textContent=file?(file.name+' · '+Math.max(1,Math.round(file.size/1024))+' KB'):'Chưa chọn file';
+  if(title&&file&&!title.value.trim())title.value=file.name.replace(/\.[^.]+$/,'');
  });
+}
+function collectTrainingNeedFiles(){
+ const rows=[...document.querySelectorAll('#neNewFileRows .need-new-file-row')],out=[];
+ for(const row of rows){
+  const file=row.querySelector('.ne-doc-file')?.files?.[0],title=row.querySelector('.ne-doc-title')?.value.trim()||'';
+  if(!file)continue;
+  if(!title)throw new Error('Vui lòng đặt tên cho từng tài liệu đã chọn.');
+  const originalExt=(file.name.match(/\.[^.]+$/)||[''])[0],enteredExt=(title.match(/\.[^.]+$/)||[''])[0];
+  const finalName=enteredExt?title:title+originalExt;
+  out.push(new File([file],finalName,{type:file.type||'application/octet-stream',lastModified:file.lastModified}));
+ }
+ return out;
 }
 function normalizeNeedUnitSearch(value){return String(value||'').toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').trim()}
 function filterNeedUnits(){const q=normalizeNeedUnitSearch(document.getElementById('neUnitSearch')?.value||'');document.querySelectorAll('#neUnitList .need-unit-option').forEach(el=>{const haystack=normalizeNeedUnitSearch((el.dataset.search||'')+' '+(el.textContent||''));el.style.setProperty('display',haystack.includes(q)?'flex':'none','important')})}
@@ -3571,12 +3614,27 @@ function updateNeedUnitCount(){const checks=[...document.querySelectorAll('#neUn
 async function uploadTrainingNeedFiles(needId,files){const out=[];for(const file of files){if(!file.size||file.size>100*1024*1024)throw new Error('File '+file.name+' rỗng hoặc vượt 100 MB.');const session=await gsCall('createTrainingNeedUploadSession',{needId,fileName:file.name,mimeType:file.type||'application/octet-stream',size:file.size});if(!session?.ok||!session.uploadKey)throw new Error(session?.error||'Không tạo được phiên tải file');let start=0,driveFileId='';while(start<file.size){const end=Math.min(start+(session.chunkSize||4*1024*1024),file.size),blob=file.slice(start,end),base64=await new Promise((resolve,reject)=>{const rd=new FileReader();rd.onload=()=>resolve(String(rd.result).split(',')[1]||'');rd.onerror=()=>reject(new Error('Không đọc được file '+file.name));rd.readAsDataURL(blob)});const part=await gsCall('uploadTrainingNeedFileChunk',{needId,uploadKey:session.uploadKey,start,total:file.size,base64});if(!part?.ok)throw new Error(part?.error||'Tải file thất bại');start=end;if(part.done)driveFileId=part.driveFileId||'';}if(!driveFileId)throw new Error('Chưa xác nhận tải xong '+file.name);const fin=await gsCall('finalizeTrainingNeedUpload',{needId,uploadKey:session.uploadKey,driveFileId});if(!fin?.ok)throw new Error(fin?.error||'Không lưu được bằng chứng');out.push(fin.file)}return out}
 function showNeedSavingOverlay(){let el=document.getElementById('needSavingOverlay');if(!el){el=document.createElement('div');el.id='needSavingOverlay';el.className='need-saving-overlay';el.innerHTML='<div class="need-saving-card"><div class="need-saving-ring"></div><div class="need-saving-title">Đang tạo nhu cầu đào tạo</div><div class="need-saving-text">Hệ thống đang lưu thông tin và tải hồ sơ đính kèm lên. Vui lòng không đóng trang trong lúc xử lý.</div></div>';document.body.appendChild(el)}el.style.display='flex'}
 function hideNeedSavingOverlay(){const el=document.getElementById('needSavingOverlay');if(el)el.style.display='none'}
-async function saveTrainingNeed(id=''){if(window._savingTrainingNeed)return;const units=[...document.querySelectorAll('#neUnitList input[name="neUnit"]:checked')].map(o=>o.value),methods=[...document.querySelectorAll('input[name="neMethod"]:checked')].map(o=>o.value),qty=Number(document.getElementById('neQty').value),hours=document.getElementById('neHours').value.trim(),month=document.getElementById('neMonth').value.trim(),pickedFiles=[...(document.getElementById('neFiles')?.files||[])],existingNeed=trainingNeeds.find(x=>String(x.NHU_CAU_ID)===String(id)),existingEvidence=needEvidence(existingNeed||{});if(!pickedFiles.length&&!existingEvidence.length){toast('Bắt buộc đính kèm ít nhất 1 hồ sơ trước khi tạo nhu cầu đào tạo');document.getElementById('neFiles')?.focus();return}if(pickedFiles.some(f=>!f.size||f.size>100*1024*1024)){toast('Mỗi file phải có dung lượng lớn hơn 0 và không vượt 100 MB');return}if(!units.length||!document.getElementById('neCourse').value.trim()||!Number.isInteger(qty)||qty<0||!methods.length){toast('Vui lòng kiểm tra tên khóa, đơn vị, số lượng và phương pháp đào tạo');return}if(month&&!/^(0[1-9]|1[0-2])\/\d{4}$/.test(month)){toast('Thời gian bắt đầu phải theo MM/yyyy, ví dụ 11/2026');return}
+async function saveTrainingNeed(id=''){
+ if(window._savingTrainingNeed)return;
+ let pickedFiles=[];
+ try{pickedFiles=collectTrainingNeedFiles()}catch(e){toast(e.message||String(e));return}
+ const units=[...document.querySelectorAll('#neUnitList input[name="neUnit"]:checked')].map(o=>o.value),methods=[...document.querySelectorAll('input[name="neMethod"]:checked')].map(o=>o.value),qty=Number(document.getElementById('neQty').value),hours=document.getElementById('neHours').value.trim(),month=document.getElementById('neMonth').value.trim(),existingNeed=trainingNeeds.find(x=>String(x.NHU_CAU_ID)===String(id)),existingEvidence=needEvidence(existingNeed||{});
+ if(!pickedFiles.length&&!existingEvidence.length){toast('Bắt buộc đính kèm ít nhất 1 tài liệu. Nhấn “Thêm tài liệu” để chọn file.');return}
+ if(pickedFiles.some(f=>!f.size||f.size>100*1024*1024)){toast('Mỗi file phải có dung lượng lớn hơn 0 và không vượt 100 MB');return}
+ if(!units.length||!document.getElementById('neCourse').value.trim()||!Number.isInteger(qty)||qty<0||!methods.length){toast('Vui lòng kiểm tra tên khóa, đơn vị, số lượng và phương pháp đào tạo');return}
+ if(month&&!/^(0[1-9]|1[0-2])\/\d{4}$/.test(month)){toast('Thời gian bắt đầu phải theo MM/yyyy, ví dụ 11/2026');return}
  window._savingTrainingNeed=true;
  const saveBtn=document.querySelector('#mbody .need-editor-footer .btn.primary');
- if(saveBtn){saveBtn.disabled=true;saveBtn.dataset.originalText=saveBtn.textContent;saveBtn.innerHTML='<span class="need-save-spinner" aria-hidden="true"></span> Đang tạo nhu cầu...';saveBtn.style.opacity='.8';saveBtn.style.cursor='wait'}
+ if(saveBtn){saveBtn.disabled=true;saveBtn.dataset.originalText=saveBtn.textContent;saveBtn.innerHTML='<span class="need-save-spinner" aria-hidden="true"></span> Đang lưu nhu cầu...';saveBtn.style.opacity='.8';saveBtn.style.cursor='wait'}
  showNeedSavingOverlay();
- try{const r=await gsCall('saveTrainingNeed',{id,loaiNhuCau:document.getElementById('neType').value,donViIds:units,nhomNangLuc:document.getElementById('neGroup').value,tenKhoaDaoTao:document.getElementById('neCourse').value.trim(),doiTuong:document.getElementById('neTarget').value.trim(),soLuongHocVien:qty,maNhanVien:document.getElementById('neEmpId').value.trim(),hoTen:document.getElementById('neEmpName').value.trim(),viTriCongViec:document.getElementById('nePosition').value.trim(),donViDaoTao:document.getElementById('neProvider').value.trim(),phuongPhapDaoTao:methods,linhVucDaoTao:document.getElementById('neField').value,thoiGianBatDau:month,thoiLuongGio:hours,diaDiem:document.getElementById('neLocation').value.trim(),ghiChu:document.getElementById('neNote').value.trim(),hasAttachment:pickedFiles.length>0||existingEvidence.length>0});if(!r?.ok)throw new Error(r?.error||'Không lưu được nhu cầu');const needId=r.data.NHU_CAU_ID,files=pickedFiles;if(files.length)await uploadTrainingNeedFiles(needId,files);closeModal();await loadTrainingNeeds();toast('Đã lưu nhu cầu đào tạo');}catch(e){toast('Lỗi lưu nhu cầu: '+(e.message||e))}finally{hideNeedSavingOverlay();window._savingTrainingNeed=false;const btn=document.querySelector('#mbody .need-editor-footer .btn.primary');if(btn){btn.disabled=false;btn.textContent=btn.dataset.originalText||'Lưu nhu cầu';btn.style.opacity='';btn.style.cursor=''}}}
+ try{
+  const r=await gsCall('saveTrainingNeed',{id,loaiNhuCau:document.getElementById('neType').value,donViIds:units,nhomNangLuc:document.getElementById('neGroup').value,tenKhoaDaoTao:document.getElementById('neCourse').value.trim(),doiTuong:document.getElementById('neTarget').value.trim(),soLuongHocVien:qty,maNhanVien:document.getElementById('neEmpId').value.trim(),hoTen:document.getElementById('neEmpName').value.trim(),viTriCongViec:document.getElementById('nePosition').value.trim(),donViDaoTao:document.getElementById('neProvider').value.trim(),phuongPhapDaoTao:methods,linhVucDaoTao:document.getElementById('neField').value,thoiGianBatDau:month,thoiLuongGio:hours,diaDiem:document.getElementById('neLocation').value.trim(),ghiChu:document.getElementById('neNote').value.trim(),hasAttachment:pickedFiles.length>0||existingEvidence.length>0});
+  if(!r?.ok)throw new Error(r?.error||'Không lưu được nhu cầu');
+  const needId=r.data.NHU_CAU_ID;if(pickedFiles.length)await uploadTrainingNeedFiles(needId,pickedFiles);
+  closeModal();await loadTrainingNeeds();toast('Đã lưu nhu cầu đào tạo');
+ }catch(e){toast('Lỗi lưu nhu cầu: '+(e.message||e))}
+ finally{hideNeedSavingOverlay();window._savingTrainingNeed=false;const btn=document.querySelector('#mbody .need-editor-footer .btn.primary');if(btn){btn.disabled=false;btn.textContent=btn.dataset.originalText||'Lưu nhu cầu';btn.style.opacity='';btn.style.cursor=''}}
+}
 function updateClassDemandRemaining(){const id=document.getElementById('ademand')?.value,n=trainingNeeds.find(x=>String(x.NHU_CAU_ID)===String(id)),host=document.getElementById('ademandRemaining'),qty=Number(document.getElementById('ademandQty')?.value||0);if(!host)return;if(!n){host.textContent='Chọn nhu cầu còn số lượng.';return}const remaining=Math.max(0,Number(n.SO_LUONG_HOC_VIEN||0)-Number(n.SO_LUONG_DA_DAP_UNG||0));host.textContent='Còn '+remaining+' học viên; đang chọn '+qty+'. Loại: '+(n.LOAI_NHU_CAU==='RIENG_DON_VI'?'riêng đơn vị':'chung nhiều đơn vị');host.style.color=qty>remaining?'#b91c1c':'var(--muted)'}
 function renderWorkflowTemplate(){
  const body=document.getElementById('workflowTemplateRows');if(!body)return;
