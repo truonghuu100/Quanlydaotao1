@@ -3658,12 +3658,24 @@ async function saveTrainingNeed(id=''){
  const saveBtn=document.querySelector('#mbody .need-editor-footer .btn.primary');
  if(saveBtn){saveBtn.disabled=true;saveBtn.dataset.originalText=saveBtn.textContent;saveBtn.innerHTML='<span class="need-save-spinner" aria-hidden="true"></span> Đang lưu nhu cầu...';saveBtn.style.opacity='.8';saveBtn.style.cursor='wait'}
  showNeedSavingOverlay();
+ let needSaved=false,savedNeedId=id||'';
  try{
   const r=await gsCall('saveTrainingNeed',{id,loaiNhuCau:document.getElementById('neType').value,donViIds:units,nhomNangLuc:document.getElementById('neGroup').value,tenKhoaDaoTao:document.getElementById('neCourse').value.trim(),doiTuong:document.getElementById('neTarget').value.trim(),soLuongHocVien:qty,maNhanVien:learners[0]?.maNhanVien||'',hoTen:learners[0]?.hoTen||'',thongTinNguoiHocJson:JSON.stringify(learners),nguoiHoc:learners,viTriCongViec:document.getElementById('nePosition').value.trim(),donViDaoTao:document.getElementById('neProvider').value.trim(),phuongPhapDaoTao:methods,linhVucDaoTao:document.getElementById('neField').value,thoiGianBatDau:month,thoiLuongGio:hours,diaDiem:document.getElementById('neLocation').value.trim(),ghiChu:document.getElementById('neNote').value.trim(),hasAttachment:pickedFiles.length>0||existingEvidence.length>0});
   if(!r?.ok)throw new Error(r?.error||'Không lưu được nhu cầu');
-  const needId=r.data.NHU_CAU_ID;if(pickedFiles.length)await uploadTrainingNeedFiles(needId,pickedFiles);
+  const needId=r.data.NHU_CAU_ID;
+  needSaved=true;savedNeedId=String(needId||id||'');
+  // Keep the generated ID on the open form so retrying a failed Drive upload
+  // updates the same demand instead of creating a duplicate record.
+  if(savedNeedId&&saveBtn)saveBtn.setAttribute('onclick',"saveTrainingNeed('"+savedNeedId.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+"')");
+  if(pickedFiles.length)await uploadTrainingNeedFiles(needId,pickedFiles);
   closeModal();await loadTrainingNeeds();toast('Đã lưu nhu cầu đào tạo');
- }catch(e){toast('Lỗi lưu nhu cầu: '+(e.message||e))}
+ }catch(e){
+  if(needSaved){
+   toast('Nhu cầu đã được lưu (mã '+savedNeedId+'), nhưng file chưa tải lên Google Drive: '+(e.message||e)+'. Vui lòng thử lưu lại trên chính biểu mẫu này sau khi Admin khôi phục kết nối Drive.');
+  }else{
+   toast('Lỗi lưu nhu cầu: '+(e.message||e));
+  }
+ }
  finally{hideNeedSavingOverlay();window._savingTrainingNeed=false;const btn=document.querySelector('#mbody .need-editor-footer .btn.primary');if(btn){btn.disabled=false;btn.textContent=btn.dataset.originalText||'Lưu nhu cầu';btn.style.opacity='';btn.style.cursor=''}}
 }
 function updateClassDemandRemaining(){const id=document.getElementById('ademand')?.value,n=trainingNeeds.find(x=>String(x.NHU_CAU_ID)===String(id)),host=document.getElementById('ademandRemaining'),qty=Number(document.getElementById('ademandQty')?.value||0);if(!host)return;if(!n){host.textContent='Chọn nhu cầu còn số lượng.';return}const remaining=Math.max(0,Number(n.SO_LUONG_HOC_VIEN||0)-Number(n.SO_LUONG_DA_DAP_UNG||0));host.textContent='Còn '+remaining+' học viên; đang chọn '+qty+'. Loại: '+(n.LOAI_NHU_CAU==='RIENG_DON_VI'?'riêng đơn vị':'chung nhiều đơn vị');host.style.color=qty>remaining?'#b91c1c':'var(--muted)'}
